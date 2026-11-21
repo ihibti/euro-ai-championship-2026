@@ -25,7 +25,7 @@ Anti-goals
 
 ## Facts the design rests on
 
-Sources: organizer slides (2026-11-21), the public `SprintML/hackathon` dataset on Hugging Face and the starter files of each task.
+Sources: organizer slides (2026-11-21), the three detailed task descriptions, the public `SprintML/hackathon` dataset on Hugging Face and the starter files of each task.
 
 | | Watermark localization | Model equality | Unlearning |
 |---|---|---|---|
@@ -34,9 +34,12 @@ Sources: organizer slides (2026-11-21), the public `SprintML/hackathon` dataset 
 | Local number | Exact, on the 510 labelled training images | Exact on 9 reference endpoints with published answers and no query limit | Proxy only: no labels, no retain set, no gold model |
 | Data | `train.zip`, `test.zip`, starter kit; gated on Hugging Face, manual approval | Starter scripts only, public | `model.pt` 344 MB, `forget_images.npz` 527 MB, public |
 | GPU | Yes | No | Yes |
-| Irreversible budget | Submission limit unknown | 100 answers per scored endpoint for the whole event, 4 concurrent requests per team, one submission per 30 minutes | Submission limit unknown |
+| Submission | `.pt` dict with `image_names` and `masks` of shape [N, 128, 128], at most 20 MB | CSV `endpoint,family,model`, one line per endpoint | float32 state dict that loads with `strict=True`, at most 450 MB |
+| Irreversible budget | Submission limit not stated | 100 answers per scored endpoint for the whole event, 4 concurrent requests per team, one submission per 30 minutes, and a failed submission starts the same cool-down | Submission limit not stated |
 
-- Submissions and queries go to one HTTP server with a team API key in the `X-API-Key` header.
+- Submissions and queries go to one HTTP server with a team API key in the `X-API-Key` header. The leaderboard shows each team's best result.
+- Public leaderboards score about 30 % of the test data; the final ranking uses the rest. The organizers warn that the two can differ a lot for model equality.
+- Watermark: an empty union counts as IoU 1. The watermarked region is a rectangle with aspect ratio at most 16:1 for PixelSeal and StegaStamp and 2:1 for TrustMark. The starter kit has extractor wrappers and a local mIoU evaluator.
 - Model equality counts quantization, LoRA adapter and base model as different models. Watermark, system prompt and decoding strategy do not change the model.
 - JURECA: reservation `cispahack`, partition `dc-gpu`, account `training2666`, one GPU per job. The team lead runs `hackathon_setup.sh` once, teammates run `teammate.sh`. The shared folder is `/p/scratch/training2666/<lead>/<team>/`.
 - Capacity: lead has Claude Max 5x (39 % of the week left, 29 % for Fable, two full resets), Devin Max (allowance resets about 09:00 Sunday) and Antigravity with Gemini Flash and older Claude models only. Two colleagues share one Claude Max and one Devin Max. No overage anywhere.
@@ -74,7 +77,7 @@ Results and submissions are one file per record, so concurrent PRs never conflic
 ### 2. Guardrails on budgets that cannot be recovered
 
 - **Scored endpoints.** A single query module wraps the organizers' client. Reference endpoints are free. Scored endpoints need an explicit spend flag and a typed confirmation at a terminal, and the planned spend and remaining budget are printed first. Every answer is appended to a committed file, so analysis never needs a second query.
-- **Submissions.** `make submit` asks for a typed confirmation, refuses during a cooldown, and records file hash, commit, person and returned score.
+- **Submissions.** `make submit` validates the file format locally first, because a rejected submission still starts the cool-down. It then asks for a typed confirmation, refuses during a cool-down, and records file hash, commit, person and returned score.
 - **Secrets.** `HACKATHON_API_KEY` and `HF_TOKEN` live in `.env` on people's machines and on JURECA. Cloud agents do not get them; they work from committed answers and public data.
 - **Cluster.** Agents stay inside the team folder, submit jobs only through the job template and never modify ACLs or shared environments.
 
@@ -125,7 +128,8 @@ The lead runs `hackathon_setup.sh` with `HF_TOKEN` exported, because the waterma
 
 ## Not settled by this design
 
-- The watermark submission format and its limits, unknown until the gated starter kit is readable.
+- Submission limits for watermark and unlearning, which the task descriptions do not state. Until known, they are treated like model equality.
+- The contents of the watermark starter kit, unreadable until the gated dataset is accessible.
 - The unlearning proxy score, which is the owner's first piece of work.
 - Whether colleagues' Devin cloud sessions can see a private repo they do not own. Tested once they are invited; agents on their own machines work regardless.
 
