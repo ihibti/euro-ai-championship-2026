@@ -16,6 +16,10 @@ may hold. Two numbers come out of them:
   closed-form edit of the last layer does the same job without training.
 - the retain proxy: accuracy and KL at temperature 2 against the class-dial model on them.
 
+With --spare-classes N, N thinned classes get no hedge and none of their images is trained on.
+They stand in for the 55 classes we hold no image of: the drift on them is what the fine-tune
+does to classes it was never shown.
+
 Run in the JURECA task folder:
 
     python <repo>/tasks/unlearning/csd.py --name csd_f25_h8 --full 25 --hedge 8 --holdout 0.2
@@ -52,6 +56,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--aug-strength", type=float, default=1.0)
     parser.add_argument("--t2-weight", type=float, default=1.0)
     parser.add_argument("--holdout", type=float, default=0.0)
+    parser.add_argument("--spare-classes", type=int, default=0, help="thinned classes left alone")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--limit", type=int, default=0, help="first N images only, for smoke runs")
     parser.add_argument("--save", action="store_true", help="save the state dict even with holdout")
@@ -197,13 +202,22 @@ def main(argv: list[str] | None = None) -> None:
         images = images[: args.limit]
     labels = lib.logits_of(teacher, images).argmax(1)
     shift, beta = lib.class_plan(labels, args.full, args.hedge)
+    hedged = torch.nonzero(beta > 0).squeeze(1)
+    order = torch.randperm(len(hedged), generator=torch.Generator().manual_seed(args.seed))
+    spare = hedged[order[: args.spare_classes]]
+    beta[spare] = 0
     with torch.no_grad():
         student.head.bias -= shift.to(student.head.bias)
     is_full = shift[labels] > 0
+    is_spare = torch.isin(labels, spare)
     train_index, held_index = stratified_split(labels, args.holdout, args.seed)
+    train_index = train_index[~is_spare[train_index]]
+    held_index = held_index[~is_spare[held_index]]
+    spare_index = torch.nonzero(is_spare).squeeze(1)
     print(
         f"full classes={int((shift > 0).sum())} hedged classes={int((beta > 0).sum())} "
-        f"train={len(train_index)} held={len(held_index)}",
+        f"spare classes={spare.tolist()} train={len(train_index)} held={len(held_index)} "
+        f"spare={len(spare_index)}",
         flush=True,
     )
     history = []
@@ -212,7 +226,7 @@ def main(argv: list[str] | None = None) -> None:
             student, teacher, images[train_index], labels[train_index], shift, beta, args
         )
     report: dict = {"args": {k: str(v) for k, v in vars(args).items()}, "history": history}
-    for part, index in (("trained", train_index), ("held", held_index)):
+    for part, index in (("trained", train_index), ("held", held_index), ("spare", spare_index)):
         if len(index) == 0:
             continue
         orig_views = lib.view_logits(teacher, images[index], lib.EVAL_VIEWS)
@@ -236,7 +250,7 @@ def main(argv: list[str] | None = None) -> None:
     report["seconds"] = time.time() - started
     (args.out / f"{args.name}.json").write_text(json.dumps(report, indent=2) + "\n")
     summary = {"name": args.name}
-    for part in ("trained", "held"):
+    for part in ("trained", "held", "spare"):
         for group in ("full", "thinned"):
             exact = report.get(part, {}).get(group, {}).get("exact")
             if exact:
