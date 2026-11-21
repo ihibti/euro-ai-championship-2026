@@ -160,3 +160,29 @@ def make_sample(
     marked = strengthen(cover, embed(cover, bits), strength)
     image = np.where(mask[:, :, None].astype(bool), marked, cover)
     return image, mask, kind
+
+
+def make_aligned(
+    rng: np.random.Generator,
+    cover: np.ndarray,
+    mask: np.ndarray,
+    embed: Embed,
+    nbits: int,
+    method: str,
+    strength: float = 1.0,
+) -> tuple[np.ndarray, np.ndarray, str] | None:
+    ys, xs = np.nonzero(mask)
+    if len(ys) == 0:
+        return None
+    y0, y1, x0, x1 = int(ys.min()), int(ys.max()) + 1, int(xs.min()), int(xs.max()) + 1
+    bits = rng.integers(0, 2, nbits)
+    if mask[y0:y1, x0:x1].all():
+        height, width = y1 - y0, x1 - x0
+        if max(height / width, width / height) > MAX_ASPECT[method]:
+            return None
+        image = cover.copy()
+        crop = np.ascontiguousarray(cover[y0:y1, x0:x1])
+        image[y0:y1, x0:x1] = strengthen(crop, embed(crop, bits), strength)
+        return image, mask, "rect"
+    marked = strengthen(cover, embed(cover, bits), strength)
+    return np.where(mask[:, :, None].astype(bool), marked, cover), mask, "object"
