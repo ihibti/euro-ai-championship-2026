@@ -22,9 +22,9 @@ Consequences:
 
 | Who | Work |
 |---|---|
-| The lead's agent (orchestrator) | this plan, the cluster, reviews and merges, server actions inside the night authorization, the morning brief |
-| Opus agents, at most two at a time | model equality main line on the reference endpoints; the night authorization code; the judges' defense pack |
-| Devin | model equality, a second and independent method: `docs_and_plans/work/doing/devin-model-equality-second-method.md` |
+| The desk: the lead's agent, a plain `claude` session in the `brill` worktree (`desk-handoff.md`) | this plan, the cluster, reviews and merges, server actions inside the night authorization, the morning brief |
+| Opus agents, at most two at a time | model equality main line (`model-equality-main-line.md`); the judges' defense pack |
+| Devin, on another computer | model equality, a second and independent method: `docs_and_plans/work/doing/devin-model-equality-second-method.md`; talks to the desk through its pull request and issues |
 | The unlearning agent | unlearning; its commits and issues arrive under the lead's GitHub account (Requests to the desk in `AGENTS.md`) |
 
 Pacing: every agent has one goal, a stop rule and a file it writes to. The orchestrator wakes when an agent or a job ends, and otherwise every 30 to 60 minutes. Nothing polls. All state is in the repo, so a session that stops can be picked up from here.
@@ -69,3 +69,5 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 |---|---|---|
 | 22:27 | The 12-hour watermark job started | limit cut to 2 hours at 22:32; ends by 00:28 |
 | 22:40 | Main line started on the reference endpoints | branch `ihibti/model-equality-refs` |
+| 23:20 | Organizers' rules, requests to the desk and the night authorization on `main` | PR #20; status issue #19 pinned |
+| 23:30 | The desk moves to a plain `claude` session; the main line checkpoints and stops | `desk-handoff.md`, `model-equality-main-line.md` |
