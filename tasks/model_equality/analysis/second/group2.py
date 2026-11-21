@@ -64,12 +64,60 @@ def as_labels(groups: list[list[str]]) -> dict[str, tuple[str, str]]:
     return {e: ("F1", f"M{i}") for i, g in enumerate(groups, start=1) for e in g}
 
 
+def undecided(
+    labels: dict[str, tuple[str, str]], tests: dict, threshold: float = 1.645
+) -> list[tuple[str, str, float, bool]]:
+    low, high = threshold / np.sqrt(2.0), threshold * np.sqrt(2.0)
+    rows = []
+    for (a, b), test in sorted(tests.items()):
+        if labels[a][0] != labels[b][0]:
+            continue
+        z = s.standardized(test)
+        if low <= z <= high:
+            rows.append((a, b, z, labels[a] == labels[b]))
+    return rows
+
+
+def report(labels: dict[str, tuple[str, str]], tests: dict, prompts: dict[str, str]) -> str:
+    rows = undecided(labels, tests)
+    per_endpoint: dict[str, int] = {}
+    for a, b, _, _ in rows:
+        per_endpoint[a] = per_endpoint.get(a, 0) + 1
+        per_endpoint[b] = per_endpoint.get(b, 0) + 1
+    lines = [
+        "# Undecided pairs: where more answers settle the most",
+        "",
+        "A pair inside one family is undecided when its standardised z lies between"
+        " 1.645/sqrt(2) and 1.645*sqrt(2): doubling the answers moves a real difference of that"
+        " size past the threshold, and leaves a pure-noise pair below it most of the time.",
+        "",
+        f"Undecided pairs: {len(rows)} of"
+        f" {sum(labels[a][0] == labels[b][0] for a, b in tests)} pairs inside families.",
+        "",
+        "| endpoint | undecided pairs |",
+        "|---|---|",
+    ]
+    for endpoint, count in sorted(per_endpoint.items(), key=lambda kv: (-kv[1], kv[0])):
+        lines.append(f"| {endpoint} | {count} |")
+    lines += ["", "| a | b | z standardised | grouped now |", "|---|---|---|---|"]
+    for a, b, z, same in rows:
+        lines.append(f"| {a} | {b} | {z:.2f} | {'same' if same else 'different'} |")
+    decided = [t for (a, b), t in tests.items() if s.standardized(t) > 1.645 * np.sqrt(2.0)]
+    lines += ["", "Mean prompt z over the clearly different pairs (which prompts separate):", ""]
+    for qid in sorted(prompts):
+        values = [t.per_battery[qid] for t in decided if qid in t.per_battery]
+        if values:
+            lines.append(f"- `{qid}`: {np.mean(values):.2f} over {len(values)} pairs")
+    return "\n".join(lines) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--answers", type=Path, nargs="+", default=[TASK / "answers/round1.jsonl"])
     parser.add_argument("--prefix", required=True)
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--prompts", choices=sorted(PROMPT_SETS), default="all")
+    parser.add_argument("--prompts", choices=sorted(PROMPT_SETS), default="batteries")
+    parser.add_argument("--family-threshold", type=float, default=4.0)
     parser.add_argument("--alpha", type=float, default=0.05)
     parser.add_argument("--linkage", choices=["average", "complete"], default="average")
     parser.add_argument("--seed", type=int, default=20261122)
@@ -81,8 +129,13 @@ def main(argv: list[str] | None = None) -> int:
     corpus = s.build_corpus(rows, prefix=args.prefix)
     prompts = PROMPT_SETS[args.prompts]
     groups, tests = group(corpus, prompts, args.alpha, args.seed, args.linkage)
+    family_tests = s.all_pairs(
+        s.corpus_grams(corpus, PROMPT_SETS["all"]), sorted(corpus.answers), args.seed + 7
+    )
+    families = s.family_groups(groups, family_tests, args.family_threshold)
+    labels = s.nested_labels(families, groups)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(s.labels_csv(groups), encoding="utf-8")
+    args.out.write_text(s.labels_to_csv(labels), encoding="utf-8")
     with args.out.with_name(args.out.stem + "_pairs.csv").open("w", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(["a", "b", "z", "p", *sorted(prompts)])
@@ -100,6 +153,15 @@ def main(argv: list[str] | None = None) -> int:
     print(f"answers per endpoint and prompt: min {min(min(c.values()) for c in counts.values())}")
     for g in groups:
         print("group:", " ".join(g))
+    for f in families:
+        print("family:", " ".join(f))
+    text = report(labels, tests, prompts)
+    args.out.with_name(args.out.stem + "_report.md").write_text(text, encoding="utf-8")
+    with args.out.with_name(args.out.stem + "_family_pairs.csv").open("w", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["a", "b", "z_standardized", "p"])
+        for (a, b), test in sorted(family_tests.items()):
+            writer.writerow([a, b, f"{s.standardized(test):.3f}", f"{test.p:.5f}"])
 
     if args.prefix == "ref-":
         truth = parse_labels(TRUTH.read_text(encoding="utf-8"), prefix="ref-")

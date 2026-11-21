@@ -397,6 +397,12 @@ MODEL_PROMPTS: dict[str, str] = {
     "seq_days": "days",
     "seq_words40": "numberwords",
 }
+FAMILY_PROMPTS: dict[str, str] = {
+    **MODEL_PROMPTS,
+    "txt_story": "text",
+    "txt_health": "text",
+    "idn_identity": "text",
+}
 
 
 GAP = re.compile(r"^[\s,;.]*(?:\d{1,3}[.)]\s*)?(?:and\s+)?$", re.IGNORECASE)
@@ -461,9 +467,30 @@ def battery_gram(items: np.ndarray) -> np.ndarray:
     return hot @ hot.T
 
 
+def char_grams(text: str, size: int = 3) -> Counter:
+    plain = " ".join(normalize(text).split())
+    return Counter(plain[i : i + size] for i in range(max(len(plain) - size + 1, 0)))
+
+
+def text_gram(responses: Sequence[str]) -> np.ndarray:
+    profiles = [char_grams(r) for r in responses]
+    norms = [float(np.sqrt(sum(v * v for v in p.values()))) or 1.0 for p in profiles]
+    size = len(profiles)
+    gram = np.zeros((size, size))
+    for i in range(size):
+        for j in range(i, size):
+            shared = sum(
+                profiles[i][g] * profiles[j][g] for g in profiles[i].keys() & profiles[j].keys()
+            )
+            gram[i, j] = gram[j, i] = shared / (norms[i] * norms[j])
+    return gram
+
+
 def gram_matrix(kind: str, prompt: str, responses: Sequence[str]) -> np.ndarray:
     if kind in ("choice", "trivia"):
         return battery_gram(battery_matrix(kind, prompt, responses))
+    if kind == "text":
+        return text_gram(responses)
     contents = [sequence_content(kind, r) for r in responses]
     return np.array([[bigram_kernel(a, b) for b in contents] for a in contents])
 
@@ -636,11 +663,12 @@ def average_linkage(
     tests: Mapping[tuple[str, str], PermutationTest],
     threshold: float = 1.645,
     veto: float = 0.001,
+    start: Sequence[Sequence[str]] | None = None,
 ) -> list[list[str]]:
     def test_of(a: str, b: str) -> PermutationTest:
         return tests[(a, b)] if (a, b) in tests else tests[(b, a)]
 
-    groups = [[name] for name in sorted(names)]
+    groups = [list(g) for g in start] if start is not None else [[name] for name in sorted(names)]
     while True:
         best: tuple[float, int, int] | None = None
         for i, j in itertools.combinations(range(len(groups)), 2):
@@ -654,6 +682,35 @@ def average_linkage(
         _, i, j = best
         groups[i] = groups[i] + groups[j]
         del groups[j]
+
+
+def family_groups(
+    models: Sequence[Sequence[str]],
+    tests: Mapping[tuple[str, str], PermutationTest],
+    threshold: float = 4.0,
+) -> list[list[str]]:
+    names = [e for g in models for e in g]
+    return average_linkage(names, tests, threshold=threshold, veto=0.0, start=models)
+
+
+def nested_labels(
+    families: Sequence[Sequence[str]], models: Sequence[Sequence[str]]
+) -> dict[str, tuple[str, str]]:
+    family_of = {e: f"F{i}" for i, fam in enumerate(families, start=1) for e in fam}
+    labels: dict[str, tuple[str, str]] = {}
+    count = 0
+    for group in models:
+        for fam in sorted({family_of[e] for e in group}):
+            count += 1
+            for e in group:
+                if family_of[e] == fam:
+                    labels[e] = (fam, f"{fam}-M{count}")
+    return labels
+
+
+def labels_to_csv(labels: Mapping[str, tuple[str, str]]) -> str:
+    rows = [f"{e},{f},{m}" for e, (f, m) in sorted(labels.items())]
+    return "\n".join(["endpoint,family,model", *rows]) + "\n"
 
 
 def labels_csv(groups: Sequence[Sequence[str]], family_of: Mapping[str, str] | None = None) -> str:

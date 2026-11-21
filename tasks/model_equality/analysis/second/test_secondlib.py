@@ -160,3 +160,23 @@ def test_disagreements_lists_pairs_decided_differently():
     theirs = {"a": ("G", "x"), "b": ("G", "y"), "c": ("G", "y")}
     assert disagreements(mine, theirs) == [("a", "b", True, False), ("b", "c", False, True)]
     assert family_disagreements(mine, theirs) == []
+
+
+def test_family_groups_join_whole_model_groups_and_nested_labels_keep_models_inside_families():
+    def test(z):
+        return s.PermutationTest(z, 0.5, {"q": z})
+
+    tests = {
+        ("a", "b"): test(0.5),
+        ("a", "c"): test(2.0),
+        ("b", "c"): test(2.5),
+        ("a", "d"): test(9.0),
+        ("b", "d"): test(9.0),
+        ("c", "d"): test(9.0),
+    }
+    families = s.family_groups([["a", "b"], ["c"], ["d"]], tests, threshold=4.0)
+    assert families == [["a", "b", "c"], ["d"]]
+    labels = s.nested_labels(families, [["a", "b"], ["c"], ["d"]])
+    assert labels["a"] == labels["b"]
+    assert labels["a"][0] == labels["c"][0] and labels["a"][1] != labels["c"][1]
+    assert labels["d"][0] != labels["a"][0]
