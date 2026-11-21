@@ -85,3 +85,11 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 23:58 | Round 1 on the references at 40 answers: MCC 0 in both modes | not spent on the scored endpoints; near-tie probes `night_a` and `night_b` run on the references first (`tasks/model_equality/research_night.md`) |
 | 00:03 | `run_sixth.sh` at `2dcdbdd` started on the four GPUs of the running job (#21) | `run_fifth.sh` ended at 00:00, reports on `desk/unlearning` |
 | 00:07 | Unlearning `x4_e20.pt` submitted | public 0.0336, up from 0.0063; next slot at 00:38 (`scale_t4.pt`) |
+| 00:22 | A test run on the lead's main laptop sent one request with a test key to the organizers' server (HTTP 401) | cause: the script tests acted on the night authorization; fixed in PR #31, merged 00:37; the stray record was never committed |
+| 00:28 | Job 15903485 ended at its limit | `run_sixth.sh`: `t6_t2` to `t6_t5` saved and checked, four runs cut; reports on `desk/unlearning` at `0735d6f` |
+| 00:29 | Job 15904049 submitted for `run_seventh.sh` at `7ea0106` (team check empty, four GPUs, limit 1 h 15) | cancelled at 00:40: the unlearning agent replaced the batch four minutes after the start |
+| 00:38 | Unlearning `scale_t4.pt` submitted | public 0.0057; best stays 0.0336; the reading "gold is soft everywhere" is out |
+| 00:40 | First scored answers: five round-1 prompts at 2 repeats on the 33 endpoints (330 answers) | in `answers/round1.jsonl` on `ihibti/model-equality-refs`; rows carry the response time |
+| 00:41 | Job 15904082 submitted for `run_seventh.sh` at `d926e1e`, after the cancelled job had left the queue and the team check printed nothing | limit 1 h 15; ends by itself |
+| 00:41 | The JURECA link dropped, seconds after the submission | only the lead can reopen it; no JURECA work until then; notification sent |
+| 00:46 | `dial12`, `dial15`, `dial20` built on the lead's main laptop from the original rebuilt out of `scale_t4.pt` | sha256 on #12; 01:08 slot armed on the queue's first open line |
