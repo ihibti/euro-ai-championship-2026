@@ -37,11 +37,14 @@ sys.path.insert(0, str(HERE / "upstream"))
 sys.path.insert(0, str(HERE))
 
 from evidence_features import mean_miou  # noqa: E402
-from synth import GRID, SIDE, make_sample, to_grid  # noqa: E402
+from synth import GRID, SIDE, make_aligned, make_sample, to_grid  # noqa: E402
 from wmloc.watermarks import load_watermark  # noqa: E402
 
 VALIDATION_COVERS = 300
 SYNTHETIC_VALIDATION = 150
+DATASET_COVERS = Path("covers/dataset_512.npy")
+DATASET_INDEX = Path("covers/dataset_512.json")
+DATASET_VALIDATION = 100
 
 
 def held_out(name: str) -> bool:
@@ -100,26 +103,61 @@ class Buffer:
         return self.images[index], self.masks[index]
 
 
-def produce(samples, stop, boost, covers_path: Path, method: str, bank, seed: int) -> None:
+def other_method_covers(method: str) -> tuple[list[int], list[int], list[dict]]:
+    index = json.loads(DATASET_INDEX.read_text())
+    others = [i for i, row in enumerate(index) if row["method"] != method]
+    aligned = [
+        i
+        for i in others
+        if index[i]["split"] == "train"
+        and index[i]["kind"] in ("object", "rect")
+        and not index[i]["held_out"]
+    ]
+    return (
+        others[:-DATASET_VALIDATION],
+        others[-DATASET_VALIDATION:],
+        [index[i] | {"at": i} for i in aligned],
+    )
+
+
+def produce(
+    samples, stop, boost, covers_path: Path, method: str, bank, seed: int, real_share, aligned_share
+) -> None:
     covers = np.load(covers_path, mmap_mode="r")
     usable = len(covers) - VALIDATION_COVERS
     wm = load_watermark(method, models_dir=Path("models"), device="cuda")
     rng = np.random.default_rng(seed)
+    pool, others, aligned = None, [], []
+    if real_share > 0 or aligned_share > 0:
+        pool = np.load(DATASET_COVERS, mmap_mode="r")
+        others, _, aligned = other_method_covers(method)
+        for row in aligned:
+            mask = Image.open(Path("release/train/masks") / f"{row['name']}.png")
+            row["mask"] = (np.asarray(mask) > 127).astype(np.uint8)
     failures = 0
     while not stop.is_set():
-        cover = np.ascontiguousarray(covers[int(rng.integers(usable))])
-        if rng.random() < 0.5:
-            cover = np.ascontiguousarray(cover[:, ::-1])
         ceiling = boost.value
         strength = float(np.exp(rng.uniform(0, np.log(ceiling)))) if ceiling > 1.0 else 1.0
+        draw = rng.random()
         try:
-            image, mask, _ = make_sample(rng, cover, wm.embed, wm.nbits, method, bank, strength)
+            made = None
+            if draw < aligned_share and aligned:
+                row = aligned[int(rng.integers(len(aligned)))]
+                cover = np.ascontiguousarray(pool[row["at"]])
+                made = make_aligned(rng, cover, row["mask"], wm.embed, wm.nbits, method, strength)
+            if made is None:
+                if draw < aligned_share + real_share and others:
+                    cover = pool[others[int(rng.integers(len(others)))]]
+                else:
+                    cover = covers[int(rng.integers(usable))]
+                cover = np.ascontiguousarray(cover[:, ::-1] if rng.random() < 0.5 else cover)
+                made = make_sample(rng, cover, wm.embed, wm.nbits, method, bank, strength)
         except Exception as error:
             failures += 1
             if failures <= 5:
                 print(f"generator {seed}: {type(error).__name__}: {error}", flush=True)
             continue
-        samples.put((image, to_grid(mask)))
+        samples.put((made[0], to_grid(made[1])))
 
 
 def collect(samples, buffer: Buffer, stop) -> None:
@@ -251,6 +289,23 @@ def main() -> None:
     parser.add_argument("--highpass", action="store_true", help="add fine-detail input channels")
     parser.add_argument("--all-real", action="store_true", help="train on the held-out fifth too")
     parser.add_argument("--covers", type=Path, default=Path("covers/ddb_512.npy"))
+    parser.add_argument(
+        "--real-covers",
+        type=float,
+        default=0.0,
+        help="share of samples built on dataset images of the other methods",
+    )
+    parser.add_argument(
+        "--aligned",
+        type=float,
+        default=0.0,
+        help="share of samples that reuse the mask of another method's train image",
+    )
+    parser.add_argument(
+        "--roll-real",
+        action="store_true",
+        help="shift real train images at random, half of the time",
+    )
     args = parser.parse_args()
 
     device = "cuda"
@@ -298,6 +353,15 @@ def main() -> None:
         synthetic_truth.append(to_grid(mask))
     synthetic = torch.from_numpy(np.stack(synthetic)).to(device)
     synthetic_truth = np.stack(synthetic_truth)
+    on_dataset, on_dataset_truth = None, None
+    if DATASET_COVERS.exists():
+        pool = np.load(DATASET_COVERS, mmap_mode="r")
+        made = [
+            make_sample(rng, np.ascontiguousarray(pool[i]), wm.embed, wm.nbits, args.method, bank)
+            for i in other_method_covers(args.method)[1]
+        ]
+        on_dataset = torch.from_numpy(np.stack([image for image, _, _ in made])).to(device)
+        on_dataset_truth = np.stack([to_grid(mask) for _, mask, _ in made])
 
     del wm
     torch.cuda.empty_cache()
@@ -309,7 +373,17 @@ def main() -> None:
     workers = [
         context.Process(
             target=produce,
-            args=(samples, stop, boost, args.covers, args.method, bank, 100 + index),
+            args=(
+                samples,
+                stop,
+                boost,
+                args.covers,
+                args.method,
+                bank,
+                100 + index,
+                args.real_covers,
+                args.aligned,
+            ),
             daemon=True,
         )
         for index in range(args.workers)
@@ -353,6 +427,11 @@ def main() -> None:
                     mean_miou((predict(ema, synthetic) >= 0.5).astype(np.uint8), synthetic_truth), 4
                 ),
             }
+            if on_dataset is not None:
+                record["synthetic_on_dataset"] = round(
+                    mean_miou((predict(ema, on_dataset) >= 0.5).astype(np.uint8), on_dataset_truth),
+                    4,
+                )
             print(json.dumps(record), flush=True)
             log.write(json.dumps(record) + "\n")
             log.flush()
@@ -372,8 +451,14 @@ def main() -> None:
         images, masks = buffer.sample(args.batch - args.real)
         if args.real:
             pick = fit_index[torch.randint(0, len(fit_index), (args.real,), device=device)]
-            images = torch.cat([images, real[pick]])
-            masks = torch.cat([masks, real_truth[pick]])
+            picked, picked_masks = real[pick], real_truth[pick]
+            if args.roll_real and torch.rand(()) < 0.5:
+                dy, dx = (int(v) for v in torch.randint(0, GRID, (2,)))
+                cell = SIDE // GRID
+                picked = torch.roll(picked, (dy * cell, dx * cell), (1, 2))
+                picked_masks = torch.roll(picked_masks, (dy, dx), (1, 2))
+            images = torch.cat([images, picked])
+            masks = torch.cat([masks, picked_masks])
         net.train()
         with torch.autocast("cuda", dtype=torch.float16):
             logits = net(images)
