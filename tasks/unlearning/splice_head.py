@@ -1,11 +1,14 @@
-"""Write a submission state dict: the original model with its last layer replaced from a small file.
+"""Write a submission state dict: the original model with its last layer replaced or rescaled.
 
-head_fit.py writes `weight` [100, 768] and `bias` [100]. This loads model.pt, replaces
-`head.weight` and `head.bias`, checks shapes and finiteness, and saves float32. CPU, seconds; run
-on a JURECA login node in the unlearning task folder:
+head_fit.py writes `weight` [100, 768] and `bias` [100]. With --head, this loads model.pt, replaces
+`head.weight` and `head.bias`, checks shapes and finiteness, and saves float32. With --scale t, it
+divides the last layer by t instead: every logit is divided by t, the predicted class never
+changes, so accuracy and the utility gate are those of the original. CPU, seconds; run on a JURECA
+login node in the unlearning task folder:
 
     python <repo>/tasks/unlearning/splice_head.py --head <repo>/tasks/unlearning/heads/<name>.npz \
         --save output/kkrgp/<name>.pt
+    python <repo>/tasks/unlearning/splice_head.py --scale 3 --save output/kkrgp/scale_t3.pt
 """
 
 from __future__ import annotations
@@ -31,15 +34,27 @@ def splice(state: dict[str, torch.Tensor], weight: np.ndarray, bias: np.ndarray)
     return out
 
 
+def scale_head(state: dict[str, torch.Tensor], temperature: float) -> dict:
+    if not temperature > 0:
+        raise ValueError("the temperature must be positive")
+    head = state["head.weight"].float().numpy() / temperature
+    return splice(state, head, state["head.bias"].float().numpy() / temperature)
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--model", type=Path, default=Path("model.pt"))
-    parser.add_argument("--head", type=Path, required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--head", type=Path)
+    source.add_argument("--scale", type=float, help="divide the last layer by this temperature")
     parser.add_argument("--save", type=Path, required=True)
     args = parser.parse_args(argv)
     state = torch.load(args.model, map_location="cpu", weights_only=True)
-    with np.load(args.head) as head:
-        out = splice(state, head["weight"], head["bias"])
+    if args.scale is not None:
+        out = scale_head(state, args.scale)
+    else:
+        with np.load(args.head) as head:
+            out = splice(state, head["weight"], head["bias"])
     args.save.parent.mkdir(parents=True, exist_ok=True)
     torch.save(out, args.save)
     digest = hashlib.sha256(args.save.read_bytes()).hexdigest()

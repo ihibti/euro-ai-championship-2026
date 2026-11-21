@@ -70,10 +70,12 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--targets", type=Path, required=True)
     parser.add_argument("--ks", default="1.6,2,3")
     parser.add_argument("--lams", default="0.1,1,10,100")
+    parser.add_argument("--taus", default="1", help="targets divided by tau after the K step")
     parser.add_argument("--holdout", type=float, default=0.2)
     parser.add_argument("--save", type=Path)
     parser.add_argument("--save-k", type=float, default=0.0)
     parser.add_argument("--save-lam", type=float, default=1.0)
+    parser.add_argument("--save-tau", type=float, default=1.0)
     args = parser.parse_args(argv)
     data = np.load(args.features)
     labels = torch.from_numpy(data["labels"]).long()
@@ -86,7 +88,8 @@ def main(argv: list[str] | None = None) -> None:
     step = torch.zeros_like(logits["exact"])
     step[:, columns] = proxy[:, columns] - logits["exact"][:, columns]
     if args.save:
-        weight, bias = ridge_head_delta(feats["exact"], args.save_k * step, args.save_lam)
+        wanted = (logits["exact"] + args.save_k * step) / args.save_tau - logits["exact"]
+        weight, bias = ridge_head_delta(feats["exact"], wanted, args.save_lam)
         head_w = torch.from_numpy(data["head_weight"]) + weight
         head_b = torch.from_numpy(data["head_bias"]) + bias
         np.savez(args.save, weight=head_w.numpy(), bias=head_b.numpy())
@@ -97,23 +100,29 @@ def main(argv: list[str] | None = None) -> None:
     held = stratified_holdout(labels, args.holdout)
     fit = ~held
     rows = []
-    for k in (float(value) for value in args.ks.split(",")):
-        for lam in (float(value) for value in args.lams.split(",")):
-            weight, bias = ridge_head_delta(feats["exact"][fit], k * step[fit], lam)
-            row = {"K": k, "lam": lam}
-            for view in views:
-                edited = logits[view] + feats[view] @ weight.T + bias
-                row[f"fit_{view}"] = profile(edited[fit], labels[fit], logits[view][fit])
-                row[f"held_{view}"] = profile(edited[held], labels[held], logits[view][held])
-            rows.append(row)
-            fit_exact, held_exact = row["fit_exact"], row["held_exact"]
-            print(
-                f"K={k:<4} lam={lam:<6} fit: loss {fit_exact['loss_mean']:.3f}/"
-                f"{fit_exact['loss_std']:.3f} on_label {fit_exact['on_label']:.3f} | held: loss "
-                f"{held_exact['loss_mean']:.3f} on_label {held_exact['on_label']:.3f} "
-                f"KL {held_exact['kl_orig_sub_t2']:.3f}",
-                flush=True,
-            )
+    grid = [
+        (float(k), float(tau), float(lam))
+        for k in args.ks.split(",")
+        for tau in args.taus.split(",")
+        for lam in args.lams.split(",")
+    ]
+    for k, tau, lam in grid:
+        wanted = (logits["exact"] + k * step) / tau - logits["exact"]
+        weight, bias = ridge_head_delta(feats["exact"][fit], wanted[fit], lam)
+        row = {"K": k, "tau": tau, "lam": lam}
+        for view in views:
+            edited = logits[view] + feats[view] @ weight.T + bias
+            row[f"fit_{view}"] = profile(edited[fit], labels[fit], logits[view][fit])
+            row[f"held_{view}"] = profile(edited[held], labels[held], logits[view][held])
+        rows.append(row)
+        fit_exact, held_exact = row["fit_exact"], row["held_exact"]
+        print(
+            f"K={k:<4} tau={tau:<3} lam={lam:<6} fit: loss {fit_exact['loss_mean']:.3f}/"
+            f"{fit_exact['loss_std']:.3f} on_label {fit_exact['on_label']:.3f} | held: loss "
+            f"{held_exact['loss_mean']:.3f} on_label {held_exact['on_label']:.3f} "
+            f"KL {held_exact['kl_orig_sub_t2']:.3f}",
+            flush=True,
+        )
     Path("output/kkrgp/head_fit.json").write_text(json.dumps(rows, indent=2) + "\n")
 
 
