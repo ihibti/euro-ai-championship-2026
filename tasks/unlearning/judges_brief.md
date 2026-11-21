@@ -37,8 +37,17 @@ This keeps the number of submissions small and makes every submission an experim
 ## What the evidence says about gold (as of 00:30)
 
 - The two positive scores together favour golds that are **confidently wrong on most forget images** (accuracy about a third, loss mean 5 to 8). Soft golds, which would make one temperature the right answer, predicted `x3_ext_m80` at ten times its score.
-- This fits the data: the original and gold are ViT-B/16 trained from scratch (the organizers' template: `pretrained=False`, LayerScale), which generalise poorly from small data, and the forget images include near-duplicate classes (six "sunset over water" classes among the labels 29 to 35).
+- This fits the data: the original and gold are ViT-B/16 trained from scratch (the organizers' template: `pretrained=False`, LayerScale), which generalise poorly from small data, and the forget images are concentrated on look-alike classes: labels 29, 30, 31 and 33 are four kinds of small boat on misty water, each among the nine classes that lost 130 images, next to 32 (fishing boats, 104 images) and 23 (bridges over water).
 - Under such golds, the best targets for the forget images are the cross-fitted step extrapolated about 3 times and tempered by 2 to 4 (predicted forget side 0.2 to 0.35). The obstacles are realising them (our fine-tunes reached a fifth of the target loss) and keeping the change on the forget images (unseen images of the same classes took 85% of the change in `d5_e30_probe`).
+
+## The utility gate binds, and it shapes everything
+
+A submission under 70% accuracy on the hidden validation set scores 0. Two of our scores pin the original's validation accuracy A in a narrow band:
+
+- `bias_full30` lowers nine classes everywhere, so it gets every validation image of those classes wrong (9% of a balanced set). Under every gold that fits our positive scores, its forget side would have been well above 0, so its 0 is the gate: A × 0.91 < 70%, so **A < 76.9%**.
+- `x4_e20` passed. Its spill probes suggest it changes about 4.7% of the predictions on images it never trained on, so **A ≥ about 73.5%**.
+
+So a submission may change only about 5 to 9% of validation predictions. That rules out every class-level edit of the nine classes past their margin, and the stronger fine-tunes (`x5_*`, estimated at 9 to 11%, never submitted). It turns the problem into one of **localisation**: change the forget images and their slight alterations, and nothing else. Dividing all logits by a temperature is the one edit that is gate-safe by construction (the predicted class never changes), which is why `scale_t4` was a safe test. The fine-tunes requested after midnight carry an anchor that holds the original's outputs on images it never memorised (blends of two forget images of different classes), and probes that measure the spill before any of them is queued.
 
 ## The plateau at 0.16
 
