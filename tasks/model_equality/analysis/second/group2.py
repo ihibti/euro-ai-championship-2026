@@ -19,9 +19,11 @@ import csv
 import statistics
 from pathlib import Path
 
+import nightlib as n
 import numpy as np
 import secondlib as s
 
+from euroai.me_labels import canonical_labels, render_rows
 from euroai.me_score import parse_labels, same_model_mcc
 
 HERE = Path(__file__).resolve().parent
@@ -34,12 +36,23 @@ PROMPT_SETS = {
 }
 
 
-def group(
-    corpus: s.Corpus, prompts: dict[str, str], alpha: float, seed: int, linkage: str = "average"
-) -> tuple[list[list[str]], dict]:
-    grams = s.corpus_grams(corpus, prompts)
+def pair_tests(corpus: s.Corpus, probes: str, prompts: dict[str, str], seed: int, kind: str):
     endpoints = sorted(corpus.answers)
-    tests = s.all_pairs(grams, endpoints, seed)
+    if probes == "night":
+        return n.all_pairs(n.build_tables(corpus), endpoints, seed, kind)
+    return s.all_pairs(s.corpus_grams(corpus, prompts), endpoints, seed)
+
+
+def group(
+    corpus: s.Corpus,
+    prompts: dict[str, str],
+    alpha: float,
+    seed: int,
+    linkage: str = "average",
+    probes: str = "round1",
+) -> tuple[list[list[str]], dict]:
+    endpoints = sorted(corpus.answers)
+    tests = pair_tests(corpus, probes, prompts, seed, "mode")
     if linkage == "complete":
         groups = s.complete_linkage(endpoints, {k: t.p for k, t in tests.items()}, alpha)
     else:
@@ -118,6 +131,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--prompts", choices=sorted(PROMPT_SETS), default="batteries")
     parser.add_argument("--family-threshold", type=float, default=4.0)
+    parser.add_argument("--probes", choices=["round1", "night"], default="night")
     parser.add_argument("--alpha", type=float, default=0.05)
     parser.add_argument("--linkage", choices=["average", "complete"], default="average")
     parser.add_argument("--seed", type=int, default=20261122)
@@ -127,15 +141,18 @@ def main(argv: list[str] | None = None) -> int:
 
     rows = [row for path in args.answers for row in s.read_jsonl(path)]
     corpus = s.build_corpus(rows, prefix=args.prefix)
-    prompts = PROMPT_SETS[args.prompts]
-    groups, tests = group(corpus, prompts, args.alpha, args.seed, args.linkage)
-    family_tests = s.all_pairs(
-        s.corpus_grams(corpus, PROMPT_SETS["all"]), sorted(corpus.answers), args.seed + 7
-    )
+    if args.probes == "night":
+        corpus = n.pool_ids(corpus)
+        prompts = dict(n.NIGHT_PROMPTS)
+    else:
+        prompts = PROMPT_SETS[args.prompts]
+    groups, tests = group(corpus, prompts, args.alpha, args.seed, args.linkage, args.probes)
+    family_tests = pair_tests(corpus, args.probes, PROMPT_SETS["all"], args.seed + 7, "mmd")
     families = s.family_groups(groups, family_tests, args.family_threshold)
     labels = s.nested_labels(families, groups)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(s.labels_to_csv(labels), encoding="utf-8")
+    rows_out = canonical_labels([(e, f, m) for e, (f, m) in labels.items()])
+    args.out.write_text(render_rows(rows_out), encoding="utf-8")
     with args.out.with_name(args.out.stem + "_pairs.csv").open("w", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(["a", "b", "z", "p", *sorted(prompts)])
@@ -172,7 +189,9 @@ def main(argv: list[str] | None = None) -> int:
             scores = []
             for draw in range(args.subsample):
                 sub = subsample(corpus, args.subsample_size, rng)
-                sub_groups, _ = group(sub, prompts, args.alpha, args.seed + 2 + draw, args.linkage)
+                sub_groups, _ = group(
+                    sub, prompts, args.alpha, args.seed + 2 + draw, args.linkage, args.probes
+                )
                 scores.append(same_model_mcc(truth, as_labels(sub_groups)).mcc)
             ordered = sorted(scores)
             print(
