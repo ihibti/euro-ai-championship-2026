@@ -5,3 +5,11 @@ x4_e12.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_
 x4_e14.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
 x4_e16.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
 x4_e20.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+
+Run on JURECA from runs/442697b with the unlearning .venv, 2026-11-22 00:02 Paris:
+python scripts/submit.py --task unlearning --file ../../output/kkrgp/x5_<name>.pt --check
+
+x5_e25.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+x5_e30.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+x5_e40.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+x5_e30_b6.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
