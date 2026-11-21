@@ -122,8 +122,12 @@ def self_mean(vectors: Sequence[Vector]) -> float:
 
 
 def similarity_matrix(
-    cells: Mapping[str, Mapping[str, Sequence[Vector]]], kinds: Sequence[str]
+    cells: Mapping[str, Mapping[str, Sequence[Vector]]],
+    kinds: Sequence[str],
+    mode: str = "pooled",
 ) -> tuple[list[str], np.ndarray]:
+    if mode == "prompt":
+        return prompt_similarity_matrix(cells, kinds)
     endpoints = sorted(cells)
     prompts = sorted(
         {p for e in endpoints for p in cells[e] if kind_of(p) in kinds},
@@ -143,7 +147,27 @@ def similarity_matrix(
     sim = np.eye(n)
     for i, j in itertools.combinations(range(n), 2):
         denominator = math.sqrt(max(own[i], 1e-9) * max(own[j], 1e-9))
-        sim[i, j] = sim[j, i] = min(1.0, cross[i, j] / denominator)
+        sim[i, j] = sim[j, i] = cross[i, j] / denominator
+    return endpoints, sim
+
+
+def prompt_similarity_matrix(
+    cells: Mapping[str, Mapping[str, Sequence[Vector]]], kinds: Sequence[str]
+) -> tuple[list[str], np.ndarray]:
+    endpoints = sorted(cells)
+    prompts = sorted({p for e in endpoints for p in cells[e] if kind_of(p) in kinds})
+    own = {(e, p): self_mean(cells[e].get(p, [])) for e in endpoints for p in prompts}
+    n = len(endpoints)
+    sim = np.eye(n)
+    for i, j in itertools.combinations(range(n), 2):
+        values = []
+        for p in prompts:
+            a, b = own[(endpoints[i], p)], own[(endpoints[j], p)]
+            if not (a > 0 and b > 0):
+                continue
+            cross = cross_mean(cells[endpoints[i]].get(p, []), cells[endpoints[j]].get(p, []))
+            values.append(cross / math.sqrt(a * b))
+        sim[i, j] = sim[j, i] = float(np.mean(values)) if values else 0.0
     return endpoints, sim
 
 
@@ -188,23 +212,105 @@ def write_csv(path: Path, rows: Sequence[tuple[str, str, str]]) -> None:
         writer.writerows(rows)
 
 
+def split_cells(
+    cells: Mapping[str, Mapping[str, Sequence[Vector]]],
+) -> dict[str, dict[str, list[Vector]]]:
+    out: dict[str, dict[str, list[Vector]]] = {}
+    for endpoint, prompts in cells.items():
+        out[f"{endpoint}#a"] = {p: list(v[0::2]) for p, v in prompts.items()}
+        out[f"{endpoint}#b"] = {p: list(v[1::2]) for p, v in prompts.items()}
+    return out
+
+
+def self_split_distance(
+    cells: Mapping[str, Mapping[str, Sequence[Vector]]],
+    kinds: Sequence[str],
+    mode: str = "pooled",
+) -> dict[str, float]:
+    halves = split_cells(cells)
+    names, sim = similarity_matrix(halves, kinds, mode)
+    index = {name: i for i, name in enumerate(names)}
+    return {e: float(1 - sim[index[f"{e}#a"], index[f"{e}#b"]]) for e in cells}
+
+
+def model_threshold(noise: Mapping[str, float], factor: float) -> float:
+    values = np.array(list(noise.values()), dtype=float)
+    return factor * float(np.sqrt(np.mean(values**2)))
+
+
+def merge_clusters(distance: np.ndarray, labels: Sequence[int], threshold: float) -> list[int]:
+    groups = sorted(set(labels))
+    members = {g: [i for i, label in enumerate(labels) if label == g] for g in groups}
+    between = np.zeros((len(groups), len(groups)))
+    for a, b in itertools.combinations(range(len(groups)), 2):
+        value = float(
+            np.mean([distance[i, j] for i in members[groups[a]] for j in members[groups[b]]])
+        )
+        between[a, b] = between[b, a] = value
+    coarse = average_linkage(between, threshold)
+    lookup = {g: coarse[k] for k, g in enumerate(groups)}
+    return [lookup[label] for label in labels]
+
+
+def decide(
+    rows: Iterable[Mapping[str, object]],
+    prefix: str = "ref-",
+    factor: float = 3.0,
+    family_threshold: float = 0.5,
+    report: dict | None = None,
+    kinds: Sequence[str] = MODEL_KINDS,
+    mode: str = "pooled",
+) -> list[tuple[str, str, str]]:
+    cells = collect(rows, prefix)
+    endpoints, model_sim = similarity_matrix(cells, kinds, mode)
+    noise = self_split_distance(cells, kinds, mode)
+    threshold = model_threshold(noise, factor)
+    if not math.isfinite(threshold):
+        raise ValueError("self-split noise undefined: need at least 4 repeats of every prompt")
+    model = average_linkage(1 - model_sim, threshold)
+    _, family_sim = similarity_matrix(cells, FAMILY_KINDS)
+    family = merge_clusters(1 - family_sim, model, family_threshold)
+    if report is not None:
+        report.update(
+            endpoints=endpoints,
+            model_sim=model_sim,
+            family_sim=family_sim,
+            noise=noise,
+            threshold=threshold,
+        )
+    return nested_labels(endpoints, family, model)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--answers", nargs="+", required=True)
     parser.add_argument("--prefix", default="ref-")
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--model-threshold", type=float, default=0.1)
+    parser.add_argument("--factor", type=float, default=3.0)
     parser.add_argument("--family-threshold", type=float, default=0.5)
+    parser.add_argument("--below", type=int, default=None, help="use only repeats below this")
     args = parser.parse_args(argv)
-    cells = collect(load_rows(args.answers), args.prefix)
-    endpoints, model_sim = similarity_matrix(cells, MODEL_KINDS)
-    _, family_sim = similarity_matrix(cells, FAMILY_KINDS)
-    family = average_linkage(1 - family_sim, args.family_threshold)
-    model = average_linkage(
-        1 - model_sim + 2.0 * (np.subtract.outer(family, family) != 0), args.model_threshold
+    rows = load_rows(args.answers)
+    if args.below is not None:
+        rows = [row for row in rows if int(row["repeat"]) < args.below]
+    report: dict = {}
+    labels = decide(
+        rows,
+        prefix=args.prefix,
+        factor=args.factor,
+        family_threshold=args.family_threshold,
+        report=report,
     )
-    write_csv(args.out, nested_labels(endpoints, family, model))
-    print(f"wrote {args.out}: {len(set(family))} families, {len(set(model))} models")
+    write_csv(args.out, labels)
+    endpoints = report["endpoints"]
+    print(f"model cut {report['threshold']:.3f} (factor x rms self-split distance)")
+    print("model distance (1 - similarity); last column: self-split distance")
+    for i, endpoint in enumerate(endpoints):
+        cells = " ".join(f"{1 - report['model_sim'][i, j]:.2f}" for j in range(len(endpoints)))
+        print(f"{endpoint} {cells} | {report['noise'][endpoint]:.2f}")
+    families = {family for _, family, _ in labels}
+    models = {model for _, _, model in labels}
+    print(f"wrote {args.out}: {len(families)} families, {len(models)} models")
     return 0
 
 
