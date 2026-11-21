@@ -32,7 +32,7 @@ This keeps the number of submissions small and makes every submission an experim
 | 21:19 | `bias_full30` | nine classes' outputs lowered by 30 everywhere | positive under the reading that whole classes were removed | 0.00 | that reading is wrong, or the gate failed (nine classes lost on the validation set) |
 | 23:37 | `x3_ext_m80` | fine-tune of the last 3 blocks towards a blend of the original and the cross-fitted prediction | small but positive | 0.0063 | first positive score; far smaller than the golds the dial assumed |
 | 00:08 | `x4_e20` | the same, towards the cross-fitted step extrapolated 2 times | much above 0.0063 if the dial points the right way | 0.0336 | the dial points the right way; five times the previous |
-| 00:38 | `scale_t4` | every logit divided by 4 (last layer / 4), no training | about 0.008 under the golds that fit the scores so far; 0.1 or more under soft golds | pending | pending |
+| 00:38 | `scale_t4` | every logit divided by 4 (last layer / 4), no training | about 0.008 (0.004 to 0.013) under the golds that fit the scores so far; 0.1 or more under soft golds | 0.0057 | the prediction held; soft golds, and with them a temperature as the answer, are out |
 
 ## What the evidence says about gold (as of 00:30)
 
