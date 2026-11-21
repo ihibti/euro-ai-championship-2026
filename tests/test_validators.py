@@ -131,6 +131,20 @@ def test_me_empty_label_rejected():
     assert any("empty" in error for error in validate_model_equality("\n".join(lines)))
 
 
+def test_me_family_must_be_capital_letters():
+    lines = me_lines()
+    lines[1] = "ep-01,F01,F011"
+    assert any("capital letters" in error for error in validate_model_equality("\n".join(lines)))
+
+
+def test_me_model_must_be_family_letter_and_number():
+    lines = me_lines()
+    lines[1] = "ep-01,A,B1"
+    assert any("family letter" in error for error in validate_model_equality("\n".join(lines)))
+    lines[1] = "ep-01,A,A"
+    assert any("family letter" in error for error in validate_model_equality("\n".join(lines)))
+
+
 def test_unlearning_valid():
     assert validate_unlearning({"w": np.zeros((2, 2), dtype=np.float32)}) == []
 

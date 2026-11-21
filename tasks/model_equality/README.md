@@ -74,6 +74,25 @@ From `upstream/task_template.py`:
 | ref-08 | P | S | sampling at temperature 1.0 |
 | ref-09 | P | T2 | LoRA at strength 0.3 |
 
+## Organizers' update on the labels, relayed by the lead on 2026-11-21 at 23:53
+
+Word for word:
+
+> The most important update on the task description is:
+>
+> The same letter (A, B, C, D, and so on) should be used for the same model family. To indicate the case base mode, you indicate the family letter and the number of the base model (e.g., A1, A2, …, B1, B2, …). For example, A1 denotes that this is the first based model from the family A, and A2 is the second base model also from family A.
+>
+> For example, the family column for endpoints ep-01 and ep-03 both contain A, so you are indicating that they are the same model family. ep-02 say B, so that is a different model family. For example model column: A1 and A2 shows that they are from the same model family A but different endpoints while B1 for both ep-02 and ep03 depict they are the same endpoints.
+
+> The leaderboard only reports the validation score. The final (test) score likely differs.
+
+How we apply it:
+
+- The `family` column holds a capital letter (`A`, `B`, …). The `model` column holds that letter and a number (`A1`, `A2`, `B1`, …). Two endpoints with the same `model` value are the same model.
+- `make check` and `make submit` refuse any other label format.
+- `uv run python scripts/me_labels.py <grouping.csv> <out.csv>` rewrites any grouping in this format without changing which endpoints share a label.
+- The floor submitted at 23:36 used `F01`/`M01` labels and scored 0.0, as an all-different answer must.
+
 ## Submission
 
 A `.csv` file with one line per endpoint and three columns, `endpoint,family,model`. The header line is optional, line order does not matter, and labels are any text without commas.

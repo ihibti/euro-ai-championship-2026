@@ -2,14 +2,36 @@
 
 Written on 2026-11-21 at about 23:30 by the previous desk session, for the plain `claude` session the lead starts in this worktree. Read all of it before acting. Then keep it current: when a fact here changes, change it here.
 
+## Ban risk: the JURECA rules come before everything else
+
+The lead on 2026-11-21 at 23:53: breaking a GPU rule can get the team banned during the night. The rules are in `jsc/organizer-rules.md`, word for word, and in `CLAUDE.md` at the workspace root above this worktree. Re-read them before every command that touches JURECA.
+
+- **One job for the whole team, running or pending, and no chained follow-up.** At 23:47 this desk chained a 5-hour job behind the running one and cancelled it at 23:54: a pending job counts, and a job that waits for work wastes a node.
+- **The team check before every `sbatch`, and `sbatch` only from inside the team folder.**
+- **A job exists only for work that is ready.** It asks for the time the work needs, at most 2 hours, uses the four GPUs when the work allows, and ends when the work ends.
+- **No workaround** other than the general queue the organizers named (no `--reservation` line).
+- **Few files**: at most a few hundred per step, no unpacked archives.
+- **SSH** only through `jureca-mux`, never in a retry loop.
+
+Everything else tonight is the desk's judgment: the lead delegated it at 23:45, with the top 6 as the goal.
+
 ## You are the desk
 
 - You are the lead's agent, on the lead's laptop, in `/Users/ismingfromchina/orca/workspaces/euro-ai-championship-2026/brill`. Only this session is the desk. You orchestrate and decide; long analysis goes to subagents.
 - The lead (`ihibti`) sleeps from about 23:30 to 09:00. After that, the lead prepares for the judges and has little time for the models. The event ends on 2026-11-22 at 12:00 Paris time. Make the last submission per task by 11:00, which leaves a slot if it fails.
 - You own **model equality** (its owner has been out since the 21st) and **watermark**.
-- **Unlearning** belongs to `kkrgp`'s agent. It works through the lead's GitHub account, so its commits and issues show `ihibti`.
-- **Devin** runs on another computer and builds a second method for model equality.
+- **Unlearning** belongs to the unlearning agent, on the lead's second laptop. It works through the lead's GitHub account, so its commits and issues show `ihibti`.
+- **Devin** builds a second method for model equality. Since about 23:20 it runs on the lead's second laptop, which it shares with the unlearning agent (#24). That laptop holds no scoreboard key.
 - Both reach you only through GitHub, by the protocol in `AGENTS.md`, section Requests to the desk. Pinned status issue: #19.
+
+## State at 23:40, from the second desk session
+
+- The handshake for the night is on #19: the three agents acked their roles there by 23:35. Its body holds the role table and the timeline. Do not open another handshake.
+- The night authorization exists since 23:36: until 09:00, 80 answers used per scored endpoint, submissions 5 model equality, 12 unlearning, 1 watermark.
+- Submitted at 23:36: the model equality floor (public 0.0) and watermark c6 (public 0.7444). The watermark slot of the authorization is used.
+- Unlearning: the queue file exists (`submit_queue.md` at `0ddc834` or later) and is the only source. It has no `map_even40.pt` line, on purpose (#12).
+- A background watcher (`gh api` every minute) reports new teammate comments, issues, PRs and pushes to `kkrgp/*` and `devin/*`. It expires after 30 minutes; re-arm it at each wake.
+- Read the clock (`date +%H:%M`) before writing a time in an issue. Two posts carried a wrong time tonight.
 
 ## Rules beyond AGENTS.md and the lead's CLAUDE.md
 
