@@ -36,6 +36,7 @@ Read from the leaderboard page on 2026-11-21:
 | `tasks/model_equality/answers/` | Every endpoint answer collected so far. Never delete or rewrite. |
 | `src/euroai/` | Shared, tested utilities. |
 | `jsc/` | JURECA access, event setup, job templates. |
+| `.github/ISSUE_TEMPLATE/` | `task.md` for a work brief, `gpu-request.md` to ask the lead for a GPU run. |
 | `docs_and_plans/` | Plans (`work/todo`, `work/doing`, `work/done`) and guides. |
 | `docs_and_plans/guides/teammate-onboarding.md` | Step-by-step setup of a teammate's laptop, token and JURECA access. |
 
@@ -74,7 +75,8 @@ uv run --extra api python scripts/me_query.py --budget   answers left on every e
 4. **Do not tune to the public leaderboard.** It covers about 30% of the data. Judge methods locally.
 5. **JURECA.**
    - Stay inside the team folder `/p/scratch/training2666/hibti1/Begg/`. Each task's README has an On JURECA section.
-   - Submit jobs only through the job template.
+   - **Only the lead's account runs GPU jobs** (rule from the lead, 2026-11-21 19:30). Everyone else, human or agent, never runs `sbatch`, `srun` or `salloc`. To get a GPU run, push your code and open an issue with `.github/ISSUE_TEMPLATE/gpu-request.md`. The lead's agent runs it and answers on the issue.
+   - **The whole team uses at most 4 GPUs at the same time, and a job uses one GPU.** The lead's agent keeps the count and submits only through the job template.
    - Never change ACLs or shared `.venv`s, and never rerun the setup scripts.
    - Compute nodes have no internet, so download on login nodes.
 6. **Laptop agents reach JURECA only through `ssh jureca-mux ...`, and only after `ssh -O check jureca` succeeds.** If no connection is open, stop and ask a human. Never retry SSH in a loop: JSC firewall-blocks addresses that open too many connections.
@@ -83,6 +85,7 @@ uv run --extra api python scripts/me_query.py --budget   answers left on every e
 ## Work contract
 
 - Work starts from an issue that follows `.github/ISSUE_TEMPLATE/task.md`. Assign yourself before starting.
+- A GPU run is asked for with `.github/ISSUE_TEMPLATE/gpu-request.md` (hard rule 5). Push the code first: the lead's agent runs the commit you name, and nothing else.
 - Use one branch and one PR per issue. Never push to `main`.
 - A PR quotes the command and the number before and after, and lists what was tried, including what failed.
 - Each task has one owner (table under Start here). The owner merges PRs that touch only `tasks/<task>/`, once the quoted command reproduces. Changes outside task directories go through the lead.

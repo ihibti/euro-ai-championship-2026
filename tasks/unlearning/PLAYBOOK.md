@@ -2,7 +2,7 @@
 
 For the agent of the task owner, `kkrgp`. `README.md` in this folder is the task statement and stays the reference for every rule and formula. This page is how we play it: the mindset, what we already measured, the working loop on JURECA and the first moves. Read `AGENTS.md` and the README first.
 
-You run the task end to end: you design, run GPU jobs, write code, open issues and merge PRs inside `tasks/unlearning/`. Your human does what cannot be undone: submitting.
+You run the task end to end: you design, write code, ask for GPU runs, open issues and merge PRs inside `tasks/unlearning/`. Your human does what cannot be undone: submitting.
 
 ## The game in five facts
 
@@ -76,16 +76,8 @@ Paths: `T=/p/scratch/training2666/hibti1/Begg/unlearning` holds `model.pt`, `for
    ```
    git archive --format=tar HEAD | ssh jureca-mux 'mkdir -p /p/scratch/training2666/hibti1/Begg/unlearning/repo && tar -xf - -C /p/scratch/training2666/hibti1/Begg/unlearning/repo'
    ```
-2. **Render a job from the template and submit it.** The job runs in `T` with its `.venv`:
-   ```
-   ssh jureca-mux 'bash -s' <<'EOF'
-   T=/p/scratch/training2666/hibti1/Begg/unlearning
-   cd $T/repo && mkdir -p $T/output
-   $T/.venv/bin/python scripts/render_template.py jsc/jureca_gpu.sbatch.template JOB_NAME=<name> TASK_DIR=$T TIME=00:30:00 COMMAND="python $T/repo/tasks/unlearning/<script>.py" > $T/output/<name>.sbatch
-   sbatch $T/output/<name>.sbatch
-   EOF
-   ```
-3. **Watch it**, at most once a minute: `ssh jureca-mux 'sacct -n -X -j <jobid> -o State,Elapsed'`. The log is `T/output/<jobid>.out`, and errors are in `<jobid>.err`.
+2. **Ask for the GPU run; do not submit it yourself.** Since 2026-11-21 19:30 only the lead's account runs GPU jobs (`AGENTS.md`, hard rule 5), so never run `sbatch`, `srun` or `salloc`. Push your branch, then open an issue with `.github/ISSUE_TEMPLATE/gpu-request.md`: the commit, the exact command, the time limit and the files you want back. The lead's agent unpacks that commit into `T/repo`, runs the job in `T` with its `.venv`, and answers on the issue with the job number and the result.
+3. **Wait for the answer on the issue.** The log is `T/output/<jobid>.out`, and errors are in `<jobid>.err`.
 4. **Bring back small files only** (numbers, logs) with `scp jureca-mux:<path> <local path>`, and commit them. Weights stay in `T/output/`.
 5. **Check a candidate without submitting.** You may run this; it takes a few seconds on the login node:
    ```
@@ -105,7 +97,7 @@ Paths: `T=/p/scratch/training2666/hibti1/Begg/unlearning` holds `model.pt`, `for
      ```
 
 Notes:
-- A job gets a whole node. A program started with `srun` sees one A100 with 40 GB; the batch script itself lists four. Whether using all four is allowed is an open question for the organizers.
+- A job uses one A100 with 40 GB. The whole team has at most 4 GPUs at the same time, so say in the request when you need the result.
 - Compute nodes have no internet. The reservation ends on 2026-11-22 at 14:00.
 - One pass of the original model over the 3,500 images and four altered copies took under a minute.
 - No live submission has been made by anyone yet, for any task. The first one also tests the upload path.

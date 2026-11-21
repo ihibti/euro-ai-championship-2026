@@ -86,7 +86,7 @@ The kit was tested on Python 3.11 with torch 2.5.1 and CUDA 12.4 wheels (`upstre
 - `models/`: videoseal at the pinned commit, the PixelSeal checkpoint and the StegaStamp ONNX. All three wrappers were loaded once on the login node, so the lazily fetched TrustMark weights are cached and jobs can run offline.
 - Data: `release/train/` and `release/test/`.
 - Baseline: the official all-zeros prediction scores **0.2518** on the 510 train images (recorded in `results/`). A valid test file is at `output/baseline_allzeros.pt`; it has not been submitted.
-- Run GPU work with `jsc/jureca_gpu.sbatch.template` and `TASK_DIR` set to this folder (see `jsc/README.md`, Submitting a job): one A100 40 GB per job (`gpu:1`, 8 CPUs) on reservation `cispahack`, which ends 2026-11-22 14:00. Compute nodes have no internet.
+- GPU work runs from the lead's account only: ask for it with `.github/ISSUE_TEMPLATE/gpu-request.md` (`AGENTS.md`, hard rule 5). A job uses `jsc/jureca_gpu.sbatch.template` with `TASK_DIR` set to this folder (see `jsc/README.md`, Submitting a job): one A100 40 GB (`gpu:1`, 8 CPUs) on reservation `cispahack`, which ends 2026-11-22 14:00. The team has at most 4 GPUs at the same time. Compute nodes have no internet.
 
 ## Submission
 
