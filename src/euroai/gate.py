@@ -188,6 +188,10 @@ def run_submission(
     except OSError as exc:
         status_code, body = None, None
         status, score, message = "error", None, f"{type(exc).__name__}: {exc}"
+    except KeyboardInterrupt:
+        status_code, body = None, None
+        status, score = "error", None
+        message = "interrupted during the upload; the server may have received the file"
     person = deps.person()
     record = {
         "task": task,

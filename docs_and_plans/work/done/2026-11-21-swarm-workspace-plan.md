@@ -145,3 +145,53 @@ The CLI requires `--spend` plus typing the total number of scored answers at a T
 - `test_submit_refuses_without_tty`
 
 - [ ] Run `make data TASK=model_equality` once; it is about 28 KB and public. Then `make lint && make test`, commit and push.
+
+## Execution record (2026-11-21)
+
+All seven tasks are done on `ihibti/setup-hackathon-swarm-workspace`. The final review was a self-review, because the build ran without subagents.
+
+### Rulings
+
+- Ruling: final whole-branch review is a self-review — the fork directive forbids subagents — weaker than a fresh reviewer.
+- Task 1: Ruling: secrets are read from the process environment, then ~/.config/euroai/.env (EUROAI_SECRETS_FILE overrides); a new src/euroai/credentials.py (pure parser plus thin loader, tested with temp files) is added in Task 5 and reused by Tasks 6 and 7 — coordinator decision — cost if wrong: one module to swap.
+- Task 1: Ruling: vendored tasks/*/upstream/ is excluded from ruff — organizer code is copied unmodified and fails our line length — cost if wrong: unlinted organizer code, which we never edit.
+- Task 1: Ruling: README status line and the stale 'Challenge — TBD' section are rewritten now, not in Task 7 — colleagues read README first and the old text says no project is chosen — cost if wrong: none, Task 7 still updates layout and quickstart.
+- Task 3: Ruling: coordinator correction — AGENTS.md rule 1 reworded so the 30-minute limit is team policy, official only for model equality; committed separately — cost if wrong: none.
+- Task 4: Ruling: validate_unlearning rejects every dtype other than float32, integer buffers included (the plan allowed integer buffers) — the server rejects other dtypes, timm vit_base_patch16_224 has no integer buffers, and the organizers' template casts every entry to float32 — cost if wrong: none for this architecture.
+- Task 4: Ruling: validators fail closed — a .pt that cannot be loaded (torch missing, or torch.load(weights_only=True) fails) is an error, not a skip; only the timm strict load is skippable, with a note — a submission we cannot check costs a 30-minute slot — cost if wrong: laptops need the torch extra to submit .pt files (handled in Task 7).
+- Task 4: Ruling: validate_file adds a one-line summary note per task (endpoint/family/model counts, mask count and marked fraction, tensor count) — the gate shows it before the typed confirmation, so an all-zero or all-different answer is visible — cost if wrong: a few lines of code.
+- Task 4: Ruling: coordinator update — the watermark kit is readable, so the kit is vendored, PENDING.md is removed and server_task_id is 34-watermark-localisation-image; the earlier ruling that make submit refuses watermark while the id is unknown is void — cost if wrong: none.
+- Task 4: Ruling: added src/euroai/wm_score.py (official per-image mIoU over the train split, per-method breakdown, metadata names) as a coordinator-requested extension, wired into make score in Task 7 — pure numpy, no torch for .npz answers — cost if wrong: one module.
+- Task 5: Ruling: SubmitDeps gains read_file (secrets file reader, for tests) and validate (defaults to validate_file; the CLI adds the watermark test names) beyond the plan's fields — needed for the coordinator's secrets rule and the test-name check — cost if wrong: two extra fields.
+- Task 5: Ruling: the plan's test_unknown_watermark_task_id_refuses became test_task_without_server_id_refuses (monkeypatched registry), because the watermark id is now known; the refusal branch stays for any task without an id — cost if wrong: none.
+- Task 5: Ruling: run_submission gains check_only (make check): validation and cool-down status, never a TTY, key or upload — lets agents verify a file without submitting — cost if wrong: one flag.
+- Task 5: Ruling: network errors (OSError, which covers requests exceptions) after confirmation are recorded as error attempts and block the next 30 minutes, since the upload may have reached the server — cost if wrong: a 30-minute wait after a purely local failure.
+- Task 5: Ruling: the API key is scrubbed (raw and JSON-escaped) from every printed line and the whole record, including server responses that echo it — defence in depth — cost if wrong: none.
+- Task 6: Ruling: blank lines in .txt prompt files are skipped while ids stay the line index (upstream sends them as empty prompts) — saves budget, ids stay compatible with upstream answer files — cost if wrong: none.
+- Task 6: Ruling: 5xx and network retries are capped at 20 per job (upstream retries forever); 429 waits with Retry-After are not capped but clamped to 300 s — an unattended run cannot spin forever — cost if wrong: a few jobs reported failed during a long outage, rerun resumes them.
+- Task 6: Ruling: a 200 reply without an answer in the body is saved raw with response null, so the spent answer is never re-asked — cost if wrong: one line to delete by hand.
+- Task 6: Ruling: one answers file per prompt set (--name, default the prompts file stem); a run refuses if that file holds different prompt text under the same ids — prevents resume keys from silently skipping new prompts — cost if wrong: choosing a new --name.
+- Task 7: Ruling: the Makefile does not pass --env-file .env (plan) — superseded by the coordinator's secrets rule; credentials.py reads ~/.config/euroai/.env itself — cost if wrong: none.
+- Task 7: Ruling: make check added (submit.py --check); make submit and make check add --extra torch for the .pt tasks, make score adds it for .pt answers — .pt files cannot be read without torch — cost if wrong: a one-time torch install on the machine that submits.
+- Task 7: Ruling: score.py and board.py take --results so tests write records to a temp dir, never into the repo — cost if wrong: none.
+- Task 7: Ruling: coordinator update — the job template now hard-codes the event values (training2666, cispahack, dc-gpu, gpu:1, 8 CPUs, logs in TASK_DIR/output) with placeholders JOB_NAME, TASK_DIR, TIME, COMMAND; it activates the task folder's .venv instead of our env scripts — cost if wrong: a job needing our repo env must source it in COMMAND.
+- Task 1: Ruling: the jureca-mux block is added to jsc/ssh_config.template, so agents reuse the human's connection and never open one — cost if wrong: none.
+- Task 2: Ruling: size limits are decimal (20,000,000 and 450,000,000 bytes), the stricter reading of 20 MB and 450 MB — cost if wrong: a file between 20.0 and 20.97 MB is refused locally.
+- Task 3: Ruling: the local model-equality score is the same-model MCC over the 36 reference pairs, exactly as score_practice.py, not the server's 0.1/0.9 formula, whose family term is degenerate on the references — cost if wrong: none.
+- Final: Ruling: server behaviour (cool-down counting, response fields, header-less CSVs) is taken from the organizers' files and never tested against the server, which was out of scope — the first real submission is recorded either way — cost if wrong: one surprising first attempt.
+- Final: Ruling: the strict load was verified with the latest PyPI torch and timm, not JURECA's torch 2.15.0 and timm 1.0.31 — same architecture name and arguments as the organizers' template — cost if wrong: a false strict-load failure, shown before any upload.
+
+### Fixed in the final review
+
+- unquoted inline comments in the secrets file were kept as part of the value (a wrong key burns a submission slot) — test_parse_env_text_inline_comments RED→GREEN, suite 181/181 (3 skipped)
+- an upload interrupted with Ctrl-C left no submission record although the server may have received it — test_interrupted_upload_is_recorded_and_blocks RED→GREEN, suite 181/181 (3 skipped)
+
+### Deferred minors
+
+- format_board left-strips its header and long recorded_at values overflow their column, so the board is misaligned.
+- submission records store the file path as given, which can include a local home path.
+- the watermark test-name check runs only when data/watermark_localization/release/test/metadata.json exists in the checkout; otherwise it is skipped with a note. A NAMES= override would cover JURECA and laptops.
+- a malformed record JSON (for example a merge conflict) makes make submit and make board fail with a traceback; this fails closed.
+- network errors on me_query's GET /models surface as a traceback.
+- the submitted file is hashed twice (summary and record).
+- jsc/README.md step 5 still says there is no git remote yet (older text).

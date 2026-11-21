@@ -6,6 +6,7 @@ Values are never printed. Messages name only the variable and the file path.
 from __future__ import annotations
 
 import os
+import re
 import stat
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -27,10 +28,14 @@ class SecretLookup:
     value: str | None = field(default=None, repr=False)
 
 
-def _unquote(value: str) -> str:
-    if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
-        return value[1:-1]
-    return value
+def _value(raw: str) -> str:
+    raw = raw.strip()
+    if raw and raw[0] in "'\"":
+        end = raw.find(raw[0], 1)
+        if end > 0:
+            return raw[1:end]
+        return raw
+    return re.split(r"\s+#", raw, maxsplit=1)[0].rstrip()
 
 
 def parse_env_text(text: str) -> dict[str, str]:
@@ -42,7 +47,7 @@ def parse_env_text(text: str) -> dict[str, str]:
         key, value = line.split("=", 1)
         key = key.strip().removeprefix("export ").strip()
         if key:
-            values[key] = _unquote(value.strip())
+            values[key] = _value(value)
     return values
 
 

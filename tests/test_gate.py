@@ -44,7 +44,7 @@ class Harness:
 
     def post(self, url, headers, path):
         self.posts.append((url, dict(headers), path))
-        if isinstance(self.response, Exception):
+        if isinstance(self.response, BaseException):
             raise self.response
         return self.response
 
@@ -204,3 +204,12 @@ def test_check_only_validates_without_tty_key_or_post(tmp_path, answer):
     )
     assert harness.posts == [] and harness.prompts == []
     assert "not submitted" in harness.output() and "33 endpoints" in harness.output()
+
+
+def test_interrupted_upload_is_recorded_and_blocks(tmp_path, answer):
+    harness = Harness(tmp_path, response=KeyboardInterrupt())
+    assert harness.run(answer) == 1
+    [record] = load_records(harness.records)
+    assert record["status"] == "error" and "interrupted" in record["message"]
+    harness.now = NOW + timedelta(minutes=1)
+    assert harness.run(answer) == 2

@@ -70,3 +70,8 @@ def test_permission_warning():
     assert permission_warning(path, 0o100600) is None
     warning = permission_warning(path, 0o100644)
     assert warning and "chmod 600" in warning and str(path) in warning
+
+
+def test_parse_env_text_inline_comments():
+    text = "\n".join(["A=abc # team key", 'B="x # y"', "C=abc#def", "D='q'  # note", "E="])
+    assert parse_env_text(text) == {"A": "abc", "B": "x # y", "C": "abc#def", "D": "q", "E": ""}
