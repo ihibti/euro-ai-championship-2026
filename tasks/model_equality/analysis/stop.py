@@ -21,7 +21,7 @@ Copy-only, frozen at 00:53 Paris before any fresh P1 answer existed (p1_copycont
 the answer, stripped, is at most 10 characters longer than the passage it was told to copy and
 continue, so it stops at the end of the copy or before it. Same decision, same alpha.
 
-Counts, frozen at 00:57 Paris before any scored P3 answer existed, for capable models that stop
+Counts, frozen at 00:54 Paris before any scored P3 answer existed, for capable models that stop
 before the cap so that the cap-hit rate is flat: the number of whole-word repetitions of
 "river" (p3_repeat, d1_repeat150), of words (d2_story100) and of list items (d3_openlist; an
 item is a piece between commas, semicolons or newlines, with list markers and a leading

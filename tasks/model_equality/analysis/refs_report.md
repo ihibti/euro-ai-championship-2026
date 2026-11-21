@@ -290,6 +290,83 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
   Against plain alone (10 against 10) the p-values are 0.37, 0.07 and 0.18. Under the desk's pass rule (difference in rate from plain > largest difference among disguises, 0.3): LoRA 0.7 (0.5) and LoRA 1.5 (0.4) pass; LoRA 0.3 (0.3) ties, so fails; fp8 (0.1) fails.
 - Conclusion: P4 fails for every pair type; its signal is format compliance, which the disguises move as much as the weights. P3 fails as a count but carries a LoRA signal in its stop decision. That was the research's prediction (the stop is a near-tie) on a binary feature: the LoRA copies fail to stop. The feature was defined after looking at these answers, at a natural gap, and needs a confirmation run on fresh answers before it decides a scored pair. It does nothing for fp8. On a scored family it would be read against that family's own majority of same-model copies, which needs the family and its disguised copies to be found first.
 
+## E12. Length and cap hits per prompt from existing answers; which prompts carry the LoRA dose; a post hoc fp8 candidate (2026-11-22 00:55)
+
+- Question (desk): for every prompt already asked, answer length and cap-hit rate per reference. For fp8, L0.3, L0.7 and L1.5, the gap from the same-model copies against the spread among the five copies. Which prompts carry the LoRA dose?
+- Command: `uv run python tasks/model_equality/analysis/lengths.py --answers tasks/model_equality/answers/round1.jsonl tasks/model_equality/answers/night-a.jsonl tasks/model_equality/answers/night-b.jsonl` (tested).
+  - Gap: the endpoint's value minus that of the pooled answers of the copies (for a copy, of the other four).
+  - Spread: the largest absolute gap among the copies.
+  - `*`: absolute gap above the spread.
+  - Cap hit: the frozen rule of `stop.py`.
+- Median characters per answer (plain), and each model's gap:
+
+| prompt | n | plain | fp8 | L0.3 | L0.7 | L1.5 | copies spread |
+|---|---|---|---|---|---|---|---|
+| seq_count30 | 4 | 110 | +0 | +2 | +1 | +164 * | 22 |
+| seq_alphabet | 4 | 108 | +106 * | +80 * | +130 * | +367 * | 58 |
+| seq_months | 4 | 122 | -18 | -18 | -18 | +1048 * | 72 |
+| seq_days | 4 | 63 | +12 | -0 | -0 | +1064 * | 48 |
+| seq_words40 | 4 | 508 | +6 | +4 | -58 | +218 | 291 |
+| bat_trivia | 4 | 387 | -137 * | -133 * | +22 | +4 | 58 |
+| bat_choice | 4 | 170 | +0 | +0 | +0 | +332 * | 54 |
+| txt_story | 4 | 1145 | -124 | +78 | +78 | +90 | 154 |
+| txt_health | 4 | 753 | -34 | -144 | +114 | +472 * | 431 |
+| idn_identity | 4 | 198 | -104 | +15 | +209 | +599 * | 242 |
+| p1_copycont | 10 | 514 | -58 * | -37 * | -58 * | +730 * | 30 |
+| p2_binary | 10 | 234 | -164 * | +0 | +0 | +60 | 80 |
+| p4_nextword | 10 | 486 | +288 | +93 | +323 | +411 | 456 |
+| p3_repeat | 10 | 56 | -32 | +1178 * | +1498 * | +1498 * | 115 |
+
+- Cap hits per endpoint (01 03 05 06 08 02 09 04 07), and each model's rate gap:
+
+| prompt | n | cap hits | fp8 | L0.3 | L0.7 | L1.5 | copies spread |
+|---|---|---|---|---|---|---|---|
+| seq_count30 | 4 | 0 0 0 0 0 0 0 0 0 | +0.00 | +0.00 | +0.00 | +0.00 | 0.00 |
+| seq_alphabet | 4 | 0 0 0 0 0 1 0 0 2 | +0.25 * | +0.00 | +0.00 | +0.50 * | 0.00 |
+| seq_months | 4 | 0 0 0 0 0 0 0 0 3 | +0.00 | +0.00 | +0.00 | +0.75 * | 0.00 |
+| seq_days | 4 | 0 0 0 0 0 0 0 0 3 | +0.00 | +0.00 | +0.00 | +0.75 * | 0.00 |
+| seq_words40 | 4 | 2 1 2 0 0 1 1 0 2 | +0.00 | +0.00 | -0.25 | +0.25 | 0.31 |
+| bat_trivia | 4 | 0 0 1 1 0 1 0 0 0 | +0.15 | -0.10 | -0.10 | -0.10 | 0.19 |
+| bat_choice | 4 | 0 1 0 0 0 0 0 0 3 | -0.05 | -0.05 | -0.05 | +0.70 * | 0.25 |
+| txt_story | 4 | 3 2 2 2 2 2 4 4 4 | -0.05 | +0.45 * | +0.45 * | +0.45 * | 0.25 |
+| txt_health | 4 | 1 0 3 2 3 2 2 2 4 | +0.05 | +0.05 | +0.05 | +0.55 | 0.56 |
+| idn_identity | 4 | 0 0 0 0 0 0 0 0 1 | +0.00 | +0.00 | +0.00 | +0.25 * | 0.00 |
+| p1_copycont | 10 | 0 0 0 0 0 0 0 0 8 | +0.00 | +0.00 | +0.00 | +0.80 * | 0.00 |
+| p2_binary | 10 | 0 1 0 5 1 1 1 1 6 | -0.04 | -0.04 | -0.04 | +0.46 * | 0.45 |
+| p4_nextword | 10 | 3 5 7 1 2 5 4 6 8 | +0.14 | +0.04 | +0.24 | +0.44 * | 0.42 |
+| p3_repeat | 10 | 4 0 3 3 1 2 6 9 10 | -0.02 | +0.38 * | +0.68 * | +0.78 * | 0.28 |
+
+- How to read the stars: if the five copies and one other endpoint were exchangeable, the other endpoint would pass by chance about once in six prompts. fp8 passes on length on 4 of 14 prompts, L0.3 on 4, L0.7 on 3. That is chance level on its own; only the rank tests below go further.
+- The dose ladder:
+  - **L1.5** runs on nearly everywhere. It overruns lists with a natural end (months, days, alphabet, count to 30: 3 of 4 cap hits or a median of +1,000 characters), the batteries, identity and P1. Any of these prompts finds it.
+  - **L0.7 and L0.3** stop correctly at the end of a list. They are visible only where the stop is a judgment call: the P3 repetition (cap rate +0.68 and +0.38) and the 200-word story (4 of 4 cap hits each, against 11 of 20 for the copies; 4 repeats only).
+  - **No prompt tonight orders L0.3 against L0.7** beyond the spread. On P3 the rates are ordered (6, 9, 10 of 10), but L0.7 and L1.5 are within one answer of each other, and L0.3 against L0.7 is Fisher p 0.30.
+  - So the dose reads as two levels, "runs on everywhere" (1.5) and "runs on only at a judgment stop" (0.3, 0.7). Under the scoring each LoRA strength is its own model, so L0.3 against L0.7 remains unseparated.
+- Timing (desk, `elapsed_s` in the scored rows, 168 rows at 00:55):
+  - Response time is 19.63 to 24.89 s, median 19.80 s, standard deviation 0.67 s, against answers of 59 to 1,271 characters.
+  - A linear fit gives a slope of -0.34 s per 1,000 characters (correlation -0.23), and the per-endpoint medians span 19.64 to 19.86 s. That is a server-side pace, not generation time.
+  - **The timing idea is dropped.** `analysis/timing.py` was not written.
+- A post hoc fp8 candidate: the stop right after the copy in P1. P1 asks for the passage copied, then about 120 more words. The copied passage alone is 437 characters, and it ends mid-sentence on "but". Answers of at most 447 characters (copy-only: stopped at the end of the copy or before it):
+  - copies: 01 3, 03 1, 05 0, 06 0, 08 3, so 7 of 50;
+  - **fp8 9 of 10** (Fisher against the 50 copies, p 7e-6);
+  - L0.3 5 (p 0.021), L0.7 6 (p 0.004), L1.5 0 (p 0.59).
+  - On length itself, a rank permutation test against the other copies (4,000 draws) gives fp8 p < 0.00025, L0.7 0.038 and L0.3 0.057. Every copy has p >= 0.07 on the six prompts tested.
+- Statistics scanned before the find, so the fresh run is judged against that:
+  - 14 prompts × 2 statistics × 4 models = 112 gap comparisons in the tables above;
+  - then 6 prompts × 4 models = 24 length rank tests, on the prompts with starred gaps;
+  - then the copy-only cut, defined after seeing P1's mass of answers at exactly 437 characters.
+  - The length rank test, Bonferroni-corrected over 136, stays below 0.04. The cut's own p is post hoc and not evidence.
+- Reading of the P1 candidate: not monotonic in the LoRA strength (5, 6, 0 of 10). It reads as a near-tie stop decision, whether to emit the end of answer right after the copied passage, that any weight change moves in its own direction:
+  - fp8 and the lighter LoRAs stop more often;
+  - L1.5, which has lost the stop habit, never stops.
+  - On its own it cannot tell fp8 from L0.3 and L0.7. Together with P3, where fp8 sits with the copies (2 of 10 against 6 to 10), it would separate fp8 from every LoRA: **copy-only high, P3 cap rate low**.
+- Confirmation: `d4_copycont` (P1 verbatim) was added to `probes/night_d.csv` on the desk's order. The copy-only rule was frozen in `stop.py` at 00:53, before any fresh P1 answer existed. The chain runs it at about 01:08, at 10 repeats.
+- Other frozen rules for the scored endpoints (desk: a capable model may never reach the cap, so the cap-hit rate could be flat). `stop.py` now also counts:
+  - "river" repetitions (P3, d1);
+  - words (d2);
+  - list items (d3).
+  The count of each endpoint is compared with its family's remaining endpoints by a two-sided rank permutation test (20,000 draws, seed 0), using the same iterative setting apart at alpha 0.01. It was frozen at 00:54, before any scored P3 answer existed. On the old P3 answers it sets apart L0.7 (p 0.0007), L0.3 (p 0.0019) and L1.5 (p 0.0031), and keeps fp8 with the copies.
+
 ## Status at handoff (2026-11-22 00:40, interim; the desk is spending recon on the scored endpoints)
 
 **Done in this run (23:30 to 00:40)**

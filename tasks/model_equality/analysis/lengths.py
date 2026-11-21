@@ -116,12 +116,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"| {prompt_id} | {n} | {plain} | {cols} | {spread:.0f} |")
         hits = {e: [cap_hit(t) for t in v] for e, v in texts.items()}
         rgap, rspread = gaps(hits, SAME, pooled_rate)
-        own = " ".join(f"{stats[e].cap_rate:.1f}" for e in (*SAME, *(o for o, _ in OTHERS)))
+        own = " ".join(
+            str(round(stats[e].cap_rate * stats[e].count)) for e in (*SAME, *(o for o, _ in OTHERS))
+        )
         rcols = " | ".join(cell(rgap, rspread, e, 2) for e, _ in OTHERS)
-        rates.append(f"| {prompt_id} | {own} | {rcols} | {rspread:.2f} |")
-    print("\nCap-hit rate per endpoint (01 03 05 06 08 | 02 09 04 07); gap from the pooled copies")
-    print(f"| prompt | rates | {names} | copies spread |")
-    print("|---|---|---|---|---|---|---|")
+        rates.append(f"| {prompt_id} | {n} | {own} | {rcols} | {rspread:.2f} |")
+    print("\nCap hits per endpoint (01 03 05 06 08 02 09 04 07); rate gap from the pooled copies")
+    print(f"| prompt | n | cap hits | {names} | copies spread |")
+    print("|---|---|---|---|---|---|---|---|")
     print("\n".join(rates))
     print("\n* = absolute gap above the spread among the five same-model copies")
     return 0
