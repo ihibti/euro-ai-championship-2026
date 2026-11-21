@@ -14,7 +14,7 @@ The organizers publish a README and two scripts in the Hugging Face dataset `Spr
    - Run `source hackathon_setup.sh`. It creates `/p/scratch/training2666/<lead>/<team-folder>/` and sets ACLs for the listed users. It also installs uv, downloads the three task datasets into `Hackathon_Watermark_Localisation_Task/`, `model_equality/` and `unlearning/`, and builds a `.venv` for each task folder that has a top-level `requirements.txt`. The watermark dataset has none (its `requirements.txt` is inside `starter_kit.zip`), so that task gets no `.venv`; we build it ourselves (see `tasks/watermark_localization/README.md`).
    - Done for our team: the lead `hibti1` ran it with `TEAM_FOLDER=Begg` (exit 0). See Team folder below.
 2. **Everyone else, after the lead finishes:**
-   - Download `teammate.sh`, set `TEAM_LEAD=hibti1` and `TEAM_FOLDER=Begg`, and run `source teammate.sh`. `scala1` and `bouziane2` have access through ACLs.
+   - Download `teammate.sh`, set `TEAM_LEAD=hibti1` and `TEAM_FOLDER=Begg`, and run `source teammate.sh`. Both teammates have access through ACLs. Their agents take them through it with `docs_and_plans/guides/teammate-onboarding.md`.
    - **Re-download `teammate.sh` if you fetched it before 2026-11-21 15:44 Paris time.** Earlier copies set `PROJECT_NAME="training2625"`.
 3. **Failed downloads.** A task whose download fails is skipped, and a rerun skips every task folder that already exists. Delete a half-created task folder before rerunning. The lead grants access to teammates added later (organizers' README, section 6).
 4. **Jobs**, per the organizers' README:
@@ -127,6 +127,8 @@ Check usage with `jutil project dataquota -p <project>` (updated every 8 h). Alw
 | The sample job submits to a leaderboard server from a compute node | That contradicts "no internet on compute nodes" unless the server sits inside FZJ or the reservation is configured differently. **Ask the organizers.** |
 
 ## One-time setup (after the talk)
+
+For the event, teammates follow `docs_and_plans/guides/teammate-onboarding.md` instead of this section. It covers the same ground step by step, with a check per step, and assumes a phone hotspot. This section stays as the general reference.
 
 ### 1. JuDoor (browser)
 1. Confirm that MFA is enabled, because SSH requires TOTP. Only you can change account settings.

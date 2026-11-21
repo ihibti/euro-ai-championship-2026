@@ -4,6 +4,8 @@ Team workspace for the European AI Championship 2026 hackathon (CISPA EU AI Cham
 
 **Status:** the three tasks are known (see [Challenge](#challenge)). Agents start with [AGENTS.md](AGENTS.md); each task's full statement is in `tasks/<task>/README.md`. Assumptions and open questions live in [NOTES.md](NOTES.md).
 
+**New teammate:** clone the repo, start your agent in it and say: "Read AGENTS.md and take me through the onboarding guide." The guide is `docs_and_plans/guides/teammate-onboarding.md`.
+
 ## Quickstart (local, CPU only)
 
 You need [uv](https://docs.astral.sh/uv/). It installs Python 3.12 into the project `.venv` and never touches global packages.
@@ -26,6 +28,7 @@ make board  TASK=<task>                          result records, best first
 make check  TASK=<task> FILE=<file>              every submission check, without submitting
 make submit TASK=<task> FILE=<file>              submit: a human at a terminal, 30-minute cool-down, typed confirmation
 uv run --extra api python scripts/me_query.py --prompts <file> [--endpoints ref|ep|<list>] [--spend]
+uv run --extra api python scripts/me_query.py --budget    answers left on every endpoint
 ```
 
 Secrets (`HACKATHON_API_KEY`, `HF_TOKEN`) come from the environment or from `~/.config/euroai/.env` (mode 600), never from the repo. See `.env.example`.

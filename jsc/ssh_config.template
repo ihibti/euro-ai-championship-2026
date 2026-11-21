@@ -1,4 +1,7 @@
-# Append to ~/.ssh/config on your laptop after replacing the placeholder.
+# JURECA access. Save it as ~/.ssh/config.jureca with your JSC username in place of the
+# placeholder, and make this the first line of ~/.ssh/config:
+#   Include ~/.ssh/config.jureca
+# Steps and checks: docs_and_plans/guides/teammate-onboarding.md.
 # Basis: JSC access docs (apps.fz-juelich.de/jsc/hps/jureca/access.html), see jsc/README.md.
 Host jureca jureca?? judac
   HostName %h.fz-juelich.de

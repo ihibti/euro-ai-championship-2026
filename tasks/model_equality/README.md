@@ -2,7 +2,7 @@
 
 Source: the organizers' task description "Model Equality" (European AI Championship Paris 2026). Supervisors: Adam Dziedzic and Franziska Boenisch. Developed by Xun Wang, Bihe Zhao, Maitri Shah, Ivo Hoese and Aditya Kumar. Rewritten here, with numbers and formulas copied exactly.
 
-Owner: TBD. Server task id: `33-model-equality`.
+Owner: `ramzerk`. How we play the task: `PLAYBOOK.md`. Server task id: `33-model-equality`.
 
 ## Background
 
@@ -110,6 +110,7 @@ All nine reference endpoints are in family P, so the family term cannot be check
 ## Budgets and tools
 
 - **Query only through `scripts/me_query.py`.**
+  - `--budget` lists the answers left on every endpoint and asks nothing.
   - `ref-*` endpoints are free.
   - `ep-*` endpoints need `--spend` plus a typed confirmation at a terminal.
   - Every answer is appended to `tasks/model_equality/answers/<name>.jsonl`, which is committed. Analyse saved answers instead of asking twice.

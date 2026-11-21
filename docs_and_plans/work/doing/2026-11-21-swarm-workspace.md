@@ -1,6 +1,6 @@
 # Swarm workspace for the 24-hour championship: design
 
-Status: awaiting approval. Written 2026-11-21 about 15:45. Hackathon ends 2026-11-22 12:00 Europe/Paris.
+Status: approved 2026-11-21 (approach A). Build steps 1 and 2 are done, see `../done/2026-11-21-swarm-workspace-plan.md`; step 3 is not started. Written 2026-11-21 about 15:45. Hackathon ends 2026-11-22 12:00 Europe/Paris.
 
 ## Intent
 
