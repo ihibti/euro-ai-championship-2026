@@ -1,0 +1,76 @@
+{
+  "answer": {
+    "path": "tasks/model_equality/analysis/second/grouping_refs.csv",
+    "sha256": "a6361bff56b3ba49cea392770ba78d4182a7f6885764b48783a22a14b5801054"
+  },
+  "command": "make score TASK=model_equality ANSWER=tasks/model_equality/analysis/second/grouping_refs.csv",
+  "details": {
+    "pairs": {
+      "fn": 0,
+      "fp": 12,
+      "tn": 14,
+      "tp": 10
+    },
+    "wrong_pairs": [
+      [
+        "ref-01",
+        "ref-04"
+      ],
+      [
+        "ref-01",
+        "ref-09"
+      ],
+      [
+        "ref-02",
+        "ref-07"
+      ],
+      [
+        "ref-03",
+        "ref-04"
+      ],
+      [
+        "ref-03",
+        "ref-09"
+      ],
+      [
+        "ref-04",
+        "ref-05"
+      ],
+      [
+        "ref-04",
+        "ref-06"
+      ],
+      [
+        "ref-04",
+        "ref-08"
+      ],
+      [
+        "ref-04",
+        "ref-09"
+      ],
+      [
+        "ref-05",
+        "ref-09"
+      ],
+      [
+        "ref-06",
+        "ref-09"
+      ],
+      [
+        "ref-08",
+        "ref-09"
+      ]
+    ]
+  },
+  "git": {
+    "branch": "devin/model-equality-second",
+    "commit": "1d232dc411841f49315d7029095a8c1188d79cdc",
+    "dirty": true
+  },
+  "metric": "practice_mcc",
+  "notes": "second method: batteries only (bat_choice, bat_trivia), per-item agreement MMD, exact permutation, average linkage z<1.645 with p veto 0.001; round1 40 answers; chosen after 6 combinations on the refs, subsample-3 mean 0.072",
+  "person": "ihibti",
+  "recorded_at": "2026-11-21T23:04:51.838252+00:00",
+  "score": 0.4947274449181537,
+  "task": "model_equality"
+}

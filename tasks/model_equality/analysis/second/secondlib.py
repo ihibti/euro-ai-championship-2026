@@ -627,6 +627,35 @@ def complete_linkage(
         del groups[j]
 
 
+def standardized(test: PermutationTest) -> float:
+    return test.z / float(np.sqrt(max(len(test.per_battery), 1)))
+
+
+def average_linkage(
+    names: Sequence[str],
+    tests: Mapping[tuple[str, str], PermutationTest],
+    threshold: float = 1.645,
+    veto: float = 0.001,
+) -> list[list[str]]:
+    def test_of(a: str, b: str) -> PermutationTest:
+        return tests[(a, b)] if (a, b) in tests else tests[(b, a)]
+
+    groups = [[name] for name in sorted(names)]
+    while True:
+        best: tuple[float, int, int] | None = None
+        for i, j in itertools.combinations(range(len(groups)), 2):
+            cross = [test_of(a, b) for a in groups[i] for b in groups[j]]
+            mean = float(np.mean([standardized(t) for t in cross]))
+            admissible = mean < threshold and min(t.p for t in cross) >= veto
+            if admissible and (best is None or mean < best[0]):
+                best = (mean, i, j)
+        if best is None:
+            return sorted((sorted(g) for g in groups), key=lambda g: g[0])
+        _, i, j = best
+        groups[i] = groups[i] + groups[j]
+        del groups[j]
+
+
 def labels_csv(groups: Sequence[Sequence[str]], family_of: Mapping[str, str] | None = None) -> str:
     lines = ["endpoint,family,model"]
     rows = []

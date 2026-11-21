@@ -151,3 +151,12 @@ def test_build_corpus_orders_answers_by_repeat_and_filters_the_prefix():
     corpus = s.build_corpus(rows, prefix="ref-")
     assert corpus.answers == {"ref-01": {"q": ["first", "second"]}}
     assert corpus.prompts == {"q": "P"}
+
+
+def test_disagreements_lists_pairs_decided_differently():
+    from compare import disagreements, family_disagreements
+
+    mine = {"a": ("F", "1"), "b": ("F", "1"), "c": ("F", "2")}
+    theirs = {"a": ("G", "x"), "b": ("G", "y"), "c": ("G", "y")}
+    assert disagreements(mine, theirs) == [("a", "b", True, False), ("b", "c", False, True)]
+    assert family_disagreements(mine, theirs) == []

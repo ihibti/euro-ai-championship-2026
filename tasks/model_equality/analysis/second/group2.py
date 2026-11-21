@@ -35,12 +35,15 @@ PROMPT_SETS = {
 
 
 def group(
-    corpus: s.Corpus, prompts: dict[str, str], alpha: float, seed: int
+    corpus: s.Corpus, prompts: dict[str, str], alpha: float, seed: int, linkage: str = "average"
 ) -> tuple[list[list[str]], dict]:
     grams = s.corpus_grams(corpus, prompts)
     endpoints = sorted(corpus.answers)
     tests = s.all_pairs(grams, endpoints, seed)
-    groups = s.complete_linkage(endpoints, {k: t.p for k, t in tests.items()}, alpha)
+    if linkage == "complete":
+        groups = s.complete_linkage(endpoints, {k: t.p for k, t in tests.items()}, alpha)
+    else:
+        groups = s.average_linkage(endpoints, tests)
     return groups, tests
 
 
@@ -68,6 +71,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--prompts", choices=sorted(PROMPT_SETS), default="all")
     parser.add_argument("--alpha", type=float, default=0.05)
+    parser.add_argument("--linkage", choices=["average", "complete"], default="average")
     parser.add_argument("--seed", type=int, default=20261122)
     parser.add_argument("--subsample", type=int, default=0)
     parser.add_argument("--subsample-size", type=int, default=3)
@@ -76,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
     rows = [row for path in args.answers for row in s.read_jsonl(path)]
     corpus = s.build_corpus(rows, prefix=args.prefix)
     prompts = PROMPT_SETS[args.prompts]
-    groups, tests = group(corpus, prompts, args.alpha, args.seed)
+    groups, tests = group(corpus, prompts, args.alpha, args.seed, args.linkage)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(s.labels_csv(groups), encoding="utf-8")
     with args.out.with_name(args.out.stem + "_pairs.csv").open("w", newline="") as handle:
@@ -106,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
             scores = []
             for draw in range(args.subsample):
                 sub = subsample(corpus, args.subsample_size, rng)
-                sub_groups, _ = group(sub, prompts, args.alpha, args.seed + 2 + draw)
+                sub_groups, _ = group(sub, prompts, args.alpha, args.seed + 2 + draw, args.linkage)
                 scores.append(same_model_mcc(truth, as_labels(sub_groups)).mcc)
             ordered = sorted(scores)
             print(
