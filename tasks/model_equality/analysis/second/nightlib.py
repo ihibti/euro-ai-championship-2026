@@ -25,6 +25,9 @@ NIGHT_PROMPTS: dict[str, str] = {
     "p3_repeat": "repeat",
     "p4_nextword": "nextword",
     "p5": "function",
+    "c1_equiv": "items:25",
+    "c2_edge": "items:25",
+    "c3_next": "first:20",
 }
 TOKEN = re.compile(r"\w+|[^\w\s]")
 BIT = re.compile(r"(?<![0-9])[01](?![0-9])")
@@ -99,7 +102,17 @@ def function_views(response: str) -> list[str | None]:
     return [min(hits)[1] if hits else None]
 
 
+def item_views(response: str, count: int, words: int) -> list[str | None]:
+    items = s.numbered_items(response, count)
+    cleaned = [" ".join(s.normalize(item).split()[:words]) if item else "" for item in items]
+    return [c or None for c in cleaned]
+
+
 def views_of(kind: str, prompt: str, response: str) -> list[str | None]:
+    if kind.startswith("items:"):
+        return item_views(response, int(kind.split(":")[1]), 3)
+    if kind.startswith("first:"):
+        return item_views(response, int(kind.split(":")[1]), 1)
     if kind == "copycont":
         return copycont_views(prompt, response)
     if kind == "binary":

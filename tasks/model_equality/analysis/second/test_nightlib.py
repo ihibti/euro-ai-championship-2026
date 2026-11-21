@@ -65,3 +65,12 @@ def test_split_statistic_ignores_views_without_valid_pairs(kind):
     assert len(onehots) == 1
     masks = s.split_masks(2, 2, 10, np.random.default_rng(0))
     assert np.isfinite(n.split_statistic(onehots, masks, kind)).all()
+
+
+def test_item_views_normalise_numbered_answers():
+    assert n.views_of("items:3", "", "1. Save_Note\n2. New Delhi, India\n3.") == [
+        "save note",
+        "new delhi india",
+        None,
+    ]
+    assert n.views_of("first:2", "", "1. Breeze.\n2. Monday morning") == ["breeze", "monday"]
