@@ -154,13 +154,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--answers", type=Path, nargs="+", required=True)
     parser.add_argument("--prefix", required=True)
     parser.add_argument("--families", type=Path)
+    parser.add_argument("--probe", default="p3_repeat")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--draws", type=int, default=499)
     parser.add_argument("--seed", type=int, default=20261122)
     args = parser.parse_args(argv)
     rows = [row for path in args.answers for row in s.read_jsonl(path)]
     corpus = s.build_corpus(rows, prefix=args.prefix)
-    answers = {e: per.get("p3_repeat", []) for e, per in corpus.answers.items()}
+    answers = {e: per.get(args.probe, []) for e, per in corpus.answers.items()}
     answers = {e: r for e, r in answers.items() if r}
     long_counts = {e: sum(is_long(r) for r in rs) for e, rs in answers.items()}
     totals = {e: len(rs) for e, rs in answers.items()}
