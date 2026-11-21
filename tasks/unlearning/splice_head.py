@@ -9,6 +9,10 @@ login node in the unlearning task folder:
     python <repo>/tasks/unlearning/splice_head.py --head <repo>/tasks/unlearning/heads/<name>.npz \
         --save output/kkrgp/<name>.pt
     python <repo>/tasks/unlearning/splice_head.py --scale 3 --save output/kkrgp/scale_t3.pt
+    python <repo>/tasks/unlearning/splice_head.py --shift 15 --save output/kkrgp/dial15.pt
+
+With --shift d, the bias of the nine classes that lost 130 images (0, 6, 7, 8, 29, 30, 31, 33, 38)
+is lowered by d: the class dial of head_edit.py, on the last layer only.
 """
 
 from __future__ import annotations
@@ -41,17 +45,29 @@ def scale_head(state: dict[str, torch.Tensor], temperature: float) -> dict:
     return splice(state, head, state["head.bias"].float().numpy() / temperature)
 
 
+NINE_CLASSES = (0, 6, 7, 8, 29, 30, 31, 33, 38)
+
+
+def shift_classes(state: dict[str, torch.Tensor], classes: tuple[int, ...], shift: float) -> dict:
+    bias = state["head.bias"].float().numpy().copy()
+    bias[list(classes)] -= shift
+    return splice(state, state["head.weight"].float().numpy(), bias)
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--model", type=Path, default=Path("model.pt"))
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--head", type=Path)
     source.add_argument("--scale", type=float, help="divide the last layer by this temperature")
+    source.add_argument("--shift", type=float, help="lower the nine classes' bias by this much")
     parser.add_argument("--save", type=Path, required=True)
     args = parser.parse_args(argv)
     state = torch.load(args.model, map_location="cpu", weights_only=True)
     if args.scale is not None:
         out = scale_head(state, args.scale)
+    elif args.shift is not None:
+        out = shift_classes(state, NINE_CLASSES, args.shift)
     else:
         with np.load(args.head) as head:
             out = splice(state, head["weight"], head["bias"])
