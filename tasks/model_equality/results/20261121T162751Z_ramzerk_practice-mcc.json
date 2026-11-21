@@ -1,0 +1,68 @@
+{
+  "answer": {
+    "path": "tasks/model_equality/analysis/floor_all_different.csv",
+    "sha256": "c4bdb79d2e21f8a010f34ed0c1c86d34c97ddcdbd540fd7663f073b5daa824f9"
+  },
+  "command": "make score TASK=model_equality ANSWER=tasks/model_equality/analysis/floor_all_different.csv",
+  "details": {
+    "pairs": {
+      "fn": 10,
+      "fp": 0,
+      "tn": 26,
+      "tp": 0
+    },
+    "wrong_pairs": [
+      [
+        "ref-01",
+        "ref-03"
+      ],
+      [
+        "ref-01",
+        "ref-05"
+      ],
+      [
+        "ref-01",
+        "ref-06"
+      ],
+      [
+        "ref-01",
+        "ref-08"
+      ],
+      [
+        "ref-03",
+        "ref-05"
+      ],
+      [
+        "ref-03",
+        "ref-06"
+      ],
+      [
+        "ref-03",
+        "ref-08"
+      ],
+      [
+        "ref-05",
+        "ref-06"
+      ],
+      [
+        "ref-05",
+        "ref-08"
+      ],
+      [
+        "ref-06",
+        "ref-08"
+      ]
+    ]
+  },
+  "git": {
+    "branch": "main",
+    "commit": "749961f0945067d79cb84973a87612f695511ce1",
+    "dirty": true
+  },
+  "metric": "practice_mcc",
+  "notes": "floor: every endpoint its own family and model, no queries",
+  "person": "ramzerk",
+  "recorded_at": "2026-11-21T16:27:51.459350+00:00",
+  "score": 0.0,
+  "task": "model_equality"
+}
