@@ -216,6 +216,13 @@ def soft_targets(
     return F.log_softmax(shifted / tau, dim=1)
 
 
+def heldout_delta(orig: torch.Tensor, proxy: torch.Tensor, columns: torch.Tensor) -> torch.Tensor:
+    """Per-image logit step from the original model to its held-out prediction, on the columns."""
+    delta = torch.zeros_like(orig)
+    delta[:, columns] = proxy[:, columns].to(orig.dtype) - orig[:, columns]
+    return delta
+
+
 def mix_with_proxy(
     log_probs: torch.Tensor, proxy: torch.Tensor, columns: torch.Tensor, mix: float
 ) -> torch.Tensor:
