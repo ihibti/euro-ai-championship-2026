@@ -87,6 +87,11 @@ def test_binary_symbols_ignore_numbers_in_a_preamble():
     ]
 
 
+def test_binary_symbols_drop_list_markers_and_split_runs():
+    text = "1. 0\n2. 1\n[3]  0011\n• 1\n10) 0\nH001 x10"
+    assert plurality.binary_symbols(text) == list("01001110")
+
+
 def test_items_read_the_first_word_of_each_numbered_line():
     assert plurality.items("1. Breeze.\n3) market day\nnoise", 3) == ["breeze", None, "market"]
 

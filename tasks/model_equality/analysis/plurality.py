@@ -34,7 +34,8 @@ from build_night import P1, P5_NAMES  # noqa: E402
 from melib import load_rows, parse_numbered  # noqa: E402
 
 WORD = re.compile(r"[a-z0-9']+")
-SYMBOL = re.compile(r"(?<![0-9])[01](?![0-9])")
+MARKER = re.compile(r"^\s*(?:\[\d+\]|\d+[.):]|[•*\-])\s*")
+RUN = re.compile(r"(?<![0-9A-Za-z])[01]+(?![0-9A-Za-z])")
 Token = str | None
 
 S = ["ref-01", "ref-03", "ref-05", "ref-06", "ref-08"]
@@ -80,7 +81,11 @@ def continuation(
 
 
 def binary_symbols(text: str) -> list[str]:
-    return SYMBOL.findall(text)
+    symbols: list[str] = []
+    for line in text.splitlines():
+        for run in RUN.findall(MARKER.sub("", line, count=1)):
+            symbols.extend(run)
+    return symbols
 
 
 def items(text: str, count: int = 20) -> list[Token]:

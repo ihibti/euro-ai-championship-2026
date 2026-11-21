@@ -175,7 +175,7 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
 
 - Conclusion: only a factor tuned down to 1 splits anything, and it pairs LoRA 1.5 with the temperature copy. That is a threshold chosen on 9 endpoints, not a method. At this count round 1 has no reference MCC above 0 under the rule as designed. Resampling at 4 repeats (old step 6) is moot until a statistic separates anything.
 
-## E8. Free side channels on the answers already held (2026-11-22 00:04)
+## E8. Free side channels on the answers already held (2026-11-22 00:03)
 
 - Latency: `answer_row` (in `src/euroai/me_query.py`) saves neither a timestamp, nor `finish_reason`, nor token usage, so latency and the 256-token cap cannot be read from saved answers. Proxy for latency: the lag between each answer's planned slot (repeat, then prompt, then endpoint) and its line in the file, over the 218 answers of the second round-1 run. The mean lag per endpoint is between -0.04 and +0.04 jobs, and the median is 0 for all nine. Answers come back in submission order whatever the endpoint, so the order carries no latency signal.
 - Length (all 482 reference answers in `smoke`, `cand1` and `round1`, characters):
@@ -194,6 +194,43 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
 
 - On `txt_health` LoRA 1.5 hits the cap 4 times out of 4 (1,229 to 1,335 characters); the others vary from 211 to 1,248.
 - Conclusion: length carries the LoRA dose at 0.7 and 1.5 and nothing at fp8 or LoRA 0.3. Recording `finish_reason`, `usage.completion_tokens` and the wall-clock time in `answer_row` would make the cap and latency checkable at no cost. That file is shared code outside this task's folder, so the change goes through the lead, before the scored spend if at all.
+
+## E9. night_a: P1 (copy then continue) and P2 (binary sequence) at 10 repeats (2026-11-22 00:20)
+
+- Hypothesis (`research_night.md`, sections 1 and 3): decoding is near-greedy on format-pinned long outputs, so the plurality token per position is stable within an endpoint. fp8 and LoRA then flip some positions, while the disguises leave the pluralities in place. A probe passes when a different-model distance from ref-01 exceeds the largest distance among the five disguises 01/03/05/06/08.
+- Commands: `probes/build_night.py` wrote `probes/night_a.csv` and `probes/night_b.csv`, with the texts checked character by character against the code blocks of section 3. Then `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/night_a.csv --repeats 10` (180 answers in 1,134 s, 9.5 per minute, 0 failed) and `uv run python tasks/model_equality/analysis/plurality.py --answers tasks/model_equality/answers/night-a.jsonl`.
+- Statistic (`analysis/plurality.py`, tested): tokens are the words after the copied passage for P1, located by the passage's last 4 words, and the 0/1 symbols for P2, after stripping line-start list markers and splitting pure 0/1 runs. The plurality per position is taken over the 10 repeats, and a repeat without a token at a position counts against it. A position is kept at share >= 0.6. The distance is the disagreement rate on positions kept by both. No other parameter.
+- Self-agreement (mean plurality share), kept positions, split-half distance (5 repeats against 5, shared positions in parentheses), and mean first-divergence position between two repeats:
+
+| endpoint | P1 self-agreement | P1 kept of 80 | P1 self first-div (words) | P2 self-agreement | P2 kept of 60 | P2 split-half | P2 self first-div |
+|---|---|---|---|---|---|---|---|
+| 01 plain | 0.04 | 0 | 0.1 | 0.42 | 7 | 0.62 (13) | 2.7 |
+| 02 fp8 | 0.01 | 0 | 0.0 | 0.34 | 8 | 0.33 (9) | 3.0 |
+| 03 system prompt | 0.11 | 1 | 0.7 | 0.27 | 2 | 0.00 (2) | 1.5 |
+| 04 LoRA 0.7 | 0.02 | 0 | 0.1 | 0.36 | 9 | 0.25 (4) | 1.2 |
+| 05 persona | 0.08 | 1 | 0.9 | 0.41 | 2 | 0.33 (3) | 6.7 |
+| 06 watermark | 0.13 | 3 | 3.2 | 0.46 | 31 | 0.00 (8) | 10.6 |
+| 07 LoRA 1.5 | 0.18 | 0 | 0.4 | 0.57 | 28 | 0.37 (30) | 3.7 |
+| 08 temperature 1.0 | 0.01 | 0 | 0.0 | 0.26 | 1 | nan (0) | 0.6 |
+| 09 LoRA 0.3 | 0.04 | 0 | 0.1 | 0.38 | 2 | nan (0) | 1.7 |
+
+- The deciding table (distance from ref-01, positions kept by both in parentheses):
+
+| pair | P1 distance | P2 distance | P2 cross first-div |
+|---|---|---|---|
+| 01-03 same model | undefined (0) | 0.00 (2) | 2.2 |
+| 01-05 same model | undefined (0) | 0.00 (2) | 1.5 |
+| 01-06 same model | undefined (0) | 0.00 (7) | 5.0 |
+| 01-08 same model | undefined (0) | 0.00 (1) | 1.0 |
+| largest of the 10 disguise pairs | 0.00 (3 of 10 pairs defined) | 0.00 (all 10 defined) | |
+| 01-02 fp8 | undefined (0): **fail** | 0.00 (5): **fail** | 2.9 |
+| 01-09 LoRA 0.3 | undefined (0): **fail** | 0.00 (1): **fail** | 2.4 |
+| 01-04 LoRA 0.7 | undefined (0): **fail** | 0.00 (3): **fail** | 2.2 |
+| 01-07 LoRA 1.5 | undefined (0): **fail** | 0.00 (4): **fail** | 3.1 |
+
+- P1, copy part: perfect copies out of 10 are 10 for plain, fp8 and watermark; 9 for LoRA 0.7 and 1.5; 8 for the system prompt; 7 for the persona and LoRA 0.3; 3 for temperature 1.0. The disguises alone span 3 to 10, and fp8 equals plain, so copy errors are not a weight signal either.
+- The only non-zero P2 distances are between the endpoints that keep many positions: 04-07 0.67 (6), 04-06 0.22 (9), 06-07 0.20 (20), 02-07 0.17 (6) and 02-06 0.12 (8). The watermark copy (06) keeps more positions than plain because it falls into the same `0 1 0 1` alternation every time. That is an attractor, not a near-tie.
+- Conclusion: both probes fail for every pair type: fp8, LoRA 0.3, LoRA 0.7 and LoRA 1.5. The premise does not hold on the reference model: it is not near-greedy on these prompts. Two repeats of plain ref-01 part at the first continuation word on P1 (mean first divergence 0.1 words), and on P2 the plain model keeps 7 positions out of 60, with its own halves disagreeing on 62% of the positions they share. The P2 positions that are kept are format attractors (a leading `0`, the alternation) that every endpoint shares, which is why all distances from ref-01 are 0. The scored models may be larger and closer to greedy, but nothing on the references supports spending scored answers on P1 or P2.
 
 ## Status at handoff (2026-11-21 23:12)
 
