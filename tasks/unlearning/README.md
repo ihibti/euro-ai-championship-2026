@@ -74,9 +74,15 @@ The Hugging Face dataset `SprintML/unlearning` is public:
 - `task_template.py`: model builder, the server's preprocessing, a prediction helper and an `unlearn()` stub. Running it saves the unchanged model as a baseline `submission.pt`, which scores about 0.
 - `submission.py`: the code to submit your model.
 
-The small files are copied unmodified into `upstream/`. The large files are not committed; `make data TASK=unlearning` downloads them into `data/unlearning/`. On JURECA the task folder is `/p/scratch/training2666/<lead>/<team>/unlearning/`.
+The small files are copied unmodified into `upstream/`. The large files are not committed; `make data TASK=unlearning` downloads them into `data/unlearning/`. On JURECA they are already in the task folder (below).
 
 **Preprocessing** (what the server does): float32 `[B, 3, 224, 224]`, `x = (pixels / 255 − 0.5) / 0.5`. Use `preprocess()` from the template and do not resize or normalise a second time. The server runs the forward pass in eval mode under float16 autocast; this does not change the weights you submit.
+
+## On JURECA
+
+- `/p/scratch/training2666/hibti1/Begg/unlearning/`: a uv project with a Python 3.12 `.venv` holding torch 2.15.0+cu132 and timm 1.0.31, plus `model.pt` and `forget_images.npz`.
+- Run GPU work with `jsc/jureca_gpu.sbatch.template` and `TASK_DIR` set to this folder (see `jsc/README.md`, Submitting a job): one A100 40 GB per job (`gpu:1`, 8 CPUs) on reservation `cispahack`, which ends 2026-11-22 14:00. Compute nodes have no internet.
+- A ViT-B/16 state dict is about 345 MB. Submitting it from a laptop means copying it there first.
 
 ## Submission
 

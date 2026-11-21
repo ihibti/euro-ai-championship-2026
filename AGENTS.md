@@ -26,9 +26,12 @@ make test        make lint
 make data   TASK=<task>                           download task data into data/<task>/ (HF_TOKEN for gated data)
 make score  TASK=<task> ANSWER=<file> NOTES=...   print one line, score=<number>, and write a result record
 make board  TASK=<task>                           list result records, best first
+make check  TASK=<task> FILE=<path>               every submission check, without submitting; agents may run it
 make submit TASK=<task> FILE=<path>               the only way to submit: validates, enforces cool-down, asks to confirm
 uv run --extra api python scripts/me_query.py     the only way to query model-equality endpoints
 ```
+
+`make score` covers model_equality (MCC on `ref-01`…`ref-09`) and watermark_localization (mIoU on the train split; ANSWER is a `.npz` or `.pt` with `image_names` and `masks`). Unlearning has no exact local score.
 
 ## Hard rules
 
@@ -44,7 +47,7 @@ uv run --extra api python scripts/me_query.py     the only way to query model-eq
    - Cloud agents have no secrets. They work from committed answers and public data.
 4. **Do not tune to the public leaderboard.** It covers about 30% of the data. Judge methods locally.
 5. **JURECA.**
-   - Stay inside the team folder `/p/scratch/training2666/<lead>/<team>/`.
+   - Stay inside the team folder `/p/scratch/training2666/hibti1/Begg/`. Each task's README has an On JURECA section.
    - Submit jobs only through the job template.
    - Never change ACLs or shared `.venv`s, and never rerun the setup scripts.
    - Compute nodes have no internet, so download on login nodes.

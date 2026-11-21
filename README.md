@@ -17,6 +17,19 @@ make check-env    # JSON report: python, packages, GPU, Slurm, loaded modules
 make papers       # (re)download reference PDFs and verify SHA-256
 ```
 
+Task commands (details in [AGENTS.md](AGENTS.md)):
+
+```
+make data   TASK=<task>                          download into data/<task>/ (watermark: also unzips into release/)
+make score  TASK=<task> ANSWER=<file> NOTES=...  local score: prints score=<x>, writes tasks/<task>/results/*.json
+make board  TASK=<task>                          result records, best first
+make check  TASK=<task> FILE=<file>              every submission check, without submitting
+make submit TASK=<task> FILE=<file>              submit: a human at a terminal, 30-minute cool-down, typed confirmation
+uv run --extra api python scripts/me_query.py --prompts <file> [--endpoints ref|ep|<list>] [--spend]
+```
+
+Secrets (`HACKATHON_API_KEY`, `HF_TOKEN`) come from the environment or from `~/.config/euroai/.env` (mode 600), never from the repo. See `.env.example`.
+
 Without `make` (these lines also work in nushell):
 
 ```
@@ -37,6 +50,8 @@ These are declared in `pyproject.toml` and pinned in `uv.lock`. **None are insta
 | Extra | Contents | Use |
 |---|---|---|
 | `dev` | pytest, ruff | always |
+| `api` | requests | `make submit`, `scripts/me_query.py` |
+| `data` | huggingface_hub | `make data` |
 | `torch` | torch | GPU work |
 | `vision` | torch, torchvision, pillow | image tasks, e.g. watermarking |
 | `hf` | torch, transformers, datasets, accelerate, safetensors | LLM/NLP tasks, e.g. model auditing |
@@ -48,7 +63,20 @@ Install extras with `uv sync --extra dev --extra torch` (add more `--extra` flag
 ## Layout
 
 ```
-src/euroai/         task-independent utilities (numpy only)
+AGENTS.md           instructions for every agent: map, commands, hard rules, work contract
+tasks/<task>/       README.md (full statement), upstream/ (organizer files, unmodified),
+                    results/ (make score records), submissions/ (make submit records)
+  model_equality/answers/   every endpoint answer collected; never delete
+src/euroai/         shared utilities (numpy only; torch, timm, requests imported lazily)
+  challenge.py      the three tasks: dataset, server task id, file rules
+  records.py        one JSON record per scoring run or submission; the board
+  me_score.py       model-equality practice MCC, as the organizers' score_practice.py
+  wm_score.py       watermark per-image mIoU, as the organizers' wmloc/utils.py
+  validators.py     local submission checks for the three tasks
+  credentials.py    secrets from the environment or ~/.config/euroai/.env
+  gate.py           the submission gate behind make submit and make check
+  me_query.py       budgeted, resumable model-equality querying
+  fetch.py          data locations and zip extraction
   seeding.py        seed_everything, derive_seed, make_rng, torch_worker_init
   env.py            read-only environment detection (stdlib, py3.8+)
   config.py         TOML configs + dotted --set overrides
@@ -62,7 +90,8 @@ src/euroai/         task-independent utilities (numpy only)
   submission.py     validated id,value CSV writer (format TBD)
   tracking.py       offline JSONL metric logger
   templating.py     <PLACEHOLDER> rendering that refuses unfilled templates
-scripts/            run_experiment.py, check_env.py, render_template.py, fetch_papers.sh
+scripts/            score.py, board.py, data.py, submit.py, me_query.py (thin CLIs over src/euroai),
+                    run_experiment.py, check_env.py, render_template.py, fetch_papers.sh
 configs/            example.toml (pipeline smoke config)
 tests/              unit tests + smoke tests (pytest -m smoke)
 notebooks/          00_quickstart.ipynb (outputs cleared; commit without outputs)
@@ -112,7 +141,8 @@ The full, source-referenced guide is [jsc/README.md](jsc/README.md). Short versi
 - **GPU node:** 4× A100 40 GB and 128 cores. Allocation is exclusive and charged per node-hour.
   - Partitions: `dc-gpu` (≤24 h, no internet) and `dc-gpu-devel` (≤2 h, has internet).
   - Download models and data on login nodes, then run offline.
-- **Jobs:** render `jsc/jureca_gpu.sbatch.template` with `scripts/render_template.py`, then run `mkdir -p logs` and `sbatch`. The reservation name and budget account must be confirmed first.
+- **Team folder:** `/p/scratch/training2666/hibti1/Begg/`, one subfolder per task with its own `.venv` (see each task's README, On JURECA).
+- **Jobs:** render `jsc/jureca_gpu.sbatch.template` with `scripts/render_template.py`, create the task's `output/`, then `sbatch`. It carries the verified event values: account `training2666`, reservation `cispahack` (until 2026-11-22 14:00), `gpu:1`, 8 CPUs.
 - **Jupyter:** https://jupyter.jsc.fz-juelich.de, logging in with **JSC Account**. This has not been tested.
 - **Data constraint:** stay within the approved project. **Do not process personal data.** JSC requires a GDPR assessment plus a signed addendum for any personal or pseudonymised data.
 

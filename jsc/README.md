@@ -2,7 +2,7 @@
 
 This page records official JSC documentation fetched on 2026-11-21 and the organizer slides (`GPU-usage-paris.pdf`, received during the talk and not committed). It tells you which source each fact comes from and where the two sources disagree.
 
-**Nothing here has been run against the cluster yet.** We have not opened an SSH connection, tested a Jupyter login or submitted a job.
+**Status (2026-11-21):** the team folder is set up and a GPU job has run on the event reservation; see [Team folder](#team-folder-verified-2026-11-21). Jupyter-JSC is still untested.
 
 ## Event setup (2026-11-21, from the organizers)
 
@@ -12,16 +12,31 @@ The organizers publish a README and two scripts in the Hugging Face dataset `Spr
    - Download `hackathon_setup.sh` and set `TEAM_LEAD` (it must equal your own Jülich username), `TEAMMATE_1`…`TEAMMATE_3` (at least one) and `TEAM_FOLDER`.
    - Export `HF_TOKEN` from a Hugging Face account approved for the gated watermark dataset.
    - Run `source hackathon_setup.sh`. It creates `/p/scratch/training2666/<lead>/<team-folder>/` and sets ACLs for the listed users. It also installs uv, downloads the three task datasets into `Hackathon_Watermark_Localisation_Task/`, `model_equality/` and `unlearning/`, and builds a `.venv` for each task folder that has a top-level `requirements.txt`. The watermark dataset has none (its `requirements.txt` is inside `starter_kit.zip`), so that task gets no `.venv`; we build it ourselves (see `tasks/watermark_localization/README.md`).
-   - The team folder name is not decided yet.
+   - Done for our team: the lead `hibti1` ran it with `TEAM_FOLDER=Begg` (exit 0). See Team folder below.
 2. **Everyone else, after the lead finishes:**
-   - Download `teammate.sh`, set `TEAM_LEAD` and `TEAM_FOLDER` to the lead's values, and run `source teammate.sh`.
+   - Download `teammate.sh`, set `TEAM_LEAD=hibti1` and `TEAM_FOLDER=Begg`, and run `source teammate.sh`. `scala1` and `bouziane2` have access through ACLs.
    - **Re-download `teammate.sh` if you fetched it before 2026-11-21 15:44 Paris time.** Earlier copies set `PROJECT_NAME="training2625"`.
 3. **Failed downloads.** A task whose download fails is skipped, and a rerun skips every task folder that already exists. Delete a half-created task folder before rerunning. The lead grants access to teammates added later (organizers' README, section 6).
 4. **Jobs**, per the organizers' README:
    - Flags: `--account=training2666`, `--reservation=cispahack`, `--partition=dc-gpu`, `--gres=gpu:1`, `--cpus-per-task=8`, `--output=output/%j.out`, `--error=output/%j.err`.
    - Run `mkdir -p output` before `sbatch`.
-   - Our `jureca_gpu.sbatch.template` still requests a full node (`gpu:4`, 128 CPUs) and has to be aligned with these values.
+   - Our `jureca_gpu.sbatch.template` uses these values; see Submitting a job.
 5. **This repo on JURECA.** SSH agent forwarding is disabled on the server, so cloning the private repo from JURECA needs its own credential there, such as a read-only deploy key. Otherwise rsync from a laptop over the open connection.
+
+### Team folder (verified 2026-11-21)
+
+`/p/scratch/training2666/hibti1/Begg/`, created by the organizers' `hackathon_setup.sh`.
+
+| Folder | Environment | Contents |
+|---|---|---|
+| `unlearning/` | uv project, Python 3.12 `.venv`: torch 2.15.0+cu132, timm 1.0.31 | `model.pt`, `forget_images.npz` |
+| `model_equality/` | uv project, Python 3.12 `.venv`: requests, numpy, pandas, scikit-learn, scipy | the public starter files |
+| `Hackathon_Watermark_Localisation_Task/` | built by us (the organizers' script builds none): Python 3.11 `.venv` with the kit's `requirements.txt` | the kit unpacked at the folder root (`wmloc/`, `submission_template.py`, `download_models.py`); `models/`; data in `release/{train,test}` |
+
+- Watermark `models/` holds videoseal at the pinned commit, the PixelSeal checkpoint and the StegaStamp ONNX. All three wrappers were loaded once on the login node, so the lazily fetched TrustMark weights are cached and jobs can run offline.
+- The official all-zeros watermark baseline scores **0.2518** on the 510 train images. A valid test file is at `Hackathon_Watermark_Localisation_Task/output/baseline_allzeros.pt`; it has not been submitted.
+- **GPU check:** job 15901345 on reservation `cispahack` saw one A100-SXM4-40GB inside `srun` with `--gres=gpu:1` (driver 620.70.06, `torch.cuda.is_available()` True).
+- **Reservation `cispahack`:** active 2026-11-21 11:00 to 2026-11-22 14:00 (Jülich time, the same as Paris), 30 `dc-gpu` nodes, accounts `admin` and `training2666`.
 
 ### Laptop agents and the shared connection
 
@@ -104,8 +119,8 @@ Check usage with `jutil project dataquota -p <project>` (updated every 8 h). Alw
 | Slide content | Assessment |
 |---|---|
 | `jutil env activate -p training2614` (screenshot shows `training2557`) | These IDs come from earlier events. Our project is **training2666**, and the slide's own sbatch uses `--account=training2666`. |
-| `#SBATCH –reservation=cispahack` | The slide uses an en-dash, so the line will not parse as an option. Retype it with `--`. The reservation name for *this* event is **unconfirmed**. |
-| `--gres=gpu:1` | Allowed, but BATCH says production jobs must use all 4 GPUs and the whole node is charged anyway. Our template uses `gpu:4`. |
+| `#SBATCH –reservation=cispahack` | The slide uses an en-dash, so the line will not parse as an option. Retype it with `--`. The name `cispahack` is **confirmed** for this event. |
+| `--gres=gpu:1` | The organizers ask for it, and our template uses it; a job then sees one GPU. BATCH says nodes are allocated whole and production jobs should use all 4 GPUs. Whether `gpu:4` is allowed in the reservation is an **open question for the organizers**. |
 | MOTD 2025-03-31: "Do not constrain GPU devices with Slurm … not constrained by cgroups" | Contradicted by CHG 2025-03-13 (cgroup constraints enabled) and absent from the current KI page. It is probably stale. Check on login. |
 | `MACs hmac-sha2-256-etm@openssh.com` in `~/.ssh/config` | Official docs don't require it for macOS. Left out of our template; see Troubleshooting. |
 | uv installed in `$HOME`, `UV_CACHE_DIR` and related variables under `$PROJECT/$USER/uv`, `uv add torch` (pip wheels) | Works, and our `env_uv.sh` follows it. JSC/SDL instead recommend module-provided PyTorch plus a venv (`env_modules.sh.template`). Caches under `$PROJECT` count toward its 3M-file quota. |
@@ -180,27 +195,28 @@ Compute nodes have no internet. Fetch everything with `HF_HOME` set (done by the
 
 ## Submitting a job
 
-`jsc/jureca_gpu.sbatch.template` has three placeholders:
+`jsc/jureca_gpu.sbatch.template` carries the event values: account `training2666`, reservation `cispahack`, partition `dc-gpu`, one node, one task, `--gres=gpu:1`, 8 CPUs per task, and `SRUN_CPUS_PER_TASK`. Logs go to the task folder's `output/`. Four placeholders remain:
 
-| Placeholder | Value | Status |
-|---|---|---|
-| `BUDGET_ACCOUNT` | the budget from `jutil user projects` (organizer slide: `training2666`) | confirm |
-| `RESERVATION` | the event reservation name (Paris slides: `cispahack`). An empty value removes the line. | **unconfirmed** |
-| `TIME` | walltime `HH:MM:SS`, at most 24 h on `dc-gpu` | your choice |
+| Placeholder | Value |
+|---|---|
+| `JOB_NAME` | a short name, shown by `squeue` |
+| `TASK_DIR` | a task folder, e.g. `/p/scratch/training2666/hibti1/Begg/unlearning`; the job runs there and activates its `.venv` |
+| `TIME` | walltime `HH:MM:SS`; the reservation ends 2026-11-22 14:00 |
+| `COMMAND` | what `srun` runs in `TASK_DIR`, e.g. `python unlearn.py` |
 
-Partition (`dc-gpu`), `gpu:4` and 128 CPUs per task are fixed from the docs. On the login node:
+On a login node (bash), from a checkout of this repo:
 ```
-python scripts/render_template.py jsc/jureca_gpu.sbatch.template BUDGET_ACCOUNT=<budget> RESERVATION=<name-or-empty> TIME=00:30:00 > job.sbatch
-mkdir -p logs
-sbatch job.sbatch
+TASK_DIR=/p/scratch/training2666/hibti1/Begg/unlearning
+python3 scripts/render_template.py jsc/jureca_gpu.sbatch.template JOB_NAME=unlearn TASK_DIR=$TASK_DIR TIME=01:00:00 COMMAND='python unlearn.py' > $TASK_DIR/job.sbatch
+mkdir -p $TASK_DIR/output
+sbatch $TASK_DIR/job.sbatch
 squeue -u "$USER"
 sacct -j <jobid>
 ```
 - `render_template.py` refuses to write a script while any placeholder is still unfilled.
-- `mkdir -p logs` matters: whether Slurm creates a missing output directory is not documented by JSC.
-- Use `EUROAI_CONFIG=configs/<file>.toml` to choose the config, `EUROAI_ARGS="--set task.x=1"` to pass overrides, and `EUROAI_ENV_SCRIPT=jsc/env_modules.sh` to use Option B.
-- To test quickly without the reservation, use `--partition=dc-gpu-devel` (max 2 h, has internet).
-- The job runs `check_env.py` first, so the log shows the visible GPUs, the CUDA build and the Slurm variables.
+- **Allocation is per whole node** (4 A100s), whatever the GPU request. The organizers ask for `gpu:1`; whether `gpu:4` is allowed in the reservation is an open question for them.
+- Compute nodes have no internet: download everything on a login node first. The template sets the Hugging Face and uv offline flags.
+- To test quickly outside the reservation, use `--partition=dc-gpu-devel` (max 2 h, has internet) and drop the reservation line.
 
 ## Jupyter-JSC
 
@@ -224,13 +240,13 @@ sacct -j <jobid>
 
 ## Still unverified
 
-1. The reservation name and partition for this event, and whether `gpu:1` jobs are expected there.
-2. The exact budget account string, via `jutil user projects`.
-3. PyTorch module names in Stage 2026.
-4. Whether pip-wheel CUDA works with the node driver.
-5. The meaning of "24 h / 6 h" for `dc-gpu`.
-6. Whether Slurm creates a missing `--output` directory.
-7. The actual `$PROJECT` path.
-8. How the leaderboard is reachable from compute nodes.
-9. VS Code Remote-SSH behaviour with TOTP and ControlMaster; it is undocumented by JSC.
-10. The text of the system usage agreement (inside JuDoor).
+1. Whether `gpu:4` (a whole node) is allowed in the `cispahack` reservation. Ask the organizers.
+2. PyTorch module names in Stage 2026 (the task `.venv`s use pip wheels, which work: torch 2.15.0+cu132 sees the GPU).
+3. The meaning of "24 h / 6 h" for `dc-gpu`.
+4. Whether Slurm creates a missing `--output` directory; create it first.
+5. The actual `$PROJECT` path. The team folder is on scratch.
+6. How the leaderboard is reachable from compute nodes.
+7. VS Code Remote-SSH behaviour with TOTP and ControlMaster; it is undocumented by JSC.
+8. The text of the system usage agreement (inside JuDoor).
+
+Verified since the first version of this page: the reservation name and account (`cispahack`, `training2666`), and that pip-wheel CUDA works with the node driver (job 15901345).

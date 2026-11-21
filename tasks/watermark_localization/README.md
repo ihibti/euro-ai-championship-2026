@@ -61,7 +61,7 @@ Score      = mean of mIoU_image over all test images
   - `images/<name>.png`: 512 x 512 RGB;
   - `metadata.json`: `[{"image_name", "method", "message"}, ...]`. Train items also have `full_watermark`: true if the whole image was watermarked and a part restored to the clean original;
   - train only: `masks/<name>.png` (512 x 512, 255 = watermarked) and `masks_128.npz` (`names`, and `masks` as N x 128 x 128 uint8 on the official grid).
-- **JURECA:** the organizers' setup script downloads the data into `/p/scratch/training2666/<lead>/<team>/Hackathon_Watermark_Localisation_Task/` when the lead's `HF_TOKEN` is approved. It builds **no `.venv`** for this task, because it reads only a top-level `requirements.txt` and this dataset has none (the kit's `requirements.txt` is inside `starter_kit.zip`). We build this environment ourselves; see Environment below.
+- **JURECA:** the organizers' setup script downloaded the data into `/p/scratch/training2666/hibti1/Begg/Hackathon_Watermark_Localisation_Task/`. It builds **no `.venv`** for this task, because it reads only a top-level `requirements.txt` and this dataset has none (the kit's `requirements.txt` is inside `starter_kit.zip`). We built the environment ourselves; see On JURECA below.
 
 ## Starter kit
 
@@ -75,9 +75,18 @@ Vendored unmodified in `upstream/`; its own instructions are in `upstream/README
 
 ## Environment
 
-- The kit was tested on Python 3.11 with torch 2.5.1 and CUDA 12.4 wheels (`upstream/requirements.txt`, including `onnxruntime-gpu==1.23.2` and `trustmark==0.8.0`).
-- On JURECA, compute nodes have no internet. Run `download_models.py`, and the first TrustMark load that fetches its weights, on a login node. Then point `WMLOC_MODELS` at the models folder inside the team folder.
-- This environment has not been built or tested on JURECA yet.
+The kit was tested on Python 3.11 with torch 2.5.1 and CUDA 12.4 wheels (`upstream/requirements.txt`, including `onnxruntime-gpu==1.23.2` and `trustmark==0.8.0`).
+
+## On JURECA
+
+`/p/scratch/training2666/hibti1/Begg/Hackathon_Watermark_Localisation_Task/`, set up and checked on 2026-11-21:
+
+- `.venv`: Python 3.11 with the kit's `requirements.txt`, built by us.
+- The kit is unpacked at the folder root: `wmloc/`, `submission_template.py`, `download_models.py`. `load_watermark` finds `models/` there by default; set `WMLOC_MODELS` only when running from elsewhere.
+- `models/`: videoseal at the pinned commit, the PixelSeal checkpoint and the StegaStamp ONNX. All three wrappers were loaded once on the login node, so the lazily fetched TrustMark weights are cached and jobs can run offline.
+- Data: `release/train/` and `release/test/`.
+- Baseline: the official all-zeros prediction scores **0.2518** on the 510 train images (recorded in `results/`). A valid test file is at `output/baseline_allzeros.pt`; it has not been submitted.
+- Run GPU work with `jsc/jureca_gpu.sbatch.template` and `TASK_DIR` set to this folder (see `jsc/README.md`, Submitting a job): one A100 40 GB per job (`gpu:1`, 8 CPUs) on reservation `cispahack`, which ends 2026-11-22 14:00. Compute nodes have no internet.
 
 ## Submission
 

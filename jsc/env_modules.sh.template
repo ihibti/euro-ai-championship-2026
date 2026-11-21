@@ -1,7 +1,7 @@
 # Alternative to env_uv.sh following JSC's recommendation: module-provided Python/PyTorch
 # plus a venv with --system-site-packages under $PROJECT. Copy to jsc/env_modules.sh,
 # replace <EXTRA_MODULES> after checking names with `module spider PyTorch` on JURECA,
-# then:  EUROAI_ENV_SCRIPT=jsc/env_modules.sh sbatch job.sbatch
+# then source it in a rendered job script in place of `source .venv/bin/activate`.
 # JSC's maintained equivalent: https://gitlab.jsc.fz-juelich.de/kesselheim1/sc_venv_template
 
 if [ -z "${PROJECT:-}" ]; then

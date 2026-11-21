@@ -119,7 +119,10 @@ All nine reference endpoints are in family P, so the family term cannot be check
 
 The Hugging Face dataset `SprintML/model_equality` is public. Its files are copied unmodified into `upstream/`: `task_template.py`, `query_reference.py`, `score_practice.py`, `submission.py`, `practice_answers.csv` and `requirements.txt`.
 
-On JURECA the task folder is `/p/scratch/training2666/<lead>/<team>/model_equality/`. No GPU is needed.
+## On JURECA
+
+- `/p/scratch/training2666/hibti1/Begg/model_equality/`: a uv project with a Python 3.12 `.venv` holding requests, numpy, pandas, scikit-learn and scipy, plus the public starter files.
+- No GPU is needed. Querying needs internet, which compute nodes do not have: query from a laptop or a login node, through `scripts/me_query.py`.
 
 ## References
 
