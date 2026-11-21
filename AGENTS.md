@@ -14,6 +14,15 @@ Team workspace for the European AI Championship, Paris. Our team name on the lea
 | `watermark_localization` | `ihibti` (the lead) | none yet; work from the task README and the open issues |
 | `unlearning` | `kkrgp` | `tasks/unlearning/PLAYBOOK.md` |
 
+## How the ranking works
+
+Read from the leaderboard page on 2026-11-21:
+
+- A team is ranked only when it has a score on **all three tasks**. Get a first valid submission in on every task early, even a modest one.
+- Per task, only the team's best submission counts. The score is rescaled across teams: the best team gets 1, the lowest 0. The overall score is the average of the three rescaled scores.
+- A task where every team is weak is therefore worth as much as the others. Beating the current best there counts as a full point for that task.
+- The board shows public scores on about 30% of the data. The final ranking uses the other 70%.
+
 ## Map
 
 | Path | Contents |
