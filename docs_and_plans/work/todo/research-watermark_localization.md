@@ -9,6 +9,7 @@ Draft issue, not filed yet. Labels: `research`, `task:watermark`.
 **Read first:**
 - AGENTS.md and tasks/watermark_localization/README.md, especially the metric and the fact that each test image comes with its watermarking method and embedded message.
 - papers/briefs/2512.16874_pixel-seal.md
+- tasks/watermark_localization/upstream/README.txt and wmloc/watermarks.py: the extractor wrappers we already have (`logits`, `decode`, `features`).
 - Papers cited by the organizers:
   - Souček et al., "Pixel Seal: Adversarial-only training for invisible image and video watermarking." https://arxiv.org/abs/2512.16874
   - Bui, Agarwal, Collomosse, "TrustMark: Robust Watermarking and Watermark Removal for Arbitrary Resolution Images." ICCV 2025. https://openaccess.thecvf.com/content/ICCV2025/html/Bui_TrustMark_Robust_Watermarking_and_Watermark_Removal_for_Arbitrary_Resolution_Images_ICCV_2025_paper.html

@@ -2,7 +2,7 @@
 
 Source: the organizers' task description "Localize Image Watermark" (European AI Championship Paris 2026). Supervisors: Adam Dziedzic and Franziska Boenisch. Developed by Simon Hector, Michel Meintz, Louis Kerner and Maitri Shah. Rewritten here, with numbers and formulas copied exactly.
 
-Owner: TBD. Server task id: unknown until the starter kit is readable (see `upstream/PENDING.md`).
+Owner: TBD. Server task id: `34-watermark-localisation-image`.
 
 ## Goal
 
@@ -55,33 +55,45 @@ Score      = mean of mIoU_image over all test images
 | Train | 510 (170 per method) | image, ground-truth mask (512 x 512 and 128 x 128), watermarking method, embedded message (bit string) |
 | Test | 1,020 (340 per method) | image, watermarking method and embedded message |
 
-- **Hugging Face:** `SprintML/Hackathon_Watermark_Localisation_Task`, **gated, with manual approval**. The task PDF links to `SprintML/Hackathon_Watermark_Localisation_Task_Paris`, which redirects to the same dataset.
+- **Hugging Face:** `SprintML/Hackathon_Watermark_Localisation_Task`, **gated, with manual approval**. The team lead's account has access. The task PDF links to `SprintML/Hackathon_Watermark_Localisation_Task_Paris`, which redirects to the same dataset.
 - **Files:** `train.zip` (190,830,424 bytes), `test.zip` (378,735,114 bytes), `starter_kit.zip` (10,057 bytes), `README.txt`.
-- **Download:** `make data TASK=watermark_localization`, with `HF_TOKEN` set from an approved account.
-- **JURECA:** the organizers' setup script puts the data in `/p/scratch/training2666/<lead>/<team>/Hackathon_Watermark_Localisation_Task/` (with `.venv`, `requirements.txt` and `output/`), if the lead's `HF_TOKEN` is approved for the gated dataset.
+- **Download:** `make data TASK=watermark_localization`, with `HF_TOKEN` from an approved account. The zips unpack to `release/<split>/`:
+  - `images/<name>.png`: 512 x 512 RGB;
+  - `metadata.json`: `[{"image_name", "method", "message"}, ...]`. Train items also have `full_watermark`: true if the whole image was watermarked and a part restored to the clean original;
+  - train only: `masks/<name>.png` (512 x 512, 255 = watermarked) and `masks_128.npz` (`names`, and `masks` as N x 128 x 128 uint8 on the official grid).
+- **JURECA:** the organizers' setup script downloads the data into `/p/scratch/training2666/<lead>/<team>/Hackathon_Watermark_Localisation_Task/` when the lead's `HF_TOKEN` is approved. It builds **no `.venv`** for this task, because it reads only a top-level `requirements.txt` and this dataset has none (the kit's `requirements.txt` is inside `starter_kit.zip`). We build this environment ourselves; see Environment below.
 
-**Starter kit**, as described in the task PDF:
-- code to unzip and load the dataset into PyTorch datasets;
-- unified PyTorch wrappers for the PixelSeal, TrustMark and StegaStamp extractors and embedders, all with the same interface: `decode(images) -> bits` and access to intermediate feature maps;
-- helper functions: bit accuracy, mask downsampling to 128 x 128, and local mIoU evaluation on the train split;
-- `submission_template.py`.
+## Starter kit
+
+Vendored unmodified in `upstream/`; its own instructions are in `upstream/README.txt`.
+
+- `wmloc/watermarks.py`: one interface for the three methods, `load_watermark("pixelseal" | "trustmark" | "stegastamp", models_dir, device)`. It exposes `embed(image, bits)`, `logits(images)`, `decode(images)` and `features(images)` (intermediate extractor feature maps). These are exactly the embedders used to build the dataset. Message lengths: PixelSeal 256 bits, TrustMark (variant Q) 100, StegaStamp 100. Each decoder resizes its input to its own working resolution: 256, 245 and 400. The models directory can be set with `WMLOC_MODELS`.
+- `wmloc/data.py`: `unzip(zip, out_dir)` and `LocalisationDataset(root, split)`. Train items also carry `mask`, `mask128` and `full_watermark`.
+- `wmloc/utils.py`: `bit_accuracy`, the official `downsample_mask` (512 to 128; a cell is 1 if at least 50% of its pixels are), the official `miou_image` and `score`.
+- `submission_template.py`: writes an all-zeros baseline and prints the local train score. Its `BASE_URL` is a placeholder (`http://SERVER_IP`); the server is http://34.147.229.55, as for the other tasks. Submit with `make submit`, not with this script.
+- `download_models.py`: downloads the PixelSeal checkpoint from `dl.fbaipublicfiles.com`, clones `facebookresearch/videoseal` at a pinned commit, and fetches the StegaStamp ONNX export from GitHub (WAVES), adding a copy with a logits output (needs `onnx`). TrustMark (`pip install trustmark==0.8.0`) downloads its weights on first use.
+
+## Environment
+
+- The kit was tested on Python 3.11 with torch 2.5.1 and CUDA 12.4 wheels (`upstream/requirements.txt`, including `onnxruntime-gpu==1.23.2` and `trustmark==0.8.0`).
+- On JURECA, compute nodes have no internet. Run `download_models.py`, and the first TrustMark load that fetches its weights, on a login node. Then point `WMLOC_MODELS` at the models folder inside the team folder.
+- This environment has not been built or tested on JURECA yet.
 
 ## Submission
 
-A `.pt` file containing a dictionary:
+A `.pt` file written with:
 
 ```
-{"image_names": names, "masks": masks}
+torch.save({"image_names": names, "masks": masks}, "submission.pt")
 ```
 
-`names[i]` corresponds to `masks[i]`, and `masks` is a tensor of shape `[num_images, 128, 128]`.
+- `names[i]` is the image name of `masks[i]`: the file name **without `.png`**.
+- `masks` is a tensor of shape `[1020, 128, 128]` with entries 0 or 1, dtype `bool` or `uint8`. 1 = watermarked.
+- Every test image appears exactly once: no duplicates, no other entries.
+- The server loads the file with `torch.load(..., weights_only=True)`. Anything other than plain tensors, lists, strings and dicts is rejected.
+- Size: the task PDF says at most 20 MB; the kit's README says 25 MB. We enforce **20 MB**. A bool tensor is about 17 MB.
 
-- Each image name must appear exactly once.
-- Masks must have the correct shape and entries (0 or 1).
-- No duplicates or invalid entries.
-- File size must not exceed 20 MB.
-
-Submissions that break these rules are rejected automatically. `make submit` checks them locally first.
+Submissions that break these rules are rejected automatically. `make submit` checks them all locally first. That includes the names, against `release/test/metadata.json` when the test split has been downloaded.
 
 ## Scoring and leaderboard
 
@@ -92,7 +104,7 @@ Submissions that break these rules are rejected automatically. `make submit` che
 
 | | Locally | Only on the server |
 |---|---|---|
-| Exact metric | mIoU on the 510 training images with ground truth (starter-kit evaluator) | the 1,020 test images |
+| Exact metric | the official per-image mIoU on the 510 training images: `make score TASK=watermark_localization ANSWER=<file>` (`wmloc/utils.py` semantics) | the 1,020 test images |
 | Other signals | extractor bit accuracy against the known embedded message, intermediate feature maps | |
 
 Test images come with their watermarking method and embedded message. A local decode can therefore be checked against the known message at test time too.

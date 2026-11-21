@@ -22,7 +22,7 @@ CHALLENGE_TASKS: dict[str, TaskInfo] = {
         TaskInfo(
             name="watermark_localization",
             hf_dataset="SprintML/Hackathon_Watermark_Localisation_Task",
-            server_task_id=None,
+            server_task_id="34-watermark-localisation-image",
             suffixes=(".pt",),
             max_bytes=20_000_000,
         ),

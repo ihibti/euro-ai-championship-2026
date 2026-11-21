@@ -11,7 +11,7 @@ The organizers publish a README and two scripts in the Hugging Face dataset `Spr
 1. **Team lead, once:**
    - Download `hackathon_setup.sh` and set `TEAM_LEAD` (it must equal your own Jülich username), `TEAMMATE_1`…`TEAMMATE_3` (at least one) and `TEAM_FOLDER`.
    - Export `HF_TOKEN` from a Hugging Face account approved for the gated watermark dataset.
-   - Run `source hackathon_setup.sh`. It creates `/p/scratch/training2666/<lead>/<team-folder>/` and sets ACLs for the listed users. It also installs uv, downloads the three task datasets, and builds one `.venv` per task folder: `Hackathon_Watermark_Localisation_Task/`, `model_equality/`, `unlearning/`.
+   - Run `source hackathon_setup.sh`. It creates `/p/scratch/training2666/<lead>/<team-folder>/` and sets ACLs for the listed users. It also installs uv, downloads the three task datasets into `Hackathon_Watermark_Localisation_Task/`, `model_equality/` and `unlearning/`, and builds a `.venv` for each task folder that has a top-level `requirements.txt`. The watermark dataset has none (its `requirements.txt` is inside `starter_kit.zip`), so that task gets no `.venv`; we build it ourselves (see `tasks/watermark_localization/README.md`).
    - The team folder name is not decided yet.
 2. **Everyone else, after the lead finishes:**
    - Download `teammate.sh`, set `TEAM_LEAD` and `TEAM_FOLDER` to the lead's values, and run `source teammate.sh`.

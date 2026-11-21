@@ -24,7 +24,7 @@ def test_registry_matches_task_statements():
     assert set(CHALLENGE_TASKS) == {"watermark_localization", "model_equality", "unlearning"}
     assert get_task("model_equality").server_task_id == "33-model-equality"
     assert get_task("unlearning").server_task_id == "31-unlearning"
-    assert get_task("watermark_localization").server_task_id is None
+    assert get_task("watermark_localization").server_task_id == "34-watermark-localisation-image"
     assert get_task("unlearning").max_bytes == 450_000_000
     assert get_task("watermark_localization").max_bytes == 20_000_000
     assert get_task("model_equality").suffixes == (".csv",)
