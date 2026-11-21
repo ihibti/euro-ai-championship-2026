@@ -121,6 +121,15 @@ def self_mean(vectors: Sequence[Vector]) -> float:
     return float(np.mean(values)) if values else float("nan")
 
 
+def self_kernels(
+    cells: Mapping[str, Mapping[str, Sequence[Vector]]], kinds: Sequence[str]
+) -> dict[str, dict[str, float]]:
+    return {
+        endpoint: {p: self_mean(v) for p, v in sorted(prompts.items()) if kind_of(p) in kinds}
+        for endpoint, prompts in cells.items()
+    }
+
+
 def similarity_matrix(
     cells: Mapping[str, Mapping[str, Sequence[Vector]]],
     kinds: Sequence[str],
@@ -277,6 +286,7 @@ def decide(
             family_sim=family_sim,
             noise=noise,
             threshold=threshold,
+            own=self_kernels(cells, kinds),
         )
     return nested_labels(endpoints, family, model)
 
@@ -289,7 +299,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--factor", type=float, default=3.0)
     parser.add_argument("--family-threshold", type=float, default=0.5)
     parser.add_argument("--below", type=int, default=None, help="use only repeats below this")
+    parser.add_argument("--kinds", default=",".join(MODEL_KINDS), help="prompt kinds for models")
+    parser.add_argument("--mode", choices=("pooled", "prompt"), default="pooled")
     args = parser.parse_args(argv)
+    kinds = tuple(filter(None, args.kinds.split(",")))
     rows = load_rows(args.answers)
     if args.below is not None:
         rows = [row for row in rows if int(row["repeat"]) < args.below]
@@ -300,14 +313,29 @@ def main(argv: list[str] | None = None) -> int:
         factor=args.factor,
         family_threshold=args.family_threshold,
         report=report,
+        kinds=kinds,
+        mode=args.mode,
     )
     write_csv(args.out, labels)
     endpoints = report["endpoints"]
-    print(f"model cut {report['threshold']:.3f} (factor x rms self-split distance)")
-    print("model distance (1 - similarity); last column: self-split distance")
+    print(
+        f"model cut {report['threshold']:.3f} (factor x rms self-split distance), "
+        f"mode {args.mode}, kinds {','.join(kinds)}"
+    )
+    print(
+        "model distance (1 - similarity) | self-split distance | "
+        "own kernel K_xx: mean over prompts, min, prompts at 0"
+    )
     for i, endpoint in enumerate(endpoints):
         cells = " ".join(f"{1 - report['model_sim'][i, j]:.2f}" for j in range(len(endpoints)))
-        print(f"{endpoint} {cells} | {report['noise'][endpoint]:.2f}")
+        own = [v for v in report["own"][endpoint].values() if math.isfinite(v)]
+        mean_own = float(np.mean(own)) if own else float("nan")
+        low = min(own) if own else float("nan")
+        zeros = sum(v <= 0 for v in own)
+        print(
+            f"{endpoint} {cells} | {report['noise'][endpoint]:.2f} | "
+            f"{mean_own:.2f} {low:.2f} {zeros}"
+        )
     families = {family for _, family, _ in labels}
     models = {model for _, _, model in labels}
     print(f"wrote {args.out}: {len(families)} families, {len(models)} models")

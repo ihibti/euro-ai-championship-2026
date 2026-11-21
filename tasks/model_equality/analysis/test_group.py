@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import random
 import sys
 from pathlib import Path
@@ -98,6 +99,34 @@ def test_decide_separates_two_synthetic_models():
     assert labels["ref-01"] == labels["ref-02"] == labels["ref-03"]
     assert labels["ref-04"] == labels["ref-05"]
     assert labels["ref-01"] != labels["ref-04"]
+
+
+def test_self_kernels_read_the_spread_of_each_endpoint():
+    rows = rows_for("ref-01", {"seq_x": ["1, 2, 3"] * 3, "idn_y": ["a b", "c d"]})
+    rows += rows_for("ref-02", {"seq_x": ["a", "b c", "d e f"]})
+    cells = group.collect(rows, "ref-")
+    own = group.self_kernels(cells, group.MODEL_KINDS)
+    assert own["ref-01"] == pytest.approx({"seq_x": 1.0})
+    assert own["ref-02"] == pytest.approx({"seq_x": 0.0})
+
+
+def test_main_passes_mode_and_kinds(tmp_path, capsys):
+    rng = random.Random(5)
+    rows = []
+    for endpoint in ["ref-01", "ref-02", "ref-03"]:
+        rows += synthetic(endpoint, "plain", rng)
+    for endpoint in ["ref-04", "ref-05"]:
+        rows += synthetic(endpoint, "dotted", rng)
+    answers = tmp_path / "answers.jsonl"
+    answers.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+    out = tmp_path / "labels.csv"
+    argv = ["--answers", str(answers), "--out", str(out), "--mode", "prompt", "--kinds", "seq"]
+    assert group.main(argv) == 0
+    lines = out.read_text(encoding="utf-8").splitlines()[1:]
+    labels = {line.split(",")[0]: line.split(",")[2] for line in lines}
+    assert labels["ref-01"] == labels["ref-02"] == labels["ref-03"]
+    assert labels["ref-04"] == labels["ref-05"] != labels["ref-01"]
+    assert "mode prompt, kinds seq" in capsys.readouterr().out
 
 
 def test_decide_ignores_other_prefixes(tmp_path):

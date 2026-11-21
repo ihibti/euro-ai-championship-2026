@@ -65,6 +65,94 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
 
 - Conclusion (4 answers, indicative only): the final period rises with LoRA strength (0.3 and 0.7 prefer it, 1.5 leaves the format), so it is a dose signal. fp8 answers exactly like plain here. The period difference seen on repeat 0 of cand1 for ref-02 was chance.
 
+## E4. Round 1 at 4 repeats: throughput and determinism (2026-11-21 23:55)
+
+- Hypothesis: constrained sequences are near-greedy, so exact repeats within an endpoint are common and exact agreement between endpoints marks shared weights.
+- Commands: `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/round1.csv --repeats 4` (218 answers, 23:30:31 to 23:54:23), then `uv run python tasks/model_equality/analysis/collisions.py tasks/model_equality/answers/round1.jsonl --matrix`.
+- Throughput: 218 answers in 1,432 s, **9.1 answers per minute**, 0 failed, 0 skipped. With E0 and the first part of round 1, the rate is 8.0 to 9.3 per minute. The scored round 1 (1,320 answers) therefore takes 2.4 to 2.75 h.
+- `answers/round1.jsonl` now holds 360 answers: 10 prompts x 9 endpoints x repeats 0 to 3, no nulls, no duplicates.
+- Within-endpoint identical-pair rate (6 pairs per cell). The two batteries, the two free-text prompts and the identity prompt are 0.00 everywhere, except `bat_choice` on 06 (0.17):
+
+| prompt | 01 | 02 | 03 | 04 L.7 | 05 | 06 | 07 L1.5 | 08 | 09 L.3 |
+|---|---|---|---|---|---|---|---|---|---|
+| seq_alphabet | 0.00 | 0.00 | 0.00 | 0.00 | 0.17 | 0.17 | 0.00 | 0.00 | 0.00 |
+| seq_count30 | 0.17 | 0.50 | 0.17 | 0.50 | 0.00 | 0.50 | 0.00 | 0.00 | 0.17 |
+| seq_days | 0.17 | 0.17 | 0.17 | 1.00 | 0.17 | 0.00 | 0.00 | 0.00 | 0.50 |
+| seq_months | 0.00 | 0.17 | 0.00 | 1.00 | 0.00 | 0.17 | 0.00 | 0.00 | 0.50 |
+| seq_words40 | 0.00 | 0.00 | 0.00 | 0.17 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |
+
+- Between-endpoint identical rate, averaged over the 10 prompts: the highest are 04-09 (0.19), 03-04 (0.11) and 02-06 (0.10). Plain 01 is at 0.03 with itself and 0.02 to 0.07 with everyone else. Nothing ever matches 07.
+- Conclusion: no endpoint is deterministic. The plain model repeats itself in at most 1 pair out of 6 on a sequence: it answers `seq_alphabet` with symbols, the alphabet or a refusal, and `seq_days` starting on Sunday or Monday. The one sharp endpoint is LoRA 0.7: it gives the same answer 4 times out of 4 on days and months, and LoRA 0.3 does in half the pairs. The adapter sharpens these sequences, and 1.5 leaves the format altogether, so this is a dose signal on 04 and 09. At 4 answers, exact agreement is too rare to separate anything else.
+
+## E5. Separation table at 4 repeats (2026-11-21 23:56)
+
+- Hypothesis: on some probe type, the distance between disguised copies of one model (a) stays at the split-half noise, while fp8 (b) and the LoRA copies (c) rise above it.
+- Commands: `uv run python tasks/model_equality/analysis/explore.py tasks/model_equality/answers/round1.jsonl --repeats 0-3` and `... --choice`.
+- Every distance is computed between halves of 2 answers (even against odd repeats). The exact-match features (`full`, `head`, `tail`) are undefined (nan) or 0/1 on nearly every cell at this count, and so is the composite `seq` feature, so they are left out. The smooth features (`noise` = one endpoint's halves against each other; S = 01/03/05/06/08, Q = 02, L = 09/04/07):
+
+| prompt | feature | noise | a:S-S | b:Q-S | b:Q-01 | c:L.3-S | c:L.7-S | c:L1.5-S | c:L-L |
+|---|---|---|---|---|---|---|---|---|---|
+| bat_choice | bat | 0.03 | 0.09 | 0.08 | 0.10 | 0.08 | 0.05 | 0.09 | 0.10 |
+| bat_choice | words | 0.00 | 0.02 | 0.02 | 0.04 | 0.02 | 0.01 | 0.01 | 0.00 |
+| bat_trivia | bat | 0.03 | 0.04 | 0.06 | 0.04 | 0.05 | 0.11 | 0.10 | 0.08 |
+| bat_trivia | words | 0.02 | 0.01 | 0.04 | 0.06 | 0.05 | 0.05 | 0.04 | 0.06 |
+| bat_trivia | char3 | 0.01 | 0.01 | 0.03 | 0.04 | 0.03 | 0.04 | 0.02 | 0.07 |
+| idn_identity | words | 0.08 | 0.14 | 0.14 | 0.06 | 0.15 | 0.06 | 0.20 | 0.19 |
+| seq_count30 | char3 | 0.19 | 0.26 | 0.18 | 0.00 | 0.09 | 0.18 | 0.08 | 0.00 |
+| seq_days | words | 0.01 | 0.00 | 0.02 | 0.03 | 0.00 | 0.00 | 0.22 | 0.19 |
+| seq_months | words | 0.08 | 0.30 | 0.25 | 0.95 | 0.25 | 0.25 | 0.27 | 0.35 |
+| seq_words40 | words | 0.06 | 0.13 | 0.00 | 0.00 | 0.05 | 0.02 | 0.04 | 0.01 |
+| txt_health | words | 0.03 | 0.02 | 0.04 | 0.01 | 0.00 | 0.01 | 0.07 | 0.03 |
+| txt_story | words | 0.01 | 0.01 | 0.01 | 0.02 | 0.01 | 0.03 | 0.03 | 0.03 |
+
+- `bat_choice`, Spearman of per-item P(A): the split-half diagonal is 0.04, 0.31, 0.00, 0.45, -0.02, 1.00, -0.05, 0.27 and 0.06 for 01 to 09. Two answers per half do not estimate a per-item rate, so the temperature-robust rank statistic cannot be used at this count.
+- Conclusion: one prompt does what the hypothesis asks. On `bat_trivia`, with words or char3 features, the disguised pairs sit at 0.01 and fp8 and every LoRA at 0.02 to 0.07, three to six times higher, against a split-half noise of 0.01 to 0.02. Knowledge errors carry the weights, and the rigid 30-line format mutes the disguises. Elsewhere the disguises are as loud as the weight changes or louder: the `seq_*` prompts are dominated by format changes (S-S 0.13 to 0.38 on words), and the free-text prompts sit at the noise for every pair. `seq_days` separates only LoRA 1.5. One answer of 4 is a weak base for any of this: every cell compares 2 answers with 2.
+
+## E6. Grouping at exactly 40 answers per endpoint (2026-11-21 23:58)
+
+- Hypothesis: `group.py` (pooled kernel over the 9 `seq`/`bat`/`txt` prompts, average linkage cut at 3 x RMS self-split distance) recovers S, T1, T2, T3 and T4 from repeats 0 to 3.
+- Commands:
+  `uv run python tasks/model_equality/analysis/group.py --prefix ref- --answers tasks/model_equality/answers/round1.jsonl --below 4 --out tasks/model_equality/analysis/round1_refs.csv`
+  `make score TASK=model_equality ANSWER=tasks/model_equality/analysis/round1_refs.csv NOTES="..."`
+  and the same with `--mode prompt` and `--out tasks/model_equality/analysis/round1_refs_prompt.csv`. `group.py` gained `--mode`, `--kinds` and a per-endpoint printout of its own kernel K_xx for this check.
+- Pooled distance matrix (1 - similarity), self-split distance, and K_xx (mean over the 9 prompts, minimum, number of prompts at exactly 0):
+
+| | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | self-split | K_xx mean | min | at 0 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 01 | 0 | 0.06 | -0.05 | 0.15 | -0.08 | 0.09 | 0.13 | 0.06 | 0.09 | 0.07 | 0.30 | 0.00 | 1 |
+| 02 | 0.06 | 0 | 0.03 | 0.25 | 0.10 | 0.01 | 0.12 | 0.10 | 0.14 | -0.09 | 0.38 | 0.00 | 0 |
+| 03 | -0.05 | 0.03 | 0 | 0.04 | -0.03 | 0.11 | 0.06 | 0.07 | -0.00 | -0.13 | 0.33 | 0.00 | 0 |
+| 04 | 0.15 | 0.25 | 0.04 | 0 | 0.17 | 0.29 | 0.27 | 0.34 | -0.01 | -0.06 | 0.59 | 0.03 | 0 |
+| 05 | -0.08 | 0.10 | -0.03 | 0.17 | 0 | 0.11 | 0.10 | 0.13 | 0.09 | -0.21 | 0.26 | 0.01 | 0 |
+| 06 | 0.09 | 0.01 | 0.11 | 0.29 | 0.11 | 0 | 0.19 | 0.12 | 0.18 | -0.05 | 0.41 | 0.04 | 0 |
+| 07 | 0.13 | 0.12 | 0.06 | 0.27 | 0.10 | 0.19 | 0 | 0.08 | 0.15 | 0.06 | 0.29 | 0.00 | 0 |
+| 08 | 0.06 | 0.10 | 0.07 | 0.34 | 0.13 | 0.12 | 0.08 | 0 | 0.23 | 0.01 | 0.22 | 0.00 | 1 |
+| 09 | 0.09 | 0.14 | -0.00 | -0.01 | 0.09 | 0.18 | 0.15 | 0.23 | 0 | -0.09 | 0.39 | 0.03 | 0 |
+
+- Pooled: cut 0.307, **one model for all nine, MCC 0.000** (TP 10, FP 26, FN 0, TN 0). Record `results/20261121T225541Z_ihibti_practice-mcc.json`.
+- `--mode prompt`: per-prompt ratios on halves of 2 answers explode (distances down to -3.24, self-split down to -2.65), cut 3.435, **one model, MCC 0.000**. Record `results/20261121T225541Z_ihibti_practice-mcc-2.json`.
+- Floor check: no endpoint has a pooled K_xx near 0. The lowest is ref-08 at 0.22, so the `1e-9` floor never acts in pooled mode. Only ref-01 and ref-08 have a prompt at exactly 0, `seq_alphabet` in both cases; on `seq_alphabet`, `seq_months` and `seq_words40` most endpoints are at 0.00 to 0.03. The failure is not the floor. The self-split distance compares 2 answers with 2, with one pair for each half's K_xx, so it is noise of about ±0.1 (negative for 6 of 9 endpoints). Its RMS (0.10) times 3 lies above every pair but 04-08. The pooled kernel is also dominated by the two free-text prompts (K_xx 0.4 to 0.87, mostly function words), where every pair sits at the noise.
+- Permutation test of "same answer distribution" per pair (`analysis/permtest.py`, pooled kernel, 4 against 4 answers per prompt, 200 permutations; the smallest p-value possible is 0.005):
+
+| | plain 01 | fp8 02 | sys 03 | L.7 04 | persona 05 | wm 06 | L1.5 07 | T1.0 08 | L.3 09 |
+|---|---|---|---|---|---|---|---|---|---|
+| plain 01 | - | 0.154 | 0.746 | 0.010 | 0.846 | 0.030 | 0.005 | 0.184 | 0.080 |
+| fp8 02 | 0.154 | - | 0.338 | 0.005 | 0.080 | 0.318 | 0.010 | 0.025 | 0.065 |
+| sys 03 | 0.746 | 0.338 | - | 0.124 | 0.582 | 0.055 | 0.055 | 0.055 | 0.408 |
+| L.7 04 | 0.010 | 0.005 | 0.124 | - | 0.005 | 0.005 | 0.005 | 0.005 | 0.458 |
+| persona 05 | 0.846 | 0.080 | 0.582 | 0.005 | - | 0.040 | 0.015 | 0.010 | 0.100 |
+| wm 06 | 0.030 | 0.318 | 0.055 | 0.005 | 0.040 | - | 0.010 | 0.040 | 0.025 |
+| L1.5 07 | 0.005 | 0.010 | 0.055 | 0.005 | 0.015 | 0.010 | - | 0.005 | 0.015 |
+| T1.0 08 | 0.184 | 0.025 | 0.055 | 0.005 | 0.010 | 0.040 | 0.005 | - | 0.005 |
+| L.3 09 | 0.080 | 0.065 | 0.408 | 0.458 | 0.100 | 0.025 | 0.015 | 0.005 | - |
+
+- 4 of the 10 same-model pairs reject at p < 0.05 (the watermark and temperature copies against others), and 15 of the 26 different-model pairs do.
+- Conclusion: at 40 answers per endpoint, round 1 with this statistic does not recover the reference structure. Neither the default cut nor any threshold on these distances can: 03 (system prompt) is closer to 09 (-0.00) and 04 (0.04) than to 06 (0.11).
+  - Inseparable at this count: fp8 02 against plain 01 (p 0.15), LoRA 0.3 09 against plain (0.08), and LoRA 0.3 against LoRA 0.7 (0.46).
+  - Separated from plain: LoRA 0.7 and LoRA 1.5 (p 0.010 and 0.005).
+  - The watermark and temperature copies differ from plain about as much as fp8 does, so a test of "same distribution" cannot be the decision rule for disguised copies either.
+  - `group.py` is not fit to run unchanged on `round1-ep.jsonl`: on the references it calls every endpoint of a family one model, which gives MCC_model 0.
+
 ## Status at handoff (2026-11-21 23:12)
 
 Stopped by the coordinator before items 3 to 5 of the brief. No separation table, no reference MCC and no `results/` record exist yet.
