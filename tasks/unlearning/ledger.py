@@ -17,7 +17,13 @@ Candidates:
   (orig + a * step) / b, fitted to its measured label probability and KL from the original;
   its retain score is estimated from the spill probes (`ledger_inputs.json`);
 - `scale_t<t>`: every logit divided by t, exactly; retain from our own logits.
-- `dial<d>`: the nine classes' bias lowered by d, exactly (`bias_full30` is dial30).
+- `dial<d>`: the nine classes' bias lowered by d, exactly (`bias_full30` is dial30); `boats<d>`
+  the same on the four small-boat classes 29, 30, 31 and 33 only.
+
+The removal family comes in two variants: `removal`, where the validation and control sets hold
+images of the nine classes, so a dial pays at the gate and in retain; and `removal_b`, where they
+hold none, so a dial passes the gate and keeps retain near 1 (drift read on the other forget
+images).
 
 The utility gate: the original's validation accuracy A lies in the band given in the inputs (from
 `bias_full30` failing and `x4_e20` passing). A candidate that changes a share f of validation
@@ -76,7 +82,9 @@ def fit_proxy(
 
 
 NINE_CLASSES = (0, 6, 7, 8, 29, 30, 31, 33, 38)
+BOATS = (29, 30, 31, 33)
 DIALS = (10.0, 12.0, 15.0, 20.0, 30.0)
+BOAT_DIALS = (10.0, 15.0, 20.0)
 REMOVAL_SHIFTS = (10.0, 15.0, 25.0)
 REMOVAL_KS = (0.5, 1.0, 2.0)
 REMOVAL_TAUS = (1.0, 1.5, 2.0, 3.0)
@@ -91,6 +99,52 @@ def gate_pass(flip: float, low: float, high: float, threshold: float = 70.0) -> 
     if high <= low:
         return 1.0 if low >= need else 0.0
     return min(max((high - need) / (high - low), 0.0), 1.0)
+
+
+def unseen_flip(unseen: torch.Tensor, labels: torch.Tensor, classes, shift: float) -> float:
+    """Share of the images of `classes` that a model which never saw them classifies correctly
+    (the cross-fitted prediction) and that the dial turns wrong."""
+    index = torch.tensor(classes)
+    inside = torch.isin(labels, index)
+    right = (unseen.argmax(1) == labels) & inside
+    if not bool(right.any()):
+        return 0.0
+    dialed = unseen.clone()
+    dialed[:, index] -= shift
+    return float((dialed.argmax(1) != labels)[right].float().mean())
+
+
+def dial_candidate(
+    orig: torch.Tensor,
+    labels: torch.Tensor,
+    classes: tuple[int, ...],
+    shift: float,
+    band,
+    unseen: torch.Tensor,
+) -> dict:
+    """The original with the bias of `classes` lowered by `shift`. With those classes in the
+    validation and control sets, the validation images of those classes flip as the cross-fitted
+    predictions do (`unseen_flip`) and the drift on them enters retain; without them, retain is
+    read on the forget images of the other classes."""
+    index = torch.tensor(classes)
+    dialed = orig.clone()
+    dialed[:, index] -= shift
+    inside = torch.isin(labels, index)
+    share = len(classes) / 100.0
+    flip = share * unseen_flip(unseen, labels, classes, shift)
+    kl_inside = float(scoring.kl_rows(orig[inside], dialed[inside]).mean())
+    outside = ~inside
+    kept = float((dialed.argmax(1) == labels)[outside].float().mean())
+    kl_outside = float(scoring.kl_rows(orig[outside], dialed[outside]).mean())
+    return {
+        "logits": dialed,
+        "stats": None,
+        "retain": (1.0 - flip) / (1.0 + share * kl_inside),
+        "gate": gate_pass(flip, band[0], band[1]),
+        "retain_without": kept / (1.0 + kl_outside),
+        "gate_without": 1.0,
+        "proxy": None,
+    }
 
 
 def weight(predicted: float, observed: float) -> float:
@@ -150,21 +204,12 @@ def main(argv: list[str] | None = None) -> None:
     nine = torch.tensor(NINE_CLASSES)
     in_nine = torch.isin(labels, nine)
     for d in DIALS:
-        dialed = orig.clone()
-        dialed[:, nine] -= d
-        flipped = float((dialed.argmax(1) != labels)[in_nine].float().mean())
-        flip = 0.09 * min(1.0, 2.0 * flipped)
-        kl_nine = float(scoring.kl_rows(orig[in_nine], dialed[in_nine]).mean())
-        candidates[f"dial{d:g}"] = {
-            "logits": dialed,
-            "stats": None,
-            "retain": (1.0 - flip) / (1.0 + 0.09 * kl_nine),
-            "proxy": None,
-            "gate": gate_pass(flip, band[0], band[1]),
-        }
+        candidates[f"dial{d:g}"] = dial_candidate(orig, labels, NINE_CLASSES, d, band, orig + step)
+    for d in BOAT_DIALS:
+        candidates[f"boats{d:g}"] = dial_candidate(orig, labels, BOATS, d, band, orig + step)
 
     hypotheses = [
-        (family, k, tau, 0.0, (orig + k * direction) / tau)
+        (family, k, tau, 0.0, (orig + k * direction) / tau, False)
         for family, direction in (("aligned", step), ("other", other))
         for k in KS
         for tau in GOLD_TAUS
@@ -175,9 +220,11 @@ def main(argv: list[str] | None = None) -> None:
             for tau in REMOVAL_TAUS:
                 gold = orig + k * step * outside
                 gold[:, nine] -= shift
-                hypotheses.append(("removal", k, tau, shift, gold / tau))
+                for without in (False, True):
+                    family = "removal_b" if without else "removal"
+                    hypotheses.append((family, k, tau, shift, gold / tau, without))
     golds = []
-    for family, k, tau, shift, gold in hypotheses:
+    for family, k, tau, shift, gold, without in hypotheses:
         row = {"family": family, "K": k, "tau_g": tau, "d_g": shift}
         mean, std = scoring.loss_stats(gold, labels)
         row["gold_loss"] = (round(mean, 3), round(std, 3))
@@ -186,7 +233,9 @@ def main(argv: list[str] | None = None) -> None:
         for name, cand in candidates.items():
             terms = scoring.forget_terms(cand["logits"], gold, orig, labels, cand["stats"])
             forget = scoring.forget_score([terms])
-            row["pred"][name] = forget * cand["retain"] * cand["gate"]
+            gate = cand.get("gate_without", cand["gate"]) if without else cand["gate"]
+            retain = cand.get("retain_without", cand["retain"]) if without else cand["retain"]
+            row["pred"][name] = forget * retain * gate
         w = 1.0
         for name, observed in inputs["observed"].items():
             if name in row["pred"]:
@@ -215,6 +264,10 @@ def main(argv: list[str] | None = None) -> None:
             f"loss {row['gold_loss'][0]:.2f}/{row['gold_loss'][1]:.2f} "
             f"acc {row['gold_acc']:.2f} | {observed}"
         )
+    shares: dict[str, float] = {}
+    for row in golds:
+        shares[row["family"]] = shares.get(row["family"], 0.0) + row["posterior"]
+    print("\nposterior by family:", {f: round(v, 3) for f, v in shares.items()})
     print("\ncandidate: weighted mean | 10th to 90th percentile | P(score above the best so far)")
     best_so_far = max(inputs["observed"].values())
     summary = {}
@@ -228,7 +281,15 @@ def main(argv: list[str] | None = None) -> None:
         mean = float((values * weights).sum())
         above = float(weights[values > best_so_far].sum())
         summary[name] = {"mean": mean, "p10": low, "p90": high, "p_above_best": above}
-        print(f"  {name:<12} {mean:.4f} | {low:.4f} to {high:.4f} | {above:.2f}")
+        by_family = {}
+        for family in shares:
+            mask = np.array([row["family"] == family for row in golds])
+            total_f = weights[mask].sum()
+            weighted = float((values[mask] * weights[mask]).sum())
+            by_family[family] = weighted / total_f if total_f else 0.0
+        summary[name]["by_family"] = by_family
+        cells = " ".join(f"{f}={v:.3f}" for f, v in by_family.items())
+        print(f"  {name:<12} {mean:.4f} | {low:.4f} to {high:.4f} | {above:.2f} | {cells}")
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
         json.dumps(
