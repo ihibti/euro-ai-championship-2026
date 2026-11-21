@@ -12,7 +12,11 @@ The counts in the playbook fit one construction exactly: **each class has 130 tr
 
 So gold is trained on 9,500 images of 91 classes. Confidence: high, not certain. The first submission tests it (section 5).
 
+The same counts also fit a cap of 10% on classes of 1,300 images, as in ImageNet. That reading lost its main support on 2026-11-21: 48 forget images, fetched by byte range from the public file, are **generated pictures of objects** (figurines, aloe plants, lanterns, boats, kites). The dataset is custom and synthetic, so a class of 130 generated images is plausible, and clean generated images of distinct objects explain how a ViT trained from scratch on so little passes 70%.
+
 Second fact, read from the confidences: the original model's median top probability is 0.99999. Label smoothing 0.1 caps that near 0.90, and mixup or cutmix cap it too. **The training recipe has hard labels and no smoothing**, and gold is trained the same way. That decides how large gold's loss is on a class it never saw.
+
+Open point: LayerScale at 1e-4 is the DeiT-III default, and DeiT-III trains with a binary cross-entropy. Under that loss a class gold never saw sits at the level of any other negative class, and an unseen-class image may fire no class at all: gold's loss would then be nearer 5 to 10 and its distribution at temperature 2 flatter. The check is on the logits: under a binary cross-entropy the non-top logits share one strongly negative level and their mean is far below zero.
 
 ## 2. What gold does, group by group
 
@@ -75,7 +79,17 @@ All candidates along `d` are built at once and checked with `--check`; the human
 - A fine-tune that looks perfect on the trained images and has drifted on the held-out ones: the held-out drift is the number that counts.
 - The public score rising while a local proxy falls: trust the proxy for the choice of method, the server for the dial.
 
-## 8. Who does what
+## 8. Outside data
+
+An organizer confirmed on 2026-11-21 that outside datasets may be used. Because the dataset is synthetic and undisclosed, no public set holds the retained images, and real photographs are a different domain. The uses, by value:
+
+1. **None for the first submissions.** The class dial needs no data; do not delay it.
+2. **A drift meter and anchor set for the 55 untouched classes.** Run the original model over a large public image set and keep, per class, the images it classifies with high confidence. They are the only view we get of the classes absent from the forget set. Anchoring a fine-tune on them is SCAR's recipe.
+3. **A faithful replica, if the first submissions confirm whole-class removal.** Generate images in the same style with a text-to-image model, train original-like and gold-like ViTs on them, and score every method with the exact formula. It also gives a direct estimate of where a model that never saw the nine classes sends their images. This costs hours, so it runs beside the calibration, not before it.
+
+Held-out forget images stay the best stand-in for the control set: same generator, same memorization.
+
+## 9. Who does what
 
 - **Owner's agent (laptop, the only one that talks to JURECA):** candidates, jobs, proxies, records, PRs.
 - **Research agents:** three questions feeding `research.md` (issue #3): what a retrained model does when a class is removed, forget-only methods for a ViT, and where this metric and dataset come from.
