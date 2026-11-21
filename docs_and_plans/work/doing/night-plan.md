@@ -40,8 +40,8 @@ The lead writes `~/.config/euroai/night.json` at a terminal. Only the lead's age
 ## Model equality
 
 1. Reference work (main line): a frozen prompt set `probes/round1.csv`, the method `analysis/group.py`, and its MCC on the references at the same number of answers per endpoint.
-2. Stage 1 spend: 10 answers per endpoint (330 in total), once step 1 is committed. It shows the families, the answer style and whether the pipeline works on real endpoints.
-3. Stage 2 spend: up to 40 more per endpoint, only if the frozen method reaches an MCC of 0.7 or more on the references at the same counts (median over resamples). Below that, the answers wait for a better method or for the lead.
+2. Measured at 23:12: 8 to 9 answers a minute, so 40 per endpoint take 2.2 to 2.75 hours. Scored round 1 is the full frozen round (40 per endpoint), started as soon as its MCC on the references at 40 is recorded. The answers are kept and both methods read them.
+3. Round 2: up to 40 more per endpoint, aimed at the undecided pairs. The revised times are in `desk-handoff.md`, Model equality.
 4. Submission: the grouping from the frozen code, checked with `make check`. A further submission needs a written reason (new answers, or a mistake found). No submission is made to try a threshold against the public score.
 5. Where the two methods disagree on a pair, the pair is listed in the morning brief with the evidence from both. The remaining answers go to those pairs first.
 6. Morning: the lead spends the remaining 50 answers per endpoint with one command. Final submission by 11:00.

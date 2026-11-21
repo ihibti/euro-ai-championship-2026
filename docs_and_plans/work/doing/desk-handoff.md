@@ -81,12 +81,19 @@ Each 0.10 on model equality adds 0.033 overall, as does each 0.04 on unlearning.
   - Brief: `docs_and_plans/work/doing/model-equality-main-line.md`.
   - Branch `ihibti/model-equality-refs`, worktree `~/worktrees/euro-ai-championship-2026/model-equality-refs`.
   - Notebook: `tasks/model_equality/analysis/refs_report.md` on that branch, section "Status at handoff".
-  - The previous session's agent was told to checkpoint and stop at about 23:30.
+  - The previous session's agent stopped at 23:12, at commit `ed349c1`. Its "Status at handoff" has 10 numbered next steps.
+  - Facts from that run:
+    - The server gives 8 to 9 answers a minute, with about 24 s per request, whatever the length.
+    - `probes/round1.csv` is frozen: 10 prompts, 40 answers per endpoint at `--repeats 4`. The references hold 1 full repeat and 1 partial repeat; finishing 4 repeats takes 218 answers, about 27 minutes.
+    - `analysis/group.py` needs at least 4 repeats per prompt and is not validated yet. Its tests run with `uv run pytest tasks/model_equality/analysis`.
+    - The reference model is weak: it often copies the prompt's examples. Nothing has separated the fp8 copy yet. On one prompt the final period after "30" rises with the LoRA strength.
   - Relaunch one Opus agent from the brief and the notebook. First check that `pgrep -fl me_query.py` prints nothing, and that the branch has a commit from after 23:25.
-- **Spend plan** (`docs_and_plans/work/doing/night-plan.md`):
-  - Stage 1: 10 answers per endpoint, once `probes/round1.csv` is frozen and its MCC on the references is recorded.
-  - Stage 2: up to 40 more, only if the frozen method reaches an MCC of 0.7 or more on the references at the same counts (median over resamples).
-  - Keep 50 per endpoint for the morning.
+- **Spend plan**, revised at 23:15 for the measured speed. Querying is the bottleneck: 40 answers per endpoint take 2.2 to 2.75 hours on all 33 endpoints. Answers from the references and the scored endpoints share the team's 4 parallel requests, so the two never run at once.
+  1. Finish 4 repeats of round 1 on the references, then record the MCC at exactly 40 answers (`make score`). Target: about 00:15.
+  2. Scored round 1 at 40 per endpoint (1,320 answers). Start it as soon as step 1 is recorded, whatever the MCC: the answers are kept, and both methods will read them. Target: about 00:20 to 03:00.
+  3. First real submission from the frozen code, then the comparison with Devin's grouping. Target: about 03:30.
+  4. Round 2: up to 40 per endpoint, aimed at the endpoints whose pairs are undecided. Fewer endpoints means a shorter round. Target: about 03:30 to 06:15.
+  5. Whatever the night authorization leaves goes to the lead in the morning: 20 per endpoint take about 80 minutes.
   - Spend command: `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/round1.csv --endpoints ep --repeats <n> --spend`.
   - Commit and push the answers file at once: those answers cannot be bought again.
 - **Submissions:** the grouping the frozen code writes, after `make check`. A further submission needs a reason written down (new answers, or a mistake found), never a threshold tried against the public score.
