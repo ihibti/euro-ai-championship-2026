@@ -231,10 +231,11 @@ def main(argv: list[str] | None = None) -> None:
         images = images[: args.limit]
     labels = lib.logits_of(teacher, images).argmax(1)
     shift, beta = lib.class_plan(labels, args.full, args.hedge)
-    beta = beta + args.even * (torch.bincount(labels, minlength=tt.NUM_CLASSES) > 0)
-    hedged = torch.nonzero((beta > 0) & (shift == 0)).squeeze(1)
-    order = torch.randperm(len(hedged), generator=torch.Generator().manual_seed(args.seed))
-    spare = hedged[order[: args.spare_classes]]
+    touched = torch.bincount(labels, minlength=tt.NUM_CLASSES) > 0
+    beta = beta + args.even * touched
+    spareable = torch.nonzero(touched & (shift == 0)).squeeze(1)
+    order = torch.randperm(len(spareable), generator=torch.Generator().manual_seed(args.seed))
+    spare = spareable[order[: args.spare_classes]]
     beta[spare] = 0
     with torch.no_grad():
         student.head.bias -= shift.to(student.head.bias)
