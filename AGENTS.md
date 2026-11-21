@@ -4,10 +4,11 @@ Team workspace for the European AI Championship, Paris. Our team name on the lea
 
 ## Start here
 
-1. Find out who you work for: `gh api user --jq .login` prints your human's GitHub login.
+1. Find out who you work for: `gh api user --jq .login` prints your human's GitHub login. On the night of 21 to 22 November, `kkrgp` works through the lead's login, so it prints `ihibti` for both: ask your human which of the two they are.
 2. If their laptop is not set up, take them through `docs_and_plans/guides/teammate-onboarding.md`, one step at a time: tools, the scoreboard token, their JURECA key and the team folder. Its checks show which steps are left. It runs on their laptop, never in a cloud session.
 3. If they own a task, read its playbook and work from it. If the playbook is not there yet, read the task README and pull `main` again in a few minutes. If they own no task, take an open issue for the task they name.
 4. Before asking the lead's agent for a GPU run or a submission, read Requests to the desk.
+5. The desk is the one session the lead starts on the lead's laptop. It reads `docs_and_plans/work/doing/desk-handoff.md` before anything else. No other agent acts as the desk.
 
 | Task | Owner | Playbook |
 |---|---|---|
