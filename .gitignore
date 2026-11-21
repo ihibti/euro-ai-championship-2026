@@ -1,0 +1,66 @@
+# Data, model weights and generated artifacts
+data/*
+!data/README.md
+outputs/
+runs/
+checkpoints/
+logs/
+output/
+wandb/
+mlruns/
+lightning_logs/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.onnx
+*.npz
+*.parquet
+*.h5
+*.hdf5
+*.zip
+*.tar
+*.tar.gz
+submission*.csv
+slurm-*.out
+slurm-*.err
+
+# Reference PDFs: arXiv licences do not generally permit redistribution; re-fetch with `make papers`
+papers/*.pdf
+
+# Credentials and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+id_ed25519*
+id_rsa*
+*.pub
+.netrc
+.huggingface/
+.cache/
+
+# Local environments and tool caches
+.venv/
+venv/
+env/
+.uv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

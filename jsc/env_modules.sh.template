@@ -1,0 +1,29 @@
+# Alternative to env_uv.sh following JSC's recommendation: module-provided Python/PyTorch
+# plus a venv with --system-site-packages under $PROJECT. Copy to jsc/env_modules.sh,
+# replace <EXTRA_MODULES> after checking names with `module spider PyTorch` on JURECA,
+# then:  EUROAI_ENV_SCRIPT=jsc/env_modules.sh sbatch job.sbatch
+# JSC's maintained equivalent: https://gitlab.jsc.fz-juelich.de/kesselheim1/sc_venv_template
+
+if [ -z "${PROJECT:-}" ]; then
+  echo "env_modules.sh: \$PROJECT is not set; run 'jutil env activate -p <project>' first" >&2
+  return 1 2>/dev/null || exit 1
+fi
+
+module load Stages/2026
+module load GCC Python <EXTRA_MODULES>
+
+EUROAI_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+EUROAI_VENV="${PROJECT}/${USER}/venvs/euroai"
+export EUROAI_REPO EUROAI_VENV
+
+if [ ! -d "${EUROAI_VENV}" ]; then
+  python -m venv --system-site-packages "${EUROAI_VENV}"
+  "${EUROAI_VENV}/bin/pip" install -e "${EUROAI_REPO}[dev]"
+fi
+source "${EUROAI_VENV}/bin/activate"
+
+if [ -n "${SCRATCH:-}" ]; then
+  export HF_HOME="${SCRATCH}/${USER}/hf"
+  export TORCH_HOME="${SCRATCH}/${USER}/torch"
+  mkdir -p "${HF_HOME}" "${TORCH_HOME}"
+fi

@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "euroai"
+version = "0.1.0"
+description = "Task-independent scaffolding for the European AI Championship 2026 hackathon (challenge TBD)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+torch = [
+    "torch>=2.2",
+]
+vision = [
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "pillow>=10.0",
+]
+hf = [
+    "torch>=2.2",
+    "transformers>=4.44",
+    "datasets>=2.20",
+    "accelerate>=0.33",
+    "safetensors>=0.4",
+]
+sci = [
+    "scipy>=1.11",
+    "scikit-learn>=1.4",
+    "pandas>=2.1",
+]
+notebook = [
+    "jupyterlab>=4.2",
+    "ipykernel>=6.29",
+    "matplotlib>=3.8",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/euroai"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "smoke: end-to-end checks that the scaffold runs on CPU",
+    "torch: requires the optional torch extra",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["notebooks", "papers", "data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "NPY"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/euroai/env.py" = ["UP"]
+"scripts/check_env.py" = ["UP"]
+"src/euroai/seeding.py" = ["NPY002"]
+"tests/test_seeding.py" = ["NPY002"]

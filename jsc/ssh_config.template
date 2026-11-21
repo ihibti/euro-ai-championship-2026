@@ -1,0 +1,14 @@
+# Append to ~/.ssh/config on your laptop after replacing the placeholder.
+# Basis: JSC access docs (apps.fz-juelich.de/jsc/hps/jureca/access.html), see jsc/README.md.
+Host jureca jureca?? judac
+  HostName %h.fz-juelich.de
+  User <JUDOOR_USERNAME>
+  IdentityFile ~/.ssh/id_ed25519_jsc
+  IdentitiesOnly yes
+  AddressFamily inet
+  ForwardAgent no
+  ForwardX11 no
+  ControlMaster auto
+  ControlPath ~/.ssh/control-%h-%p-%r
+  ControlPersist 8h
+  ServerAliveInterval 60

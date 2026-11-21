@@ -1,0 +1,29 @@
+#!/bin/bash
+# JURECA-DC single-node GPU job. Fill placeholders with scripts/render_template.py;
+# see jsc/README.md ("Submitting a job") for what each value must be and how it was verified.
+#SBATCH --job-name=euroai
+#SBATCH --account=<BUDGET_ACCOUNT>
+#SBATCH --reservation=<RESERVATION>
+#SBATCH --partition=dc-gpu
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=128
+#SBATCH --gres=gpu:4
+#SBATCH --time=<TIME>
+#SBATCH --output=logs/%x-%j.out
+#SBATCH --error=logs/%x-%j.err
+
+set -euo pipefail
+
+export SRUN_CPUS_PER_TASK="${SLURM_CPUS_PER_TASK}"
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+export HF_DATASETS_OFFLINE=1
+export PYTHONUNBUFFERED=1
+
+cd "${SLURM_SUBMIT_DIR}"
+source "${EUROAI_ENV_SCRIPT:-jsc/env_uv.sh}"
+
+srun python scripts/check_env.py
+srun python scripts/run_experiment.py --config "${EUROAI_CONFIG:-configs/example.toml}" ${EUROAI_ARGS:-}

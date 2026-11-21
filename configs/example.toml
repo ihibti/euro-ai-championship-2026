@@ -1,0 +1,16 @@
+# Pipeline smoke config: synthetic detection scores, no data or GPU needed.
+# Copy this file per experiment; override any key with --set section.key=value.
+
+[experiment]
+name = "synthetic-detection-smoke"
+task = "synthetic_detection"
+seed = 1234
+deterministic = false
+output_dir = "outputs"
+
+[task]
+n_positive = 500
+n_negative = 500
+separation = 1.0
+target_fpr = 0.01
+bootstrap_resamples = 300
