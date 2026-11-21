@@ -33,6 +33,7 @@ from euroai.credentials import (  # noqa: E402
     read_text_or_none,
 )
 from euroai.me_query import (  # noqa: E402
+    ELAPSED_FIELD,
     Job,
     budget_from_models,
     budget_lines,
@@ -60,11 +61,15 @@ BASE_URL = f"{SERVER_URL}/{get_task('model_equality').server_task_id}/v1"
 
 def make_send(session: Any):
     def send(job: Job) -> tuple[int, Any, Any]:
+        start = time.monotonic()
         reply = session.post(f"{BASE_URL}/chat/completions", json=request_body(job), timeout=180)
+        elapsed = time.monotonic() - start
         try:
             body = reply.json()
         except ValueError:
             body = {"raw_text": reply.text[:300]}
+        if isinstance(body, dict):
+            body[ELAPSED_FIELD] = round(elapsed, 3)
         return reply.status_code, reply.headers, body
 
     return send
