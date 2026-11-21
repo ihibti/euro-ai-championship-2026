@@ -43,6 +43,18 @@ What the targets ask for, computed on the laptop from the original logits and th
 
 The spread runs at 2.3 to 3.5 times the mean, the shape of a bimodal test loss. The range where gold probably sits, a 10 to 25% error rate, is K between 1.2 and 1.6. A fine-tune undershoots its targets: `moved_share` was 0.65 to 1.0 in #14.
 
+**Undershooting costs less than overshooting.** If gold lay on the dial at K*, a candidate at K would score as follows (`dial_matrix.py`, exact images, forget score only):
+
+| Candidate K | gold 1.1 | 1.2 | 1.4 | 1.6 | 1.8 | 2.0 | mean |
+|---|---|---|---|---|---|---|---|
+| 1.0 | 0.69 | 0.49 | 0.28 | 0.17 | 0.12 | 0.08 | 0.31 |
+| 1.2 | 0.63 | 1.00 | 0.58 | 0.37 | 0.26 | 0.19 | 0.51 |
+| 1.4 | 0.00 | 0.32 | 1.00 | 0.66 | 0.46 | 0.34 | 0.46 |
+| 1.6 | 0.00 | 0.00 | 0.49 | 1.00 | 0.72 | 0.53 | 0.46 |
+| 2.0 | 0.00 | 0.00 | 0.00 | 0.19 | 0.69 | 1.00 | 0.31 |
+
+The search therefore starts low and climbs while the score rises. Gold is not on the dial, so real scores sit lower; the shape is what carries over.
+
 **Retain is cheap if the change stays on the images.** In `d3_ext_probe` (#14), images and classes the fine-tune never saw took about a third of the softening (KL 0.017 to 0.024 at temperature 2) and none of the flips (held-out loss mean 0.002, against 0.034 on trained images). Retain stays about 0.97 or above.
 
 ## Assumptions that can break
