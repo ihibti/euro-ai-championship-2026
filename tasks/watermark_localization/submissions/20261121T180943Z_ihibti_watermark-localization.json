@@ -1,0 +1,30 @@
+{
+  "attempted_at": "2026-11-21T18:09:43.637139+00:00",
+  "bytes": 16735024,
+  "file": "data/watermark_localization/output/candidates/c4a_test.pt",
+  "git": {
+    "branch": "ihibti/setup-hackathon-swarm-workspace",
+    "commit": "2bc7e42712f6e8b5f934606d3ef417e86fdc7536",
+    "dirty": false
+  },
+  "http_status": 200,
+  "message": "score 0.6876; previous best 0.4421; improved True; New best on this task. Score shown is on the public split; the final ranking uses the held out subset, revealed after submissions close.",
+  "person": "ihibti",
+  "response": {
+    "delta": 0.2455,
+    "improved": true,
+    "message": "New best on this task. Score shown is on the public split; the final ranking uses the held out subset, revealed after submissions close.",
+    "previous_best": 0.4421,
+    "score": 0.6876,
+    "status": "success",
+    "submission_id": 1289
+  },
+  "score": 0.6876,
+  "server_task_id": "34-watermark-localisation-image",
+  "sha256": "4d7b6e87adf8099af23d8348fe54bb825e30e611bd76fc579693bca1436dfca7",
+  "status": "success",
+  "task": "watermark_localization",
+  "validation_notes": [
+    "1020 masks, 48.9% of cells marked"
+  ]
+}

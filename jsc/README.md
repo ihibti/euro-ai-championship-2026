@@ -120,7 +120,7 @@ Check usage with `jutil project dataquota -p <project>` (updated every 8 h). Alw
 |---|---|
 | `jutil env activate -p training2614` (screenshot shows `training2557`) | These IDs come from earlier events. Our project is **training2666**, and the slide's own sbatch uses `--account=training2666`. |
 | `#SBATCH –reservation=cispahack` | The slide uses an en-dash, so the line will not parse as an option. Retype it with `--`. The name `cispahack` is **confirmed** for this event. |
-| `--gres=gpu:1` | The organizers ask for it, and our template uses it; a job then sees one GPU. BATCH says nodes are allocated whole and production jobs should use all 4 GPUs. Whether `gpu:4` is allowed in the reservation is an **open question for the organizers**. |
+| `--gres=gpu:1` | The organizers ask for it, and our template uses it; a job then sees one GPU. BATCH says nodes are allocated whole and production jobs should use all 4 GPUs. **Team rule (lead, 2026-11-21): a job uses one GPU, and the team uses at most 4 at the same time.** |
 | MOTD 2025-03-31: "Do not constrain GPU devices with Slurm … not constrained by cgroups" | Contradicted by CHG 2025-03-13 (cgroup constraints enabled) and absent from the current KI page. It is probably stale. Check on login. |
 | `MACs hmac-sha2-256-etm@openssh.com` in `~/.ssh/config` | Official docs don't require it for macOS. Left out of our template; see Troubleshooting. |
 | uv installed in `$HOME`, `UV_CACHE_DIR` and related variables under `$PROJECT/$USER/uv`, `uv add torch` (pip wheels) | Works, and our `env_uv.sh` follows it. JSC/SDL instead recommend module-provided PyTorch plus a venv (`env_modules.sh.template`). Caches under `$PROJECT` count toward its 3M-file quota. |
@@ -206,6 +206,8 @@ Compute nodes have no internet. Fetch everything with `HF_HOME` set (done by the
 | `TIME` | walltime `HH:MM:SS`; the reservation ends 2026-11-22 14:00 |
 | `COMMAND` | what `srun` runs in `TASK_DIR`, e.g. `python unlearn.py` |
 
+Only the lead's account submits jobs (`AGENTS.md`, hard rule 5). Everyone else asks with `.github/ISSUE_TEMPLATE/gpu-request.md`.
+
 On a login node (bash), from a checkout of this repo:
 ```
 TASK_DIR=/p/scratch/training2666/hibti1/Begg/unlearning
@@ -216,7 +218,7 @@ squeue -u "$USER"
 sacct -j <jobid>
 ```
 - `render_template.py` refuses to write a script while any placeholder is still unfilled.
-- **Allocation is per whole node** (4 A100s), whatever the GPU request. The organizers ask for `gpu:1`; whether `gpu:4` is allowed in the reservation is an open question for them.
+- **Allocation is per whole node** (4 A100s), whatever the GPU request. The organizers ask for `gpu:1`. Team rule (lead, 2026-11-21): a job uses one GPU, and the team runs at most 4 at the same time.
 - Compute nodes have no internet: download everything on a login node first. The template sets the Hugging Face and uv offline flags.
 - To test quickly outside the reservation, use `--partition=dc-gpu-devel` (max 2 h, has internet) and drop the reservation line.
 
@@ -242,7 +244,7 @@ sacct -j <jobid>
 
 ## Still unverified
 
-1. Whether `gpu:4` (a whole node) is allowed in the `cispahack` reservation. Ask the organizers.
+1. Whether `gpu:4` (a whole node) is allowed in the `cispahack` reservation. Not needed any more: the team rule is one GPU per job and at most 4 at the same time.
 2. PyTorch module names in Stage 2026 (the task `.venv`s use pip wheels, which work: torch 2.15.0+cu132 sees the GPU).
 3. The meaning of "24 h / 6 h" for `dc-gpu`.
 4. Whether Slurm creates a missing `--output` directory; create it first.

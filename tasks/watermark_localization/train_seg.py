@@ -235,6 +235,74 @@ class Net(nn.Module):
         return self.head(x)[:, 0]
 
 
+EXTRACTOR_CHANNELS = {"pixelseal": (96, 192, 384, 768), "trustmark": (256, 512, 1024, 2048)}
+
+
+def extractor_backbone(wm) -> nn.Module:
+    core = copy.deepcopy(wm.det.convnext if wm.name == "pixelseal" else wm.net).float()
+    for parameter in core.parameters():
+        parameter.requires_grad_(True)
+    return core
+
+
+class ExtractorNet(nn.Module):
+    """Segmentation on top of the method's own extractor, which already sees the watermark."""
+
+    def __init__(self, method: str, backbone: nn.Module, width: int = 32):
+        super().__init__()
+        self.method = method
+        self.backbone = backbone
+        c1, c2, c3, c4 = EXTRACTOR_CHANNELS[method]
+        w = width
+        self.lat4 = nn.Conv2d(c4, 8 * w, 1)
+        self.lat3 = nn.Conv2d(c3, 8 * w, 1)
+        self.lat2 = nn.Conv2d(c2, 4 * w, 1)
+        self.lat1 = nn.Conv2d(c1, 4 * w, 1)
+        self.u3 = stage(16 * w, 8 * w, 1)
+        self.u2 = stage(12 * w, 4 * w, 1)
+        self.u1 = stage(8 * w, 4 * w, 1)
+        self.fine = nn.Sequential(conv_bn(3, w, 2), conv_bn(w, 2 * w, 2), Block(2 * w))
+        self.out = nn.Sequential(conv_bn(6 * w, 4 * w), Block(4 * w), nn.Conv2d(4 * w, 1, 1))
+
+    def train(self, mode: bool = True):
+        super().train(mode)
+        self.backbone.eval()
+        return self
+
+    def decoder_parameters(self):
+        return [p for name, p in self.named_parameters() if not name.startswith("backbone.")]
+
+    def pyramid(self, x: torch.Tensor) -> list[torch.Tensor]:
+        features = []
+        if self.method == "pixelseal":
+            for down, blocks in zip(
+                self.backbone.downsample_layers, self.backbone.stages, strict=True
+            ):
+                x = blocks(down(x))
+                features.append(x)
+            return features
+        core = self.backbone
+        x = core.maxpool(core.relu(core.bn1(core.conv1(x))))
+        for name in ("layer1", "layer2", "layer3", "layer4"):
+            x = getattr(core, name)(x)
+            features.append(x)
+        return features
+
+    def forward(self, images):
+        with torch.autocast("cuda", enabled=False):
+            full = images.permute(0, 3, 1, 2).float().div(255)
+            small = F.interpolate(
+                full, size=(256, 256), mode="bilinear", align_corners=False, antialias=True
+            )
+            small = (small * 2 - 1).contiguous(memory_format=torch.channels_last)
+            full = (full * 2 - 1).contiguous(memory_format=torch.channels_last)
+        f1, f2, f3, f4 = self.pyramid(small)
+        x = self.u3(Net.up(self.lat4(f4), self.lat3(f3)))
+        x = self.u2(Net.up(x, self.lat2(f2)))
+        x = self.u1(Net.up(x, self.lat1(f1)))
+        return self.out(Net.up(x, self.fine(full)))[:, 0]
+
+
 def seg_loss(logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
     bce = F.binary_cross_entropy_with_logits(logits, target)
     p = torch.sigmoid(logits)
@@ -287,6 +355,12 @@ def main() -> None:
     parser.add_argument("--boost", type=float, default=1.0, help="starting watermark gain")
     parser.add_argument("--boost-fraction", type=float, default=0.35)
     parser.add_argument("--highpass", action="store_true", help="add fine-detail input channels")
+    parser.add_argument(
+        "--extractor",
+        action="store_true",
+        help="build on the method's own extractor (PixelSeal, TrustMark)",
+    )
+    parser.add_argument("--backbone-lr", type=float, default=0.3, help="relative to --lr")
     parser.add_argument("--all-real", action="store_true", help="train on the held-out fifth too")
     parser.add_argument("--covers", type=Path, default=Path("covers/ddb_512.npy"))
     parser.add_argument(
@@ -363,6 +437,7 @@ def main() -> None:
         on_dataset = torch.from_numpy(np.stack([image for image, _, _ in made])).to(device)
         on_dataset_truth = np.stack([to_grid(mask) for _, mask, _ in made])
 
+    backbone = extractor_backbone(wm) if args.extractor else None
     del wm
     torch.cuda.empty_cache()
     buffer = Buffer(args.buffer, device)
@@ -394,11 +469,20 @@ def main() -> None:
     while buffer.count < 200:
         time.sleep(1)
 
-    net = Net(args.width, args.highpass).to(device).to(memory_format=torch.channels_last)
+    if args.extractor:
+        net = ExtractorNet(args.method, backbone, args.width)
+        groups_of_parameters = [
+            {"params": net.decoder_parameters(), "scale": 1.0},
+            {"params": list(net.backbone.parameters()), "scale": args.backbone_lr},
+        ]
+    else:
+        net = Net(args.width, args.highpass)
+        groups_of_parameters = [{"params": list(net.parameters()), "scale": 1.0}]
+    net = net.to(device).to(memory_format=torch.channels_last)
     if args.init:
         net.load_state_dict(torch.load(args.init, map_location=device, weights_only=True))
     ema = copy.deepcopy(net)
-    optimizer = torch.optim.AdamW(net.parameters(), lr=args.lr, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(groups_of_parameters, lr=args.lr, weight_decay=1e-4)
     scaler = torch.amp.GradScaler("cuda")
     groups = {
         "held_out": val,
@@ -445,7 +529,7 @@ def main() -> None:
             args.lr * min(1.0, (step + 1) / 500) * 0.5 * (1 + math.cos(math.pi * elapsed / budget))
         )
         for group in optimizer.param_groups:
-            group["lr"] = rate
+            group["lr"] = rate * group["scale"]
         fade = max(0.0, 1.0 - elapsed / (args.boost_fraction * budget))
         boost.value = 1.0 + (args.boost - 1.0) * fade
         images, masks = buffer.sample(args.batch - args.real)
