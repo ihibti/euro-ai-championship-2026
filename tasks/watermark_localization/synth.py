@@ -125,6 +125,13 @@ def draw_shape(rng: np.random.Generator, bank: list[np.ndarray], low: float, hig
     return blob_shape(rng, 0.1)
 
 
+def strengthen(cover: np.ndarray, marked: np.ndarray, strength: float) -> np.ndarray:
+    if strength == 1.0:
+        return marked
+    change = marked.astype(np.float32) - cover.astype(np.float32)
+    return np.clip(np.rint(cover + strength * change), 0, 255).astype(np.uint8)
+
+
 def make_sample(
     rng: np.random.Generator,
     cover: np.ndarray,
@@ -132,6 +139,7 @@ def make_sample(
     nbits: int,
     method: str,
     bank: list[np.ndarray],
+    strength: float = 1.0,
 ) -> tuple[np.ndarray, np.ndarray, str]:
     kind = str(rng.choice(KINDS, p=KIND_WEIGHTS))
     bits = rng.integers(0, 2, nbits)
@@ -140,12 +148,13 @@ def make_sample(
         mask = np.zeros((SIDE, SIDE), np.uint8)
         mask[y0:y1, x0:x1] = 1
         image = cover.copy()
-        image[y0:y1, x0:x1] = embed(np.ascontiguousarray(cover[y0:y1, x0:x1]), bits)
+        crop = np.ascontiguousarray(cover[y0:y1, x0:x1])
+        image[y0:y1, x0:x1] = strengthen(crop, embed(crop, bits), strength)
         return image, mask, kind
     if kind == "hole":
         mask = 1 - draw_shape(rng, bank, 0.003, 0.5)
     else:
         mask = draw_shape(rng, bank, 0.004, 0.45)
-    marked = embed(cover, bits)
+    marked = strengthen(cover, embed(cover, bits), strength)
     image = np.where(mask[:, :, None].astype(bool), marked, cover)
     return image, mask, kind

@@ -100,7 +100,7 @@ class Buffer:
         return self.images[index], self.masks[index]
 
 
-def produce(samples, stop, covers_path: Path, method: str, bank, seed: int) -> None:
+def produce(samples, stop, boost, covers_path: Path, method: str, bank, seed: int) -> None:
     covers = np.load(covers_path, mmap_mode="r")
     usable = len(covers) - VALIDATION_COVERS
     wm = load_watermark(method, models_dir=Path("models"), device="cuda")
@@ -110,8 +110,10 @@ def produce(samples, stop, covers_path: Path, method: str, bank, seed: int) -> N
         cover = np.ascontiguousarray(covers[int(rng.integers(usable))])
         if rng.random() < 0.5:
             cover = np.ascontiguousarray(cover[:, ::-1])
+        ceiling = boost.value
+        strength = float(np.exp(rng.uniform(0, np.log(ceiling)))) if ceiling > 1.0 else 1.0
         try:
-            image, mask, _ = make_sample(rng, cover, wm.embed, wm.nbits, method, bank)
+            image, mask, _ = make_sample(rng, cover, wm.embed, wm.nbits, method, bank, strength)
         except Exception as error:
             failures += 1
             if failures <= 5:
@@ -153,10 +155,11 @@ def stage(cin: int, cout: int, stride: int) -> nn.Sequential:
 
 
 class Net(nn.Module):
-    def __init__(self, width: int = 32):
+    def __init__(self, width: int = 32, highpass: bool = False):
         super().__init__()
         w = width
-        self.stem = nn.Sequential(conv_bn(3, w), conv_bn(w, w))
+        self.highpass = highpass
+        self.stem = nn.Sequential(conv_bn(9 if highpass else 3, w), conv_bn(w, w))
         self.d1 = stage(w, 2 * w, 2)
         self.d2 = stage(2 * w, 4 * w, 2)
         self.d3 = stage(4 * w, 8 * w, 2)
@@ -173,8 +176,17 @@ class Net(nn.Module):
         x = F.interpolate(x, size=skip.shape[-2:], mode="bilinear", align_corners=False)
         return torch.cat([x, skip], 1)
 
-    def forward(self, x):
-        s2 = self.d2(self.d1(self.stem(x)))
+    def prepare(self, images: torch.Tensor) -> torch.Tensor:
+        with torch.autocast("cuda", enabled=False):
+            x = images.permute(0, 3, 1, 2).float().div(127.5).sub(1.0)
+            if self.highpass:
+                fine = x - F.avg_pool2d(x, 3, 1, 1, count_include_pad=False)
+                coarse = x - F.avg_pool2d(x, 7, 1, 3, count_include_pad=False)
+                x = torch.cat([x, torch.tanh(16 * fine), torch.tanh(16 * coarse)], 1)
+        return x.contiguous(memory_format=torch.channels_last)
+
+    def forward(self, images):
+        s2 = self.d2(self.d1(self.stem(self.prepare(images))))
         s3 = self.d3(s2)
         s4 = self.d4(s3)
         s5 = self.d5(s4)
@@ -183,11 +195,6 @@ class Net(nn.Module):
         x = self.u3(self.up(x, s3))
         x = self.u2(self.up(x, s2))
         return self.head(x)[:, 0]
-
-
-def prepare(images: torch.Tensor) -> torch.Tensor:
-    x = images.permute(0, 3, 1, 2).float().div(127.5).sub(1.0)
-    return x.contiguous(memory_format=torch.channels_last)
 
 
 def seg_loss(logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
@@ -207,7 +214,7 @@ def predict(net: nn.Module, images: torch.Tensor, batch: int = 32) -> np.ndarray
     out = []
     for start in range(0, len(images), batch):
         with torch.autocast("cuda", dtype=torch.float16):
-            logits = net(prepare(images[start : start + batch]))
+            logits = net(images[start : start + batch])
         out.append(torch.sigmoid(logits.float()).cpu())
     return torch.cat(out).numpy()
 
@@ -239,6 +246,9 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=3, help="generator processes")
     parser.add_argument("--eval-every", type=int, default=1000)
     parser.add_argument("--init", type=Path, default=None)
+    parser.add_argument("--boost", type=float, default=1.0, help="starting watermark gain")
+    parser.add_argument("--boost-fraction", type=float, default=0.35)
+    parser.add_argument("--highpass", action="store_true", help="add fine-detail input channels")
     parser.add_argument("--all-real", action="store_true", help="train on the held-out fifth too")
     parser.add_argument("--covers", type=Path, default=Path("covers/ddb_512.npy"))
     args = parser.parse_args()
@@ -295,10 +305,11 @@ def main() -> None:
     context = mp.get_context("spawn")
     samples = context.Queue(maxsize=64)
     stop = context.Event()
+    boost = context.Value("d", args.boost)
     workers = [
         context.Process(
             target=produce,
-            args=(samples, stop, args.covers, args.method, bank, 100 + index),
+            args=(samples, stop, boost, args.covers, args.method, bank, 100 + index),
             daemon=True,
         )
         for index in range(args.workers)
@@ -309,7 +320,7 @@ def main() -> None:
     while buffer.count < 200:
         time.sleep(1)
 
-    net = Net(args.width).to(device).to(memory_format=torch.channels_last)
+    net = Net(args.width, args.highpass).to(device).to(memory_format=torch.channels_last)
     if args.init:
         net.load_state_dict(torch.load(args.init, map_location=device, weights_only=True))
     ema = copy.deepcopy(net)
@@ -336,6 +347,7 @@ def main() -> None:
                 "minutes": round(elapsed / 60, 1),
                 "loss": round(running / max(1, min(step, args.eval_every)), 4),
                 "generated": buffer.total,
+                "boost": round(boost.value, 2),
                 **score_groups(real_probs, truth, groups),
                 "synthetic": round(
                     mean_miou((predict(ema, synthetic) >= 0.5).astype(np.uint8), synthetic_truth), 4
@@ -355,6 +367,8 @@ def main() -> None:
         )
         for group in optimizer.param_groups:
             group["lr"] = rate
+        fade = max(0.0, 1.0 - elapsed / (args.boost_fraction * budget))
+        boost.value = 1.0 + (args.boost - 1.0) * fade
         images, masks = buffer.sample(args.batch - args.real)
         if args.real:
             pick = fit_index[torch.randint(0, len(fit_index), (args.real,), device=device)]
@@ -362,7 +376,7 @@ def main() -> None:
             masks = torch.cat([masks, real_truth[pick]])
         net.train()
         with torch.autocast("cuda", dtype=torch.float16):
-            logits = net(prepare(images))
+            logits = net(images)
         loss = seg_loss(logits.float(), masks.float())
         optimizer.zero_grad(set_to_none=True)
         scaler.scale(loss).backward()
