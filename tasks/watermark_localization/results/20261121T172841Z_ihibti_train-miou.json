@@ -1,0 +1,27 @@
+{
+  "answer": {
+    "path": "data/watermark_localization/output/candidates/c3_train.npz",
+    "sha256": "0e7aef93d6eaf7014e5fb489a4facf8b5d21ecc2ab02282cf91ea2159c890949"
+  },
+  "command": "make score TASK=watermark_localization ANSWER=data/watermark_localization/output/candidates/c3_train.npz",
+  "details": {
+    "by_method": {
+      "pixelseal": 0.44931963752297793,
+      "stegastamp": 0.8825463187763413,
+      "trustmark": 0.45066905302159926
+    },
+    "ignored_predictions": 0,
+    "images": 510
+  },
+  "git": {
+    "branch": "ihibti/setup-hackathon-swarm-workspace",
+    "commit": "3fd0f8635d450770d5868d07247496616faa6695",
+    "dirty": false
+  },
+  "metric": "train_miou",
+  "notes": "c3: StegaStamp segmentation network v1 at step 12000 (trained on 4 of 5 train folds), full-frame decode rule for PixelSeal and TrustMark",
+  "person": "ihibti",
+  "recorded_at": "2026-11-21T17:28:41.034255+00:00",
+  "score": 0.594178336440306,
+  "task": "watermark_localization"
+}
