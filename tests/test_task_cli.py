@@ -12,7 +12,10 @@ from euroai.validators import ME_ENDPOINTS
 
 ROOT = Path(__file__).resolve().parents[1]
 SENTINEL = "sentinel-key-0123456789"
-NO_SECRETS = {"EUROAI_SECRETS_FILE": "/nonexistent/euroai-test-secrets.env"}
+NO_SECRETS = {
+    "EUROAI_SECRETS_FILE": "/nonexistent/euroai-test-secrets.env",
+    "EUROAI_NIGHT_FILE": "/nonexistent/euroai-test-night.json",
+}
 
 pytestmark = pytest.mark.smoke
 
@@ -49,6 +52,25 @@ def test_submit_without_terminal_refuses(answer):
     assert "human at a terminal" in run.stdout or "cool-down" in run.stdout
     assert "Type model_equality" not in run.stdout
     assert SENTINEL not in run.stdout + run.stderr
+
+
+def test_scripts_run_without_the_lead_files():
+    assert set(NO_SECRETS) == {"EUROAI_SECRETS_FILE", "EUROAI_NIGHT_FILE"}
+    assert not any(Path(value).exists() for value in NO_SECRETS.values())
+
+
+def test_submit_without_terminal_leaves_no_record(answer):
+    folder = ROOT / "tasks" / "model_equality" / "submissions"
+    before = sorted(path.name for path in folder.iterdir())
+    run_script(
+        "submit.py",
+        "--task",
+        "model_equality",
+        "--file",
+        str(answer),
+        env={"HACKATHON_API_KEY": SENTINEL},
+    )
+    assert sorted(path.name for path in folder.iterdir()) == before
 
 
 def test_submit_check_only(answer):
