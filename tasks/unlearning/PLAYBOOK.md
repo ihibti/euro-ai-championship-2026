@@ -76,8 +76,8 @@ Paths: `T=/p/scratch/training2666/hibti1/Begg/unlearning` holds `model.pt`, `for
    ```
    git archive --format=tar HEAD | ssh jureca-mux 'mkdir -p /p/scratch/training2666/hibti1/Begg/unlearning/repo && tar -xf - -C /p/scratch/training2666/hibti1/Begg/unlearning/repo'
    ```
-2. **Ask for the GPU run; do not submit it yourself.** Since 2026-11-21 19:30 only the lead's account runs GPU jobs (`AGENTS.md`, hard rule 5), so never run `sbatch`, `srun` or `salloc`. Push your branch, then open an issue with `.github/ISSUE_TEMPLATE/gpu-request.md`: the commit, the exact command, the time limit and the files you want back. The lead's agent unpacks that commit into `T/repo`, runs the job in `T` with its `.venv`, and answers on the issue with the job number and the result.
-3. **Wait for the answer on the issue.** The log is `T/output/<jobid>.out`, and errors are in `<jobid>.err`.
+2. **Ask for the GPU run; do not submit it yourself.** The organizers allow the whole team one job at a time, and the lead's account holds it (`AGENTS.md`, hard rule 5), so never run `sbatch`, `srun`, `salloc` or `scancel`. Push your branch, then open an issue with `.github/ISSUE_TEMPLATE/gpu-request.md`: the commit, the exact command, the run time and the files you want back. The lead's agent unpacks that commit into `T/runs/<commit>/` (files in `T/repo` belong to your account and it cannot replace them), runs the command in `T` with its `.venv` on a free GPU of the team's node, and answers on the issue.
+3. **Wait for the answer on the issue.** It names the log file, under `T/output/`.
 4. **Bring back small files only** (numbers, logs) with `scp jureca-mux:<path> <local path>`, and commit them. Weights stay in `T/output/`.
 5. **Check a candidate without submitting.** You may run this; it takes a few seconds on the login node:
    ```
@@ -97,7 +97,7 @@ Paths: `T=/p/scratch/training2666/hibti1/Begg/unlearning` holds `model.pt`, `for
      ```
 
 Notes:
-- A job uses one A100 with 40 GB. The whole team has at most 4 GPUs at the same time, so say in the request when you need the result.
+- A run gets one A100 with 40 GB. The whole team shares one node of four, so say in the request when you need the result.
 - Compute nodes have no internet. The reservation ends on 2026-11-22 at 14:00.
 - One pass of the original model over the 3,500 images and four altered copies took under a minute.
 - No live submission has been made by anyone yet, for any task. The first one also tests the upload path.

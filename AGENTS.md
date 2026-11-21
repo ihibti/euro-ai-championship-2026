@@ -75,8 +75,25 @@ uv run --extra api python scripts/me_query.py --budget   answers left on every e
 4. **Do not tune to the public leaderboard.** It covers about 30% of the data. Judge methods locally.
 5. **JURECA.**
    - Stay inside the team folder `/p/scratch/training2666/hibti1/Begg/`. Each task's README has an On JURECA section.
-   - **Only the lead's account runs GPU jobs** (rule from the lead, 2026-11-21 19:30). Everyone else, human or agent, never runs `sbatch`, `srun` or `salloc`. To get a GPU run, push your code and open an issue with `.github/ISSUE_TEMPLATE/gpu-request.md`. The lead's agent runs it and answers on the issue.
-   - **The whole team uses at most 4 GPUs at the same time, and a job uses one GPU.** The lead's agent keeps the count and submits only through the job template.
+   - **One job at a time for the whole team.** The organizers' rule, copied word for word on 2026-11-21 at 19:50:
+     > The cispahack reservation is full (30/30 nodes) and several teams are holding multiple nodes, so other teams can't get in. Nodes here are exclusive: every job gets a whole node with 4 GPUs. Teams are allowed to use only node at a time. So two 1-GPU jobs = two nodes = a violation.
+     >
+     > The rule: your whole team (everyone in /p/scratch/training2666/<lead>/<team>/) may run at most one job at a time, counting running and queued jobs.
+     >
+     > Check your team before submitting (not squeue -u $USER — it can't see teammates):
+     > ```
+     > T=$(pwd | grep -oE '/p/scratch/training2666/[^/]+/[^/]+')
+     > squeue -r --reservation=cispahack -h -o "%u|%T|%Z" | grep "$T"
+     > ```
+     > If anything shows up, your team already has its node — don't submit another.
+     >
+     > Need more than 1 GPU? Use one job with #SBATCH --gres=gpu:4 and parallelise inside it — never two jobs.
+     > More work to do? Chain it: sbatch --dependency=afterany:<jobid> next.sh. Don't stack a queue. Arrays: --array=0-N%1.
+     > Always submit from inside your team folder.
+     >
+     > If your team is on >1 node right now, please scancel down to one job immediately.
+   - **Only the lead's account holds that job.** Everyone else, human or agent, never runs `sbatch`, `srun`, `salloc` or `scancel`. To get a GPU run, push your code and open an issue with `.github/ISSUE_TEMPLATE/gpu-request.md`. The lead's agent runs it on a free GPU of the team's node and answers on the issue.
+   - The lead's agent submits only through the job template and from inside the team folder. It keeps one job, with at most one more chained behind it with `--dependency=afterany`. The check above prints usernames: never paste its output into an issue, a commit or a file.
    - Never change ACLs or shared `.venv`s, and never rerun the setup scripts.
    - Compute nodes have no internet, so download on login nodes.
 6. **Laptop agents reach JURECA only through `ssh jureca-mux ...`, and only after `ssh -O check jureca` succeeds.** If no connection is open, stop and ask a human. Never retry SSH in a loop: JSC firewall-blocks addresses that open too many connections.

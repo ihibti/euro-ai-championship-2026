@@ -81,7 +81,7 @@ The small files are copied unmodified into `upstream/`. The large files are not 
 ## On JURECA
 
 - `/p/scratch/training2666/hibti1/Begg/unlearning/`: a uv project with a Python 3.12 `.venv` holding torch 2.15.0+cu132 and timm 1.0.31, plus `model.pt` and `forget_images.npz`.
-- GPU work runs from the lead's account only: ask for it with `.github/ISSUE_TEMPLATE/gpu-request.md` (`AGENTS.md`, hard rule 5). A job uses `jsc/jureca_gpu.sbatch.template` with `TASK_DIR` set to this folder (see `jsc/README.md`, Submitting a job): one A100 40 GB (`gpu:1`, 8 CPUs) on reservation `cispahack`, which ends 2026-11-22 14:00. The team has at most 4 GPUs at the same time. Compute nodes have no internet.
+- GPU work runs from the lead's account only: ask for it with `.github/ISSUE_TEMPLATE/gpu-request.md` (`AGENTS.md`, hard rule 5). The organizers allow the team one job at a time: one node with four A100 40 GB on reservation `cispahack`, which ends 2026-11-22 14:00. A run gets one of the four GPUs. Compute nodes have no internet.
 - A ViT-B/16 state dict is about 345 MB. Submitting it from a laptop means copying it there first.
 
 ## Submission

@@ -1,5 +1,6 @@
 #!/bin/bash
-# GPU job on the event reservation, with the organizers' values (verified 2026-11-21, job 15901345).
+# GPU job on the event reservation: one node and its four GPUs, as the organizers ask since 2026-11-21 19:50.
+# The whole team may have one job at a time, running or queued (AGENTS.md, hard rule 5).
 # Render with scripts/render_template.py and see jsc/README.md ("Submitting a job").
 # TASK_DIR is a task folder under /p/scratch/training2666/hibti1/Begg/ with its own .venv.
 # Create TASK_DIR/output before sbatch, as the organizers' README asks.
@@ -9,8 +10,8 @@
 #SBATCH --partition=dc-gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=8
+#SBATCH --gres=gpu:4
+#SBATCH --cpus-per-task=32
 #SBATCH --time=<TIME>
 #SBATCH --output=<TASK_DIR>/output/%j.out
 #SBATCH --error=<TASK_DIR>/output/%j.err
@@ -23,6 +24,7 @@ export TRANSFORMERS_OFFLINE=1
 export HF_DATASETS_OFFLINE=1
 export UV_OFFLINE=1
 export PYTHONUNBUFFERED=1
+export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 cd "<TASK_DIR>"
 source .venv/bin/activate
