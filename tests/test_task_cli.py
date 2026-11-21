@@ -58,3 +58,12 @@ def test_submit_check_rejects_invalid_file(tmp_path):
     bad.write_text("ref-01,P,S\n")
     run = run_script("submit.py", "--task", "model_equality", "--file", str(bad), "--check")
     assert run.returncode == 2 and "ref-01" in run.stdout
+
+
+def test_me_query_without_key_refuses_before_any_network(tmp_path):
+    prompts = tmp_path / "prompts.txt"
+    prompts.write_text("hello\n")
+    env = {"HACKATHON_API_KEY": "", "EUROAI_SECRETS_FILE": str(tmp_path / "absent.env")}
+    run = run_script("me_query.py", "--prompts", str(prompts), env=env)
+    assert run.returncode == 2, run.stdout + run.stderr
+    assert "HACKATHON_API_KEY" in run.stdout and "absent.env" in run.stdout
