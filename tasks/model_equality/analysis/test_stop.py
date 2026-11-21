@@ -94,3 +94,38 @@ def test_cap_hits_read_rows_by_endpoint_and_prompt():
         {"endpoint": "ref-02", "id": "other", "repeat": 0, "response": "river " * 256},
     ]
     assert stop.cap_hits(rows, "p3_repeat", "ref-") == {"ref-01": [False, True]}
+
+
+def test_counters_read_repetitions_words_and_list_items():
+    assert stop.repetitions("River river, rivers RIVER. riverbank") == 3
+    assert stop.word_count("The ferry's late, and 3 boats left.") == 6
+    assert stop.list_items("whale, shark, sea turtle, and octopus.") == 4
+    assert stop.list_items("1. whale\n2. shark\n\n- crab") == 3
+    assert stop.list_items("") == 0
+
+
+def test_rank_pvalue_separates_a_shift_and_not_a_resample():
+    same = stop.rank_pvalue([1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6, 2, 5], draws=4000)
+    shifted = stop.rank_pvalue([40, 41, 42, 43, 44, 45], [1, 2, 3, 4, 5, 6, 2, 5], draws=4000)
+    assert same > 0.5
+    assert shifted < 0.01
+
+
+def test_midranks_average_ties():
+    assert list(stop.midranks([5, 1, 5, 2])) == [3.5, 1.0, 3.5, 2.0]
+
+
+def test_set_apart_by_rank_flags_the_endpoint_that_writes_far_more():
+    values = {f"e{k}": [100 + k, 120, 140, 150, 130, 110] for k in range(5)}
+    values["lora"] = [300, 310, 290, 305, 320, 299]
+    flagged = stop.set_apart(values, sorted(values), stop.rank_against_pool)
+    assert [endpoint for endpoint, _ in flagged] == ["lora"]
+
+
+def test_counts_use_the_counter_of_each_prompt():
+    rows = [
+        {"endpoint": "ep-01", "id": "d3_openlist", "repeat": 0, "response": "crab, eel"},
+        {"endpoint": "ep-01", "id": "d1_repeat150", "repeat": 0, "response": "river river"},
+    ]
+    assert stop.counts(rows, "d3_openlist", "ep-") == {"ep-01": [2]}
+    assert stop.counts(rows, "d1_repeat150", "ep-") == {"ep-01": [2]}
