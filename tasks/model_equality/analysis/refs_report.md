@@ -246,7 +246,7 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
 - Statistic: `analysis/choices.py` (tested). It counts the chosen option per item and endpoint and compares two endpoints by the mean per-item total variation, and by a temperature-robust mean per-item Kendall tau-b distance between the two count vectors, which sees only the order of preference. Each is calibrated by a permutation test that shuffles whole answers between the two endpoints. The pass rule is unchanged.
 - Command for the references, when the desk schedules it (at 10 repeats: 270 answers, about 28 min): `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/night_c.csv --repeats 10`. Analysis: `uv run python tasks/model_equality/analysis/choices.py --answers tasks/model_equality/answers/night-c.jsonl`.
 
-## E11. night_b: P4 (next-word battery) and P3 (repetition count) at 10 repeats (2026-11-22 00:42)
+## E11. night_b: P4 (next-word battery) and P3 (repetition count) at 10 repeats (2026-11-22 00:39)
 
 - Hypothesis (`research_night.md`, section 3): fp8 flips a few near-tie next words and LoRA flips more (P4); the stop decision of a long repetition is a near-tie that the weights move (P3).
 - Commands: `uv run --extra api python scripts/me_query.py --prompts <copy of the p4_nextword and p3_repeat rows of probes/night_b.csv> --name night_b --repeats 10` (180 answers in 1,077 s, 10.0 per minute, 0 failed). Then `uv run python tasks/model_equality/analysis/choices.py --answers tasks/model_equality/answers/night-b.jsonl --draws 500` and `uv run python tasks/model_equality/analysis/plurality.py --answers tasks/model_equality/answers/night-b.jsonl`. The P5 ids were not asked, on the desk's order: one draw per answer is too weak.
@@ -290,38 +290,43 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
   Against plain alone (10 against 10) the p-values are 0.37, 0.07 and 0.18. Under the desk's pass rule (difference in rate from plain > largest difference among disguises, 0.3): LoRA 0.7 (0.5) and LoRA 1.5 (0.4) pass; LoRA 0.3 (0.3) ties, so fails; fp8 (0.1) fails.
 - Conclusion: P4 fails for every pair type; its signal is format compliance, which the disguises move as much as the weights. P3 fails as a count but carries a LoRA signal in its stop decision. That was the research's prediction (the stop is a near-tie) on a binary feature: the LoRA copies fail to stop. The feature was defined after looking at these answers, at a natural gap, and needs a confirmation run on fresh answers before it decides a scored pair. It does nothing for fp8. On a scored family it would be read against that family's own majority of same-model copies, which needs the family and its disguised copies to be found first.
 
-## Status at handoff (2026-11-22 00:25, interim; night_b still running)
+## Status at handoff (2026-11-22 00:40, interim; the desk is spending recon on the scored endpoints)
 
-**Done in this run (23:30 to 00:25)**
-- Round 1 completed to 4 repeats (E4), and steps 2 to 5 of the previous list (E4 to E7): determinism, the separation table, the grouping at exactly 40 answers per endpoint with its two records, the ablations, and a permutation test per pair.
-- Side channels (E8): the saved rows record no latency, no `finish_reason` and no token usage, and the answer order carries no latency signal. Length shows the LoRA dose at 0.7 and 1.5 only.
-- night_a: P1 and P2 at 10 repeats, scored with `analysis/plurality.py` (E9).
+**Done in this run (23:30 to 00:40)**
+- Round 1 completed to 4 repeats (E4), and steps 2 to 5 of the previous list (E4 to E7): determinism, the separation table, the grouping at 40 answers per endpoint with two records, the ablations, and a permutation test per pair.
+- Side channels (E8): the saved rows hold no latency, no `finish_reason` and no token usage, and the answer order carries no latency signal. Length shows the LoRA dose at 0.7 and 1.5 only.
+- night_a, P1 and P2 at 10 repeats (E9): both fail for every pair type.
+- night_b, P4 and P3 at 10 repeats (E11): P4 fails (format compliance). P3's run-to-cap rate separates the LoRA copies from the pooled disguises. fp8 is untouched.
+- `origin/main` merged (47c7199). `probes/recon.csv` (5 round-1 rows) and `probes/night_c.csv` (E10) written for the desk.
 
 **Measured**
-- Throughput: 9.1 to 9.5 answers per minute, 0 failures over 398 answers tonight.
+- Throughput: 9.1 to 10.0 answers per minute, 0 failures over 578 answers tonight.
 - Round 1, 40 answers per endpoint: **MCC 0.000** pooled and with `--mode prompt` (`results/20261121T225541Z_ihibti_practice-mcc*.json`). Only a factor tuned down to 1 gives 0.351.
-- Permutation test of same answer distribution, 4 against 4 answers per prompt:
-  - inseparable: fp8 against plain (p 0.15), LoRA 0.3 against plain (0.08), LoRA 0.3 against LoRA 0.7 (0.46);
-  - separated: LoRA 0.7 and 1.5 against plain (0.010, 0.005);
-  - 4 of the 10 disguise pairs also reject at p < 0.05.
-- P1 and P2 fail for fp8 and for every LoRA. The reference model is not near-greedy: on P1 two of its own repeats part at the first continuation word.
+- Separable from plain at these counts: LoRA 0.7 and 1.5 (round-1 permutation p 0.010 and 0.005). LoRA 0.3 only on the P3 run-to-cap rate against the pooled disguises (p 0.007). fp8: never, on any probe tonight.
+- The reference model (it calls itself SmolLM, from Hugging Face) samples at a real temperature. Positional plurality is dead on it. A system prompt or a persona makes it more compliant with formats, so compliance cannot be read as a weight signal.
 
 **Not fit as is**
-- `analysis/group.py` merges every reference into one model at 40 answers. Do not run it unchanged on `round1-ep.jsonl` expecting a model split. Its family cut (0.5 on word profiles) is unvalidated and cannot be checked locally.
+- `analysis/group.py` merges every reference into one model at 40 answers. Its family cut (0.5 on word profiles) is unvalidated.
+
+**Query channel**: scheduled by the desk since 00:37. This agent starts no query. Never append to `answers/round1.jsonl` from here: the desk adds the scored rows there.
+
+**Tests**: until the desk's fix lands on this branch, run `make lint` and `uv run pytest tasks/model_equality/analysis` only. `tests/test_task_cli.py::test_submit_without_terminal_refuses` sends a real request while the lead's night authorization is active (desk, 00:37).
 
 **Frozen prompt files** (answers are stored under these ids; never edit them)
-- `probes/round1.csv` (10 ids), `probes/night_a.csv` (`p1_copycont`, `p2_binary`), `probes/night_b.csv` (`p4_nextword`, `p3_repeat`, `p5_perm01` to `p5_perm10`), all written by their `build_*.py`.
+- `probes/round1.csv` (10 ids), `probes/recon.csv` (5 of those ids, same text), `probes/night_a.csv` (`p1_copycont`, `p2_binary`), `probes/night_b.csv` (`p4_nextword`, `p3_repeat`, `p5_perm01` to `p5_perm10`), `probes/night_c.csv` (`c1_equiv`, `c2_edge`, `c3_next`). Each is written by its `build_*.py`.
 
-**Answer files** (all `ref-*`, all committed except where noted)
-- `smoke` 18, `cand1` 104, `round1` 360 (10 prompts x 9 x repeats 0 to 3), `night-a` 180 (2 prompts x 9 x 10).
-- `night-b`: part 1 running at 00:25 (P4 and P3 x 9 x 10 = 180 answers). It was started from a scratch copy of the two `night_b.csv` rows with `--name night_b --repeats 10`, because one `--repeats` applies to the whole file and the P5 ids are asked once each.
+**Answer files** (all committed)
+- `smoke` 18, `cand1` 104, `round1` 360 reference answers (scored rows to come from the desk), `night-a` 180, `night-b` 180 (P4 and P3 x 9 x 10; the P5 ids were not asked).
+
+**Tools**
+- `analysis/group.py`: kernel grouping, with `--mode`, `--kinds` and a K_xx printout.
+- `analysis/permtest.py`: pairwise permutation test of same answer distribution.
+- `analysis/plurality.py`: positional plurality (P1, P2, P4), plus the P3 and P5 summaries.
+- `analysis/choices.py`: per-item choice counts, total variation and Kendall tau-b distances, and permutation tests on whole answers (P3, P4, night_c).
+- `analysis/recon.py`: per-endpoint identity claims, lengths, format, self-agreement and first-pass families.
 
 **Next steps**
-1. When part 1 ends, commit `answers/night-b.jsonl`. Then add the ten P5 ids once each (90 answers, about 10 min); P4 and P3 repeat 0 already exist, so only P5 is asked:
-   `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/night_b.csv --repeats 1`
-   Never run `night_b.csv` with `--repeats` above 1: that would ask the P5 ids again.
-2. Tables for P3, P4 and P5, with the same pass rule as E9:
-   `uv run python tasks/model_equality/analysis/plurality.py --answers tasks/model_equality/answers/night-b.jsonl`
-3. For a pairwise check of two scored endpoints the clustering leaves borderline:
-   `uv run python tasks/model_equality/analysis/permtest.py --answers <file> --prefix ep- --pairs ep-01:ep-02`
-4. Ask the lead to make `answer_row` in `src/euroai/me_query.py` save `finish_reason`, `usage.completion_tokens` and a timestamp before any scored spend. It is shared code, outside this task's folder.
+1. When the desk says the scored recon rows are in `answers/round1.jsonl`, run `uv run python tasks/model_equality/analysis/recon.py --answers tasks/model_equality/answers/round1.jsonl --prefix ep-` and write `analysis/recon_ep.md`. Pass any `ep-*` grouping CSV through `uv run python scripts/me_labels.py <in> <out>`.
+2. When the desk has run `night_c` on the references (10 repeats), score it with `uv run python tasks/model_equality/analysis/choices.py --answers tasks/model_equality/answers/night-c.jsonl --draws 500`, with the pass rule of E9 and E11, for fp8 and each LoRA separately.
+3. Confirm the P3 run-to-cap rate on fresh reference answers before it decides any scored pair: 10 more P3 repeats cost 90 answers, about 9 min, under the desk's schedule.
+4. Ask the lead to make `answer_row` in `src/euroai/me_query.py` save `finish_reason`, `usage.completion_tokens` and a timestamp. The cap is then read directly, not inferred from counts.
