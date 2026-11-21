@@ -46,3 +46,27 @@ def test_family_clusters_join_endpoints_that_agree_like_themselves():
     }
     own = {"e1": 0.9, "e2": 0.7, "e3": 0.8}
     assert recon.family_clusters(["e1", "e2", "e3"], similarity, own) == [["e1", "e2"], ["e3"]]
+
+
+def test_battery_answers_read_an_echoed_question_and_its_dash_answer():
+    text = "1. What is the capital of Australia?\n- Canberra\n\n2. How many legs?\n- Eight\n"
+    assert recon.battery_answers(text, 3) == ["canberra", "eight", None]
+    assert recon.battery_answers("1. Paris\n2. 8", 2) == ["paris", "8"]
+
+
+def test_cluster_k_joins_by_average_link_and_ignores_missing_pairs():
+    sim = {
+        ("a", "b"): 0.95,
+        ("a", "c"): 0.9,
+        ("b", "c"): 0.92,
+        ("d", "e"): 0.8,
+        ("a", "d"): 0.6,
+        ("b", "e"): 0.55,
+        ("c", "d"): 0.6,
+        ("x", "a"): float("nan"),
+        ("x", "d"): 0.85,
+    }
+    assert recon.cluster_k(["a", "b", "c", "d", "e", "x"], sim, 2) == [
+        ["a", "b", "c"],
+        ["d", "e", "x"],
+    ]
