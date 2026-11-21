@@ -5,7 +5,9 @@ The student starts as the original model with the whole-forgotten classes' bias 
 alterations of them, towards targets built from the original model's own logits:
 
 - every image: the whole-forgotten classes lowered by --full (what the student already does);
-- an image of a thinned class c: its own label lowered further by --hedge * n_c / 130.
+- an image of a thinned class c: its own label lowered further by --hedge * n_c / 130;
+- with --even, every image: its own label lowered by that amount, whatever its class. With
+  --full 0 this is the hedge for the reading in which no class is removed.
 
 With --holdout, a share of every class's forget images is never trained on. Those images are
 memorized training images of the same classes, like the retained images the server's control set
@@ -44,6 +46,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--out", type=Path, default=Path("output/kkrgp"))
     parser.add_argument("--full", type=float, default=25.0)
     parser.add_argument("--hedge", type=float, default=8.0)
+    parser.add_argument(
+        "--even", type=float, default=0.0, help="label hedge on every touched class"
+    )
     parser.add_argument("--tau", type=float, default=1.0)
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--batch", type=int, default=128)
@@ -202,7 +207,8 @@ def main(argv: list[str] | None = None) -> None:
         images = images[: args.limit]
     labels = lib.logits_of(teacher, images).argmax(1)
     shift, beta = lib.class_plan(labels, args.full, args.hedge)
-    hedged = torch.nonzero(beta > 0).squeeze(1)
+    beta = beta + args.even * (torch.bincount(labels, minlength=tt.NUM_CLASSES) > 0)
+    hedged = torch.nonzero((beta > 0) & (shift == 0)).squeeze(1)
     order = torch.randperm(len(hedged), generator=torch.Generator().manual_seed(args.seed))
     spare = hedged[order[: args.spare_classes]]
     beta[spare] = 0
