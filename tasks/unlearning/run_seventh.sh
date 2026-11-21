@@ -34,4 +34,6 @@ for slot in "${!DEVICES[@]}"; do
 done
 wait
 tail -n 12 $OUT/seventh/log_*.txt
+CANDS="x3_ext_m80,x4_e20,x5_e30,x5_e30_b6,t6_t3,t6_t4,t6_t5,k7_e3t2_rm,k7_e3t2,k7_e3t3_rm,k7_e4t4_rm,k7_e3t2_rm3,u7_t32_rm,k7_e3t2_all_rm"
+CUDA_VISIBLE_DEVICES=${DEVICES[0]} python "$HERE/dump_logits.py" --names "$CANDS" --views exact,jitter --out "$OUT/seventh/logits.npz" > "$OUT/seventh/log_dump.txt" 2>&1 || echo "dump failed" >> "$OUT/seventh/failed.txt"
 cd $OUT && sha256sum k7_*.pt u7_*.pt 2>/dev/null | tee seventh/sha256.txt

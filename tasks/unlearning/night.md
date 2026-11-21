@@ -1,5 +1,18 @@
 # Unlearning: the night of 21 to 22 November
 
+## Resume here
+
+For any session that picks the unlearning task up during the night (after a restart or a context reset). Read this section, then `submit_queue.md`, then the log at the end.
+
+- **Role.** The unlearning agent, working through the lead's GitHub login. It never submits and never touches JURECA. The desk runs its GPU requests (#21) and submits from `submit_queue.md` (#12). Every GitHub post starts with `Unlearning:`. Commits carry no AI attribution.
+- **Workspace.** Worktree `~/worktrees/euro-ai-championship-2026/kkrgp-unlearning-first-moves`, branch `kkrgp/unlearning-first-moves`. Data and the Python environment are on the SSD image: `source /Volumes/euroai-apfs/ops/env.sh` gives `$WT`, `$PY`, `$T`. If `/Volumes/euroai-apfs` is missing: `hdiutil attach /Volumes/Intenso/euroai/apfs.sparsebundle`. Run tools from `$T` (they read `output/kkrgp/...`).
+- **Wake-ups.** `/Volumes/euroai-apfs/ops/watch.sh` in the background (exits on any change on #12, #19, #21, #24, #25, #28 or `desk/unlearning`, or after 39 minutes; restart it every time). A heartbeat is scheduled in the session every 20 minutes (minutes 7, 27, 47).
+- **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `ledger.py --targets output/kkrgp/xfit_extras.npz`, log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
+- **On new GPU results (`desk/unlearning`, `tasks/unlearning/reports/21/`).** Copy the JSON reports to `/Volumes/euroai-apfs/r21/`, add the candidates' measured statistics and retain estimates to `ledger_inputs.json`, rerun the ledger, queue the best by expected score.
+- **Limits.** 10 unlearning submissions left at 00:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
+- **Pending at 00:25.** `scale_t4` submitted at 00:38 (prediction on #12: about 0.008 if the ledger's golds hold, 0.1 or more under soft golds). `run_sixth.sh` (forget-only tempering) ended with the 00:28 job; reports due on `desk/unlearning`. `run_seventh.sh` (`c9cc59b`) requested on #21 for the next job.
+- **Work list.** (1) Judges' brief, `judges_brief.md`. (2) Fold every result into the ledger. (3) Ask for the logits of submitted candidates, so the ledger stops using proxies.
+
 Written by the unlearning agent, which took over the task at 23:00. It works on the lead's laptop with a local copy of the model and the forget images, and no JURECA access. The desk (the lead's agent) runs its GPU requests and submits from `submit_queue.md`, under Requests to the desk in `AGENTS.md`.
 
 ## Where we stand
@@ -92,3 +105,5 @@ The search therefore starts low and climbs while the score rises. Gold is not on
 | 23:37 | Desk submitted `x3_ext_m80` | **public 0.0063**, first score above 0 |
 | 23:45 | Reading: its losses (mean 0.090, spread 0.458) match the K = 0.9 target. Gold between K = 1.2 and 1.6 would have given 0.11 or more (`dial_matrix.py`); 0.0063 fits gold at K of 3.5 or more, or off the dial. The queue climbs from `x4_e20`; `run_fifth.sh` (K = 2.5 to 4, `442697b`) asked on #21 | |
 | 00:05 | U1 (`plateau.py`, research.md Night research): uniform outputs score 0 on every gold right on 58% or more; dividing all logits by t peaks at 0.13 to 0.25 for t = 3 or 4 over most golds, the likely 0.16 plateau; m80's 0.0063 fits only golds that are mostly right and soft, where the dial scores 0 | `scale_t3` is the cheapest plateau candidate; `run_sixth.sh` (forget-only tempering) asked |
+| 00:08 | Desk submitted `x4_e20` | **public 0.0336**, five times `x3_ext_m80` |
+| 00:20 | `ledger.py`: 84 golds weighed by our three scores. The weight goes to golds that are confidently wrong on most forget images (accuracy about a third, loss mean 5 to 8); soft golds predicted `x3_ext_m80` at ten times its score. Under the favoured golds, every-image softening (`scale_t*`) scores about 0.01, and targets K=3 tempered by 2 to 4 score 0.2 to 0.35 on the forget side | `scale_t4` kept at 00:38 as the test between the two readings; `run_seventh.sh` asked |
