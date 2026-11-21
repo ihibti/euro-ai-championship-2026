@@ -106,6 +106,7 @@ def main(argv: list[str] | None = None) -> None:
         "--inputs", type=Path, default=Path(__file__).with_name("ledger_inputs.json")
     )
     parser.add_argument("--out", type=Path, default=Path("output/kkrgp/ledger.json"))
+    parser.add_argument("--logits", type=Path, help="dump_logits.py output: exact logits win")
     args = parser.parse_args(argv)
     orig = torch.from_numpy(np.load(args.orig)).float()
     labels = orig.argmax(1)
@@ -127,6 +128,14 @@ def main(argv: list[str] | None = None) -> None:
             "retain": spec["retain"],
             "proxy": (round(a, 2), round(b, 2)),
         }
+    if args.logits is not None:
+        with np.load(args.logits) as dumped:
+            for name in candidates:
+                key = f"{name}__exact"
+                if key in dumped.files:
+                    candidates[name]["logits"] = torch.from_numpy(dumped[key].astype(np.float32))
+                    candidates[name]["stats"] = None
+                    candidates[name]["proxy"] = "dumped"
     band = inputs["gate_band"]
     for name, spec in inputs["candidates"].items():
         candidates[name]["gate"] = gate_pass(spec.get("flip", 0.0), band[0], band[1])
@@ -191,7 +200,7 @@ def main(argv: list[str] | None = None) -> None:
     ranked = sorted(golds, key=lambda row: -row["posterior"])
     print(
         "proxies (a, b) for the fine-tunes:",
-        {n: c["proxy"] for n, c in candidates.items() if c["proxy"]},
+        {n: c["proxy"] for n, c in candidates.items() if c["proxy"] is not None},
     )
     print(
         "\ngolds carrying the weight (posterior, family, K, tau_g, gold loss mean/std, gold acc):"
