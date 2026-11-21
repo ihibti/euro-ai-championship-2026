@@ -190,6 +190,7 @@ Tell your human in three lines what now works: the tests, the token, JURECA. The
 
 - If your human owns a task (table in `AGENTS.md`), read `tasks/<task>/PLAYBOOK.md` and continue there.
 - On JURECA you work only through `ssh jureca-mux '<command>'`, and only while `ssh -O check jureca` prints `Master running` (rules 5 and 6 in `AGENTS.md`). When it does not, ask your human to run `ssh -fN jureca` again.
+- You never run GPU jobs yourself: no `sbatch`, `srun` or `salloc`. Only the lead's account does. Ask for a run with `.github/ISSUE_TEMPLATE/gpu-request.md` (rule 5 in `AGENTS.md`).
 
 ## When the network changes
 
