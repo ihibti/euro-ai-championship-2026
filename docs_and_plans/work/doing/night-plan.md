@@ -78,3 +78,7 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 23:36 | Model equality floor submitted | public 0.0; the team now has a score on all three tasks |
 | 23:36 | Watermark c6 submitted | public 0.7444, up from 0.7251 for c5 |
 | 23:37 | Unlearning `x3_ext_m80.pt` submitted, the head of the queue | public 0.0063, up from 0.0; next unlearning slot at 00:08 |
+| 23:45 | Public board read: Begg 20th of 32 with 0.33; the 6th has 0.73 | research orders for the three agents in #28; the lead delegated the night to the desk with the top 6 as the goal |
+| 23:45 | `run_fifth.sh` at `442697b` started on GPU 3 (#21) | `run_fourth.sh` ended at 23:43, reports on `desk/unlearning` at `612ab76` |
+| 23:47 | The desk chained a 5-hour holder job (15903853) behind the running job | cancelled at 23:54 on the lead's reminder of the ban risk: one job in total, running or pending, and only for work that is ready |
+| 23:53 | Organizers' update on model equality labels: family `A`, model `A1` | `make check` now enforces it; `scripts/me_labels.py` rewrites any grouping |

@@ -2,6 +2,19 @@
 
 Written on 2026-11-21 at about 23:30 by the previous desk session, for the plain `claude` session the lead starts in this worktree. Read all of it before acting. Then keep it current: when a fact here changes, change it here.
 
+## Ban risk: the JURECA rules come before everything else
+
+The lead on 2026-11-21 at 23:53: breaking a GPU rule can get the team banned during the night. The rules are in `jsc/organizer-rules.md`, word for word, and in `CLAUDE.md` at the workspace root above this worktree. Re-read them before every command that touches JURECA.
+
+- **One job for the whole team, running or pending, and no chained follow-up.** At 23:47 this desk chained a 5-hour job behind the running one and cancelled it at 23:54: a pending job counts, and a job that waits for work wastes a node.
+- **The team check before every `sbatch`, and `sbatch` only from inside the team folder.**
+- **A job exists only for work that is ready.** It asks for the time the work needs, at most 2 hours, uses the four GPUs when the work allows, and ends when the work ends.
+- **No workaround** other than the general queue the organizers named (no `--reservation` line).
+- **Few files**: at most a few hundred per step, no unpacked archives.
+- **SSH** only through `jureca-mux`, never in a retry loop.
+
+Everything else tonight is the desk's judgment: the lead delegated it at 23:45, with the top 6 as the goal.
+
 ## You are the desk
 
 - You are the lead's agent, on the lead's laptop, in `/Users/ismingfromchina/orca/workspaces/euro-ai-championship-2026/brill`. Only this session is the desk. You orchestrate and decide; long analysis goes to subagents.

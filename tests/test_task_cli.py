@@ -31,7 +31,7 @@ def run_script(name, *args, env=None):
 @pytest.fixture
 def answer(tmp_path):
     path = tmp_path / "answer.csv"
-    lines = ["endpoint,family,model"] + [f"{e},F{e[-2:]},M{e[-2:]}" for e in ME_ENDPOINTS]
+    lines = ["endpoint,family,model"] + [f"{e},A,A{int(e[-2:])}" for e in ME_ENDPOINTS]
     path.write_text("\n".join(lines) + "\n")
     return path
 
