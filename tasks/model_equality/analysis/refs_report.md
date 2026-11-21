@@ -246,6 +246,50 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
 - Statistic: `analysis/choices.py` (tested). It counts the chosen option per item and endpoint and compares two endpoints by the mean per-item total variation, and by a temperature-robust mean per-item Kendall tau-b distance between the two count vectors, which sees only the order of preference. Each is calibrated by a permutation test that shuffles whole answers between the two endpoints. The pass rule is unchanged.
 - Command for the references, when the desk schedules it (at 10 repeats: 270 answers, about 28 min): `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/night_c.csv --repeats 10`. Analysis: `uv run python tasks/model_equality/analysis/choices.py --answers tasks/model_equality/answers/night-c.jsonl`.
 
+## E11. night_b: P4 (next-word battery) and P3 (repetition count) at 10 repeats (2026-11-22 00:42)
+
+- Hypothesis (`research_night.md`, section 3): fp8 flips a few near-tie next words and LoRA flips more (P4); the stop decision of a long repetition is a near-tie that the weights move (P3).
+- Commands: `uv run --extra api python scripts/me_query.py --prompts <copy of the p4_nextword and p3_repeat rows of probes/night_b.csv> --name night_b --repeats 10` (180 answers in 1,077 s, 10.0 per minute, 0 failed). Then `uv run python tasks/model_equality/analysis/choices.py --answers tasks/model_equality/answers/night-b.jsonl --draws 500` and `uv run python tasks/model_equality/analysis/plurality.py --answers tasks/model_equality/answers/night-b.jsonl`. The P5 ids were not asked, on the desk's order: one draw per answer is too weak.
+- P4 compliance per repeat: numbered items parsed (of 20) and next words extracted (the word after the echoed sentence start, or a bare one-word answer):
+
+| endpoint | numbered items per repeat | mean | answers with >= 10 | next words per repeat | mean |
+|---|---|---|---|---|---|
+| 01 plain | 0 0 15 0 19 0 1 0 0 0 | 3.5 | 2 of 10 | 0 0 2 0 0 0 1 0 0 0 | 0.3 |
+| 03 system prompt | 19 18 20 18 0 20 20 0 18 20 | 15.3 | 8 of 10 | 11 14 8 2 0 20 16 0 18 12 | 10.1 |
+| 05 persona | 1 20 20 20 20 20 20 20 20 0 | 16.1 | 8 of 10 | 1 13 19 18 16 19 10 11 17 0 | 12.4 |
+| 06 watermark | 0 20 0 0 0 0 0 19 0 20 | 5.9 | 3 of 10 | 0 17 0 0 0 0 0 0 0 6 | 2.3 |
+| 08 temperature 1.0 | 0 1 1 1 19 0 1 0 20 20 | 6.3 | 3 of 10 | 0 1 1 1 0 0 1 0 14 14 | 3.2 |
+| 02 fp8 | 19 20 20 20 20 19 0 19 20 20 | 17.7 | 9 of 10 | 14 9 18 15 9 0 0 1 11 18 | 9.5 |
+| 09 LoRA 0.3 | 20 1 20 0 0 19 19 20 10 20 | 12.9 | 7 of 10 | 13 1 20 0 0 0 13 20 10 14 | 9.1 |
+| 04 LoRA 0.7 | 20 20 19 20 20 20 19 20 20 19 | 19.7 | 10 of 10 | 19 19 12 20 15 7 10 16 14 11 | 14.3 |
+| 07 LoRA 1.5 | 20 20 20 20 20 20 20 0 7 20 | 16.7 | 8 of 10 | 16 20 14 15 12 19 0 0 4 1 | 10.1 |
+
+- Compliance is noise, not an fp8 signal. The five same-model copies alone span 2 to 8 answers in format of 10, and fp8 (9) sits with the system-prompt and persona copies (8 each), not apart from them. A system prompt or a persona makes this model more compliant.
+- P4 next words against plain (mean per-item total variation, permutation p over whole answers, 500 permutations): the disguise spread is 0.67 to 1.00, and fp8 0.95, LoRA 0.3 1.00, LoRA 0.7 0.89, LoRA 1.5 0.85. **Fail for all four.** With the rank statistic, the spread is 0.61 to 1.00 against 0.92, 0.92, 0.63 and 0.54: **fail**. Plain yields 0.3 next words per answer, so every distance from it rests on a few items. Among compliant answers only (>= 10 next words), system prompt against persona, the same model, is 0.67, and system prompt against fp8 is 0.70 (p 0.76). Every pair falls between 0.62 and 0.78. Nothing separates fp8.
+- P3 repetition counts per repeat:
+
+| endpoint | counts of "river" | answers running to the token cap |
+|---|---|---|
+| 01 plain | 256 9 256 1 52 1 1 0 256 10 | 3 of 10 |
+| 03 system prompt | 1 1 1 3 9 1 3 1 1 1 | 0 |
+| 05 persona | 256 128 1 1 0 128 1 1 1 1 | 3 |
+| 06 watermark | 9 128 8 1 1 36 1 1 0 256 | 2 |
+| 08 temperature 1.0 | 2 1 3 17 1 12 7 1 5 13 | 0 |
+| 02 fp8 | 5 7 128 1 1 1 1 1 1 256 | 2 |
+| 09 LoRA 0.3 | 256 128 6 14 256 12 0 256 256 256 | 6 |
+| 04 LoRA 0.7 | 128 256 256 256 128 256 57 256 6 256 | 8 |
+| 07 LoRA 1.5 | 17 256 256 256 128 256 70 241 256 0 | 7 |
+
+- No count lies between 71 and 127. An answer either stops early or runs to the 256-token cap (256 spaced or 128 comma-separated repetitions); the requested 150 is never written. On the raw counts, total variation and the rank statistic fail for every pair (disguise spread 0.30 to 0.70 and 0.20 to 0.76, against at most 0.70 and 0.66).
+- The run-to-cap rate is the first statistic of the night that separates LoRA from the disguises. Two-sided Fisher exact tests against the pooled answers of the five same-model copies (40 when an endpoint is compared with the other four):
+  - LoRA 0.3: 6 of 10 against 8 of 50, p 0.007;
+  - LoRA 0.7: 8 of 10, p 0.0002;
+  - LoRA 1.5: 7 of 10, p 0.001;
+  - fp8: 2 of 10, p 0.67;
+  - each disguise against the other four: p 0.18 to 0.65.
+  Against plain alone (10 against 10) the p-values are 0.37, 0.07 and 0.18. Under the desk's pass rule (difference in rate from plain > largest difference among disguises, 0.3): LoRA 0.7 (0.5) and LoRA 1.5 (0.4) pass; LoRA 0.3 (0.3) ties, so fails; fp8 (0.1) fails.
+- Conclusion: P4 fails for every pair type; its signal is format compliance, which the disguises move as much as the weights. P3 fails as a count but carries a LoRA signal in its stop decision. That was the research's prediction (the stop is a near-tie) on a binary feature: the LoRA copies fail to stop. The feature was defined after looking at these answers, at a natural gap, and needs a confirmation run on fresh answers before it decides a scored pair. It does nothing for fp8. On a scored family it would be read against that family's own majority of same-model copies, which needs the family and its disguised copies to be found first.
+
 ## Status at handoff (2026-11-22 00:25, interim; night_b still running)
 
 **Done in this run (23:30 to 00:25)**
