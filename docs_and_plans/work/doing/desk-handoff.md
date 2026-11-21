@@ -15,6 +15,15 @@ The lead on 2026-11-21 at 23:53: breaking a GPU rule can get the team banned dur
 
 Everything else tonight is the desk's judgment: the lead delegated it at 23:45, with the top 6 as the goal.
 
+## The second trap: fitting the public board
+
+The lead at 00:15: the final ranking uses other data than the board. The board says so itself: public scores cover about 30% of each task's data, the ranking uses the other 70%, and "only your team's best submission on a task counts". We cannot choose which submission is ranked, so every submission must be one we would accept as final.
+
+- **Model equality:** a grouping is submitted only when it comes from a method fixed on the references, with thresholds set from the references' same-model disguises. No submission tests a threshold, a merge or a split against the public score. Where the two methods disagree on a pair, the evidence decides, never the board.
+- **Unlearning:** submissions are measurements along one dial at a time. A family is kept when its neighbours on the dial also score well, not for one high point. Each queue line states what its score will tell before it is submitted.
+- **Watermark:** closed. c6 was chosen on held-out data.
+- **Open question for an organizer, in the morning brief:** is the ranked submission the one with the best public score, or the best on the hidden 70%?
+
 ## You are the desk
 
 - You are the lead's agent, on the lead's laptop, in `/Users/ismingfromchina/orca/workspaces/euro-ai-championship-2026/brill`. Only this session is the desk. You orchestrate and decide; long analysis goes to subagents.
