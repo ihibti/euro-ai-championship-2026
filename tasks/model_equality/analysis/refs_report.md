@@ -232,6 +232,19 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
 - The only non-zero P2 distances are between the endpoints that keep many positions: 04-07 0.67 (6), 04-06 0.22 (9), 06-07 0.20 (20), 02-07 0.17 (6) and 02-06 0.12 (8). The watermark copy (06) keeps more positions than plain because it falls into the same `0 1 0 1` alternation every time. That is an attractor, not a near-tie.
 - Conclusion: both probes fail for every pair type: fp8, LoRA 0.3, LoRA 0.7 and LoRA 1.5. The premise does not hold on the reference model: it is not near-greedy on these prompts. Two repeats of plain ref-01 part at the first continuation word on P1 (mean first divergence 0.1 words), and on P2 the plain model keeps 7 positions out of 60, with its own halves disagreeing on 62% of the positions they share. The P2 positions that are kept are format attractors (a leading `0`, the alternation) that every endpoint shares, which is why all distances from ref-01 are 0. The scored models may be larger and closer to greedy, but nothing on the references supports spending scored answers on P1 or P2.
 
+## E10. night_c design: three categorical batteries, not yet asked (2026-11-22 00:28)
+
+- Constraint from the desk: each answer carries 20 to 30 independent categorical draws, with no worked example in the prompt.
+- Constraint from the data: whether the plain model answers in format depends on one line of the instruction. Mean numbered items parsed per answer:
+  - round-1 batteries, which say "Reply with exactly 30 lines in the form '1. A'": 20 to 30 of 30 on every endpoint, plain 24 and 28, temperature 1.0 25 and 28;
+  - P4, which has no such line (`night_b`, first 4 repeats): plain 0.5 of 20, temperature 0.8, against 14 to 17.5 for fp8 and the LoRAs. P4's distances therefore measure format compliance first.
+  - What the model copies is a plausible answer inside the example: `'1. 42'` gave forty 42s in E1. `night_c` keeps the format line and puts a placeholder in it (`'number. option'`), never an answer.
+- `probes/night_c.csv` (built by `probes/build_night_c.py`, 225 to 289 input tokens, answers about 100 to 170 tokens):
+  - `c1_equiv` (candidate a): 25 lines of four equivalent options with a fixed order, mixing function names that do the same thing, synonyms and arbitrary equal picks. The draw is the option written. A line counts only when exactly one of its options appears, so an echoed line is not read as a first-option pick.
+  - `c2_edge` (candidate c, from E5): 25 one-word questions near the edge of a small model's knowledge (capitals that are not the largest city, rare chemical symbols, dates, two arithmetic items). The draw is the first word of the answer. In round 1, knowledge errors (`bat_trivia`) were the only weight signal larger than the disguises.
+  - `c3_next` (candidate b): P4's 20 sentence starts with the format line added. The draw is the word after the echoed start, or a bare one-word answer. This is the fair test of the next-word idea, since P4 itself is confounded with compliance.
+- Statistic: `analysis/choices.py` (tested). It counts the chosen option per item and endpoint and compares two endpoints by the mean per-item total variation, and by a temperature-robust mean per-item Kendall tau-b distance between the two count vectors, which sees only the order of preference. Each is calibrated by a permutation test that shuffles whole answers between the two endpoints. The pass rule is unchanged.
+- Command for the references, when the desk schedules it (at 10 repeats: 270 answers, about 28 min): `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/night_c.csv --repeats 10`. Analysis: `uv run python tasks/model_equality/analysis/choices.py --answers tasks/model_equality/answers/night-c.jsonl`.
 
 ## Status at handoff (2026-11-22 00:25, interim; night_b still running)
 
