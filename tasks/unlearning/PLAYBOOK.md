@@ -112,7 +112,7 @@ Notes:
 
 ## Where to start looking
 
-`research.md` in this folder will rank the published methods; it is being written under issue #3. Until it lands, these are untested starting points:
+`research.md` in this folder ranks the published methods, proposes three approaches and a local proxy score; read it before choosing. These are untested starting points:
 
 1. **Test the nine-class hypothesis with a change that needs no training.** Lowering the nine classes' entries of the last layer's bias by `d` lowers their logits by `d` on every input. Computed from `orig_logits.npz`:
 
@@ -137,7 +137,7 @@ Notes:
 2. Copy `orig_logits.npz` to the laptop (7 MB) and reproduce the table above. That proves your tooling and gives you the playground for last-layer edits.
 3. Send the repo to `unlearning/repo` (command 1) and run `orig_stats.py` once as a job, to prove the job path from your own account.
 4. Build the first candidate, the bias change at a moderate `d`, as a state dict in `output/`. Run `--check`, then have your human submit it.
-5. Open an issue per line of work from `.github/ISSUE_TEMPLATE/task.md`, and read `research.md` when the PR for issue #3 lands.
+5. Open an issue per line of work from `.github/ISSUE_TEMPLATE/task.md`, and read `research.md` before the first one.
 
 ## Clock
 
