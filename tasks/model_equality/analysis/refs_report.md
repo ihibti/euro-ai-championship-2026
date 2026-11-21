@@ -153,6 +153,48 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
   - The watermark and temperature copies differ from plain about as much as fp8 does, so a test of "same distribution" cannot be the decision rule for disguised copies either.
   - `group.py` is not fit to run unchanged on `round1-ep.jsonl`: on the references it calls every endpoint of a family one model, which gives MCC_model 0.
 
+## E7. Ablations of group.py at 40 answers per endpoint (2026-11-21 23:59)
+
+- Hypothesis: a subset of the prompt kinds, or the per-prompt mode, rescues the grouping at the same count.
+- Command: `uv run python tasks/model_equality/analysis/evaluate.py --answers tasks/model_equality/answers/round1.jsonl --per-prompt 4 --draws 0` plus the options below (run under bash: an unquoted `$opts` in zsh is not split, and the argparse error was hidden at first).
+
+| options | MCC | grouping |
+|---|---|---|
+| default (pooled, seq,bat,txt, factor 3) | 0.000 | all one |
+| `--kinds seq` | 0.000 | all one |
+| `--kinds seq,bat` | 0.000 | all one |
+| `--kinds bat` | 0.000 | all one |
+| `--kinds txt` | 0.000 | all one |
+| `--kinds bat,txt` | 0.000 | all one |
+| `--ids bat_trivia --kinds bat` | 0.000 | all one |
+| `--mode prompt` | 0.000 | all one |
+| `--factor 2` | 0.000 | all one |
+| `--factor 2 --kinds bat,txt` | 0.000 | all one |
+| `--factor 1 --kinds bat,txt` | 0.000 | all one |
+| `--factor 1` | 0.351 | {01,02,03,05,06} {04,09} {07,08} |
+
+- Conclusion: only a factor tuned down to 1 splits anything, and it pairs LoRA 1.5 with the temperature copy. That is a threshold chosen on 9 endpoints, not a method. At this count round 1 has no reference MCC above 0 under the rule as designed. Resampling at 4 repeats (old step 6) is moot until a statistic separates anything.
+
+## E8. Free side channels on the answers already held (2026-11-22 00:04)
+
+- Latency: `answer_row` (in `src/euroai/me_query.py`) saves neither a timestamp, nor `finish_reason`, nor token usage, so latency and the 256-token cap cannot be read from saved answers. Proxy for latency: the lag between each answer's planned slot (repeat, then prompt, then endpoint) and its line in the file, over the 218 answers of the second round-1 run. The mean lag per endpoint is between -0.04 and +0.04 jobs, and the median is 0 for all nine. Answers come back in submission order whatever the endpoint, so the order carries no latency signal.
+- Length (all 482 reference answers in `smoke`, `cand1` and `round1`, characters):
+
+| endpoint | n | median | p90 | share >= 1,000 | ends mid-sentence |
+|---|---|---|---|---|---|
+| 01 plain | 54 | 180 | 937 | 0.09 | 0.57 |
+| 02 fp8 | 54 | 197 | 831 | 0.07 | 0.57 |
+| 03 system prompt | 54 | 178 | 857 | 0.06 | 0.48 |
+| 04 LoRA 0.7 | 54 | 233 | 1,112 | 0.15 | 0.31 |
+| 05 persona | 54 | 199 | 1,070 | 0.11 | 0.57 |
+| 06 watermark | 53 | 170 | 729 | 0.08 | 0.62 |
+| 07 LoRA 1.5 | 53 | 612 | 1,250 | 0.34 | 0.64 |
+| 08 temperature 1.0 | 53 | 217 | 953 | 0.09 | 0.49 |
+| 09 LoRA 0.3 | 53 | 226 | 825 | 0.08 | 0.43 |
+
+- On `txt_health` LoRA 1.5 hits the cap 4 times out of 4 (1,229 to 1,335 characters); the others vary from 211 to 1,248.
+- Conclusion: length carries the LoRA dose at 0.7 and 1.5 and nothing at fp8 or LoRA 0.3. Recording `finish_reason`, `usage.completion_tokens` and the wall-clock time in `answer_row` would make the cap and latency checkable at no cost. That file is shared code outside this task's folder, so the change goes through the lead, before the scored spend if at all.
+
 ## Status at handoff (2026-11-21 23:12)
 
 Stopped by the coordinator before items 3 to 5 of the brief. No separation table, no reference MCC and no `results/` record exist yet.
