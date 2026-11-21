@@ -9,8 +9,8 @@ Run in the JURECA task folder, which holds release/ and models/:
 
     python <repo>/tasks/watermark_localization/decode_evidence.py --split train
 
-Writes output/evidence/<split>_<method>.npz. "margin" is the mean over bits of logit x sign of the true
-bit; "acc" is the share of bits read correctly.
+Writes output/evidence/<split>_<method>.npz. "margin" is the mean over bits of the logit times the
+sign of the true bit; "acc" is the share of bits read correctly.
 """
 
 from __future__ import annotations
