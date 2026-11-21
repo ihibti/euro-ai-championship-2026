@@ -90,3 +90,22 @@ GPU estimates are my own guesses (3,500 images, ViT-B, fp16, one A100-class GPU)
 - Checked afterwards: every arXiv identifier above resolves to a paper with the cited title, and every repository exists with the licence shown.
 - Not checked: the method summaries, which come from one reading of each paper, and the effort and GPU estimates.
 - The measurements of the forget set in `PLAYBOOK.md` are ours and take precedence where they disagree with these notes.
+
+## Measured afterwards: the original model was trained with a softmax loss
+
+Measured on 2026-11-21 from the last layer of the public `model.pt`. The script fetches about 0.4 MB with HTTP range requests and needs no GPU and no token:
+
+```
+uv run --extra api python tasks/unlearning/head_probe.py
+```
+
+| Quantity | Measured | Under softmax cross-entropy | Under binary cross-entropy |
+|---|---|---|---|
+| Head bias, mean (sd) | −0.0065 (0.020) | stays near its start, 0: its gradient sums to zero over the classes | pushed far below 0 by the 99 negative classes of every image |
+| Norm of the class-mean weight row, over the mean row norm | 0.086; rows with no common direction give about 0.10 | no common direction | a common direction that lowers every logit |
+| Mean logit over the 100 classes, for any input | +0.002 ± 3.54, a bound from the final LayerNorm | near 0 | about −5 or lower for a head that fits its training images |
+
+- The binary cross-entropy of the DeiT-III recipe is ruled out. The saved logits agree: on the forget images, the mean logit of the other classes is −0.3 to −0.8 (`analysis.md` section 1b on `kkrgp/unlearning-first-moves`).
+- This settles the open point of section 1 of that file. Under the removal reading, gold's loss on the nine classes is in the high range of its section 2 (15 to 25), not 5 to 10.
+- For the first submission (#12): a class dial at 30 can no longer score 0 by overshooting a low, binary-cross-entropy level of loss. A 0 from `bias_full30.pt` points to the extras reading of section 1b, or to the 70% gate.
+- The same tensors give section 1b's figures for the nine classes: bias +0.021 and row norm 1.087, against −0.009 and 1.183 on average for the other 91 classes.
