@@ -1,0 +1,7 @@
+Run on JURECA from runs/02b0eb5 with the unlearning .venv, 2026-11-21 23:46 Paris:
+python scripts/submit.py --task unlearning --file ../../output/kkrgp/x4_<K>.pt --check
+
+x4_e12.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+x4_e14.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+x4_e16.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+x4_e20.pt: checks passed: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
