@@ -1,7 +1,8 @@
 """The only path from a local file to a submission.
 
-Order: server id known, file valid, cool-down over, a human at a terminal, API key present,
-summary, typed task name, upload, record. Every attempt that reaches the upload is recorded,
+Order: server id known, file valid, cool-down over, a human at a terminal or a night
+authorization from the lead, API key present, summary, typed task name (human only), upload,
+record. Every attempt that reaches the upload is recorded,
 including failures, because the server counts failed submissions toward its cool-down.
 """
 
@@ -23,6 +24,7 @@ from euroai.credentials import (
     missing_secret_message,
     read_text_or_none,
 )
+from euroai.night import HUMAN, NIGHT, load_authorization, night_file, submission_refusal
 from euroai.provenance import GitState, sha256_file
 from euroai.records import load_records, record_stem, write_record
 from euroai.validators import ValidationReport, validate_file
@@ -150,7 +152,8 @@ def run_submission(
     if not report.ok:
         _report_errors(deps, task, path, report)
         return REFUSED
-    last = latest_attempt(load_records(records_dir))
+    records = load_records(records_dir)
+    last = latest_attempt(records)
     left = cooldown_left(last, deps.now())
     if check_only:
         deps.out(f"checks passed for {path}: {'; '.join(report.notes) or 'ok'}")
@@ -163,9 +166,16 @@ def run_submission(
             f"wait {_wait_text(left)}. Pull first to see teammates' attempts."
         )
         return REFUSED
+    night = None
     if not deps.isatty():
-        deps.out("refused: submitting needs a human at a terminal; agents and scripts may not")
-        return REFUSED
+        night, reason = load_authorization(deps.read_file(night_file(deps.env)), deps.now())
+        refusal = reason if night is None else submission_refusal(night, task, records)
+        if refusal is not None:
+            deps.out(
+                "refused: submitting needs a human at a terminal, or a night authorization "
+                f"from the lead; {refusal}"
+            )
+            return REFUSED
     lookup = find_secret(API_KEY_VAR, deps.env, deps.read_file)
     if lookup.value is None:
         deps.out(f"refused: {missing_secret_message(lookup)}")
@@ -177,7 +187,9 @@ def run_submission(
 
     for line in _summary(task, info, path, report, deps.git(), last, lookup):
         say(line)
-    if deps.read_line(f"Type {task} to submit, anything else cancels: ").strip() != task:
+    if night is not None:
+        say(f"no typed confirmation: night authorization until {night.expires.isoformat()}")
+    elif deps.read_line(f"Type {task} to submit, anything else cancels: ").strip() != task:
         say("cancelled: nothing was sent")
         return REFUSED
     attempted_at = deps.now()
@@ -203,6 +215,7 @@ def run_submission(
         "validation_notes": report.notes,
         "git": deps.git().to_dict(),
         "person": person,
+        "authorization": NIGHT if night is not None else HUMAN,
         "status": status,
         "http_status": status_code,
         "score": score,

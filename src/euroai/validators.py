@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass, field
@@ -15,6 +16,8 @@ from euroai.me_score import parse_labels
 
 ME_ENDPOINTS = tuple(f"ep-{index:02d}" for index in range(1, 34))
 ME_HEADER = ["endpoint", "family", "model"]
+ME_FAMILY_LABEL = re.compile(r"[A-Z]+")
+ME_MODEL_NUMBER = re.compile(r"[0-9]+")
 WATERMARK_KEYS = frozenset({"image_names", "masks"})
 WATERMARK_GRID = 128
 WATERMARK_TEST_COUNT = 1020
@@ -161,6 +164,18 @@ def validate_model_equality(text: str) -> list[str]:
         seen[endpoint] = number
         if not family or not model:
             errors.append(f"line {number}: empty family or model label for {endpoint}")
+            continue
+        if not ME_FAMILY_LABEL.fullmatch(family):
+            errors.append(
+                f"line {number}: family {family!r} must be capital letters such as A, "
+                "the organizers' format; rewrite the file with scripts/me_labels.py"
+            )
+            continue
+        if not (model.startswith(family) and ME_MODEL_NUMBER.fullmatch(model[len(family) :])):
+            errors.append(
+                f"line {number}: model {model!r} must be the family letter and a number, "
+                f"such as {family}1; rewrite the file with scripts/me_labels.py"
+            )
             continue
         families_by_model.setdefault(model, set()).add(family)
     missing = [endpoint for endpoint in ME_ENDPOINTS if endpoint not in seen]

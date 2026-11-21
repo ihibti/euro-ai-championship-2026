@@ -160,6 +160,21 @@ def budget_from_models(body: Mapping[str, Any]) -> dict[str, int]:
     }
 
 
+def used_from_models(body: Mapping[str, Any]) -> dict[str, int]:
+    return {item["id"]: int(item["budget"]["used"]) for item in body["data"]}
+
+
+def unrehearsed_prompts(
+    rows: Iterable[Mapping[str, Any]], prompts: Sequence[Prompt], references: Sequence[str]
+) -> list[str]:
+    seen = {(str(row["endpoint"]), str(row["id"])) for row in rows}
+    return [
+        prompt_id
+        for prompt_id, _ in prompts
+        if any((reference, prompt_id) not in seen for reference in references)
+    ]
+
+
 def budget_lines(body: Mapping[str, Any]) -> list[str]:
     limits = {item["id"]: int(item["budget"]["limit"]) for item in body["data"]}
     left = budget_from_models(body)

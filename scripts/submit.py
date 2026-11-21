@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="validate only; never submit")
     args = parser.parse_args(argv)
     human = sys.stdin.isatty() and sys.stdout.isatty()
-    if not args.check and human and importlib.util.find_spec("requests") is None:
+    if not args.check and importlib.util.find_spec("requests") is None:
         print("refused: requests is not installed; run through make submit (uv run --extra api)")
         return 2
     secrets = secrets_file(os.environ)

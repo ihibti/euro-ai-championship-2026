@@ -23,7 +23,9 @@ SUCCESS = {"status": "success", "score": 0.42, "previous_best": 0.3, "improved":
 
 
 class Harness:
-    def __init__(self, tmp_path, *, tty=True, typed="model_equality", response=(200, SUCCESS)):
+    def __init__(
+        self, tmp_path, *, tty=True, typed="model_equality", response=(200, SUCCESS), night=None
+    ):
         self.records = tmp_path / "submissions"
         self.lines = []
         self.posts = []
@@ -39,7 +41,7 @@ class Harness:
             out=self.lines.append,
             git=lambda: GitState(commit="abc1234def", branch="main", dirty=False),
             person=lambda: "ana",
-            read_file=lambda _: None,
+            read_file=lambda path: night if path.name == "night.json" else None,
         )
 
     def post(self, url, headers, path):
@@ -65,7 +67,7 @@ class Harness:
 @pytest.fixture
 def answer(tmp_path):
     path = tmp_path / "answer.csv"
-    lines = ["endpoint,family,model"] + [f"{e},F{e[-2:]},M{e[-2:]}" for e in ME_ENDPOINTS]
+    lines = ["endpoint,family,model"] + [f"{e},A,A{int(e[-2:])}" for e in ME_ENDPOINTS]
     path.write_text("\n".join(lines) + "\n")
     return path
 
@@ -213,3 +215,56 @@ def test_interrupted_upload_is_recorded_and_blocks(tmp_path, answer):
     assert record["status"] == "error" and "interrupted" in record["message"]
     harness.now = NOW + timedelta(minutes=1)
     assert harness.run(answer) == 2
+
+
+NIGHT_TEXT = (
+    '{"expires": "2026-11-22T09:00:00+01:00", "answers_per_endpoint": 50, '
+    '"submissions": {"model_equality": 2}}'
+)
+
+
+def test_human_submission_is_recorded_as_human(tmp_path, answer):
+    harness = Harness(tmp_path)
+    assert harness.run(answer) == 0
+    [record] = load_records(harness.records)
+    assert record["authorization"] == "human"
+
+
+def test_night_authorization_submits_without_a_typed_confirmation(tmp_path, answer):
+    harness = Harness(tmp_path, tty=False, night=NIGHT_TEXT)
+    assert harness.run(answer) == 0
+    assert len(harness.posts) == 1 and harness.prompts == []
+    [record] = load_records(harness.records)
+    assert record["authorization"] == "night" and record["score"] == 0.42
+    assert "night authorization until" in harness.output()
+    assert KEY not in harness.output()
+
+
+def test_night_authorization_keeps_cooldown_and_cap(tmp_path, answer):
+    harness = Harness(tmp_path, tty=False, night=NIGHT_TEXT)
+    assert harness.run(answer) == 0
+    assert harness.run(answer) == 2 and "cool-down" in harness.output()
+    harness.now = NOW + COOLDOWN
+    assert harness.run(answer) == 0
+    harness.now = NOW + 2 * COOLDOWN
+    assert harness.run(answer) == 2
+    assert len(harness.posts) == 2
+    assert "allows 2 model_equality submissions" in harness.output()
+
+
+def test_night_authorization_expired_unreadable_or_other_task(tmp_path, answer):
+    late = Harness(tmp_path / "late", tty=False, night=NIGHT_TEXT)
+    late.now = datetime(2026, 11, 22, 8, 0, 0, tzinfo=timezone.utc)
+    assert late.run(answer) == 2 and "ended" in late.output() and late.posts == []
+    broken = Harness(tmp_path / "broken", tty=False, night="{")
+    assert broken.run(answer) == 2 and "unreadable" in broken.output() and broken.posts == []
+    none = '{"expires": "2026-11-22T09:00:00+01:00", "submissions": {"unlearning": 3}}'
+    other = Harness(tmp_path / "other", tty=False, night=none)
+    assert other.run(answer) == 2 and other.posts == []
+    assert "allows 0 model_equality submissions" in other.output()
+
+
+def test_a_human_at_a_terminal_ignores_the_night_authorization(tmp_path, answer):
+    harness = Harness(tmp_path, typed="no", night=NIGHT_TEXT)
+    assert harness.run(answer) == 2
+    assert harness.posts == [] and len(harness.prompts) == 1
