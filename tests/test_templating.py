@@ -23,12 +23,32 @@ def test_lowercase_and_shell_syntax_are_not_placeholders():
     assert find_placeholders("cat <<'EOF'\n<lower> ${VAR} <A_1>") == {"A_1"}
 
 
-def test_jureca_sbatch_template_has_documented_placeholders_only():
+def test_jureca_sbatch_template_uses_event_values():
     text = (ROOT / "jsc" / "jureca_gpu.sbatch.template").read_text()
-    assert find_placeholders(text) == {"BUDGET_ACCOUNT", "RESERVATION", "TIME"}
-    rendered = render(text, {"BUDGET_ACCOUNT": "acct", "RESERVATION": "", "TIME": "00:30:00"})
-    assert "--reservation" not in rendered
-    assert "#SBATCH --account=acct" in rendered
+    assert find_placeholders(text) == {"JOB_NAME", "TASK_DIR", "TIME", "COMMAND"}
+    task_dir = "/p/scratch/training2666/hibti1/Begg/unlearning"
+    values = {
+        "JOB_NAME": "unlearn",
+        "TASK_DIR": task_dir,
+        "TIME": "01:00:00",
+        "COMMAND": "python unlearn.py",
+    }
+    lines = render(text, values).splitlines()
+    for expected in [
+        "#SBATCH --account=training2666",
+        "#SBATCH --reservation=cispahack",
+        "#SBATCH --partition=dc-gpu",
+        "#SBATCH --nodes=1",
+        "#SBATCH --ntasks-per-node=1",
+        "#SBATCH --gres=gpu:1",
+        "#SBATCH --cpus-per-task=8",
+        f"#SBATCH --output={task_dir}/output/%j.out",
+        f"#SBATCH --error={task_dir}/output/%j.err",
+        'export SRUN_CPUS_PER_TASK="${SLURM_CPUS_PER_TASK}"',
+        f'cd "{task_dir}"',
+        "srun python unlearn.py",
+    ]:
+        assert expected in lines
 
 
 def test_ssh_template_placeholders():

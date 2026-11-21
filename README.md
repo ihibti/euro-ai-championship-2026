@@ -2,7 +2,9 @@
 
 Team workspace for the European AI Championship 2026 hackathon (CISPA EU AI Championship 26–27, JSC project `training2666`).
 
-**Status:** this is scaffolding only. **We have not chosen a project.** The challenge, data and rules are still TBD (see below). Assumptions and open questions live in [NOTES.md](NOTES.md).
+**Status:** the three tasks are known (see [Challenge](#challenge)). Agents start with [AGENTS.md](AGENTS.md); each task's full statement is in `tasks/<task>/README.md`. Assumptions and open questions live in [NOTES.md](NOTES.md).
+
+**New teammate:** clone the repo, start your agent in it and say: "Read AGENTS.md and take me through the onboarding guide." The guide is `docs_and_plans/guides/teammate-onboarding.md`.
 
 ## Quickstart (local, CPU only)
 
@@ -16,6 +18,20 @@ make smoke        # end-to-end synthetic run, writes outputs/<timestamp>_<name>/
 make check-env    # JSON report: python, packages, GPU, Slurm, loaded modules
 make papers       # (re)download reference PDFs and verify SHA-256
 ```
+
+Task commands (details in [AGENTS.md](AGENTS.md)):
+
+```
+make data   TASK=<task>                          download into data/<task>/ (watermark: also unzips into release/)
+make score  TASK=<task> ANSWER=<file> NOTES=...  local score: prints score=<x>, writes tasks/<task>/results/*.json
+make board  TASK=<task>                          result records, best first
+make check  TASK=<task> FILE=<file>              every submission check, without submitting
+make submit TASK=<task> FILE=<file>              submit: a human at a terminal, 30-minute cool-down, typed confirmation
+uv run --extra api python scripts/me_query.py --prompts <file> [--endpoints ref|ep|<list>] [--spend]
+uv run --extra api python scripts/me_query.py --budget    answers left on every endpoint
+```
+
+Secrets (`HACKATHON_API_KEY`, `HF_TOKEN`) come from the environment or from `~/.config/euroai/.env` (mode 600), never from the repo. See `.env.example`.
 
 Without `make` (these lines also work in nushell):
 
@@ -37,6 +53,8 @@ These are declared in `pyproject.toml` and pinned in `uv.lock`. **None are insta
 | Extra | Contents | Use |
 |---|---|---|
 | `dev` | pytest, ruff | always |
+| `api` | requests | `make submit`, `scripts/me_query.py` |
+| `data` | huggingface_hub | `make data` |
 | `torch` | torch | GPU work |
 | `vision` | torch, torchvision, pillow | image tasks, e.g. watermarking |
 | `hf` | torch, transformers, datasets, accelerate, safetensors | LLM/NLP tasks, e.g. model auditing |
@@ -48,7 +66,20 @@ Install extras with `uv sync --extra dev --extra torch` (add more `--extra` flag
 ## Layout
 
 ```
-src/euroai/         task-independent utilities (numpy only)
+AGENTS.md           instructions for every agent: map, commands, hard rules, work contract
+tasks/<task>/       README.md (full statement), upstream/ (organizer files, unmodified),
+                    results/ (make score records), submissions/ (make submit records)
+  model_equality/answers/   every endpoint answer collected; never delete
+src/euroai/         shared utilities (numpy only; torch, timm, requests imported lazily)
+  challenge.py      the three tasks: dataset, server task id, file rules
+  records.py        one JSON record per scoring run or submission; the board
+  me_score.py       model-equality practice MCC, as the organizers' score_practice.py
+  wm_score.py       watermark per-image mIoU, as the organizers' wmloc/utils.py
+  validators.py     local submission checks for the three tasks
+  credentials.py    secrets from the environment or ~/.config/euroai/.env
+  gate.py           the submission gate behind make submit and make check
+  me_query.py       budgeted, resumable model-equality querying
+  fetch.py          data locations and zip extraction
   seeding.py        seed_everything, derive_seed, make_rng, torch_worker_init
   env.py            read-only environment detection (stdlib, py3.8+)
   config.py         TOML configs + dotted --set overrides
@@ -62,7 +93,8 @@ src/euroai/         task-independent utilities (numpy only)
   submission.py     validated id,value CSV writer (format TBD)
   tracking.py       offline JSONL metric logger
   templating.py     <PLACEHOLDER> rendering that refuses unfilled templates
-scripts/            run_experiment.py, check_env.py, render_template.py, fetch_papers.sh
+scripts/            score.py, board.py, data.py, submit.py, me_query.py (thin CLIs over src/euroai),
+                    run_experiment.py, check_env.py, render_template.py, fetch_papers.sh
 configs/            example.toml (pipeline smoke config)
 tests/              unit tests + smoke tests (pytest -m smoke)
 notebooks/          00_quickstart.ipynb (outputs cleared; commit without outputs)
@@ -79,17 +111,17 @@ docs_and_plans/     guides/ (references), work/{todo,doing,done}/ (plans)
 3. Run it with `scripts/run_experiment.py --config ...`. Each run writes `manifest.json`, `metrics.json` and any extra files to `outputs/`.
 4. Keep the logic pure where possible (data in, numbers out) and test it with synthetic inputs.
 
-## Challenge — TBD
+## Challenge
 
-| Item | Status |
-|---|---|
-| Task / problem statement | **TBD** |
-| Dataset (source, licence, size, personal data?) | **TBD** |
-| Evaluation metric and scorer | **TBD** |
-| Submission format and endpoint | **TBD**. Paris slides showed `id,label` with probability in [0,1], posted to a leaderboard server. Unconfirmed for this event. |
-| Rules: external data, pretrained models, team size, compute limits | **TBD** |
-| Deadlines | **TBD** |
-| Judging criteria | **TBD** |
+Three tasks, all scored at http://34.147.229.55/leaderboard_page, where our team name is **Begg**. The hackathon ends at 2026-11-22 12:00 Europe/Paris. Each task's full statement is in `tasks/<task>/README.md`.
+
+| Task | Goal | Metric | Local score |
+|---|---|---|---|
+| [watermark_localization](tasks/watermark_localization/README.md) | Mark the watermarked cells (128 x 128 grid) of 1,020 test images | mean over images of the two-class mIoU | exact, on the 510 labelled training images |
+| [model_equality](tasks/model_equality/README.md) | Give family and model labels for 33 LLM endpoints | 0.1 · MCC_family + 0.9 · MCC_model over 528 pairs | exact, on the 9 free reference endpoints |
+| [unlearning](tasks/unlearning/README.md) | Make a ViT-B/16 forget 3,500 training images | forget score × retain score; 0 below 70% validation accuracy | proxy only |
+
+The organizers have not stated rules on external data, pretrained models or paid APIs, nor the submission limits for watermark and unlearning. `make submit` applies the model-equality limit (one per 30 minutes, failures included) to all three.
 
 ## Reference papers
 
@@ -112,7 +144,8 @@ The full, source-referenced guide is [jsc/README.md](jsc/README.md). Short versi
 - **GPU node:** 4× A100 40 GB and 128 cores. Allocation is exclusive and charged per node-hour.
   - Partitions: `dc-gpu` (≤24 h, no internet) and `dc-gpu-devel` (≤2 h, has internet).
   - Download models and data on login nodes, then run offline.
-- **Jobs:** render `jsc/jureca_gpu.sbatch.template` with `scripts/render_template.py`, then run `mkdir -p logs` and `sbatch`. The reservation name and budget account must be confirmed first.
+- **Team folder:** `/p/scratch/training2666/hibti1/Begg/`, one subfolder per task with its own `.venv` (see each task's README, On JURECA).
+- **Jobs:** render `jsc/jureca_gpu.sbatch.template` with `scripts/render_template.py`, create the task's `output/`, then `sbatch`. It carries the verified event values: account `training2666`, reservation `cispahack` (until 2026-11-22 14:00), `gpu:1`, 8 CPUs.
 - **Jupyter:** https://jupyter.jsc.fz-juelich.de, logging in with **JSC Account**. This has not been tested.
 - **Data constraint:** stay within the approved project. **Do not process personal data.** JSC requires a GDPR assessment plus a signed addendum for any personal or pseudonymised data.
 

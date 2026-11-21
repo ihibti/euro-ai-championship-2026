@@ -1,0 +1,2 @@
+Write the numbers from 1 to 30, separated by commas, and nothing else.
+Describe a rainy day in two sentences.

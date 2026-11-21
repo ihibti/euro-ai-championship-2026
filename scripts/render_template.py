@@ -1,8 +1,9 @@
 """Render a `<PLACEHOLDER>` template, refusing to output anything left unfilled.
 
 Example (on a JURECA login node):
-    python3 scripts/render_template.py jsc/jureca_gpu.sbatch.template \
-        BUDGET_ACCOUNT=<budget> RESERVATION= TIME=01:00:00 > job.sbatch
+    python3 scripts/render_template.py jsc/jureca_gpu.sbatch.template JOB_NAME=unlearn \
+        TASK_DIR=/p/scratch/training2666/hibti1/Begg/unlearning TIME=01:00:00 \
+        COMMAND='python unlearn.py' > job.sbatch
 """
 
 from __future__ import annotations
