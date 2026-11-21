@@ -12,9 +12,9 @@ assignees: [ihibti]
 
 **Command:** the exact command, as you would type it at the root of the repo. For example `bash tasks/unlearning/run_second.sh`. It runs with the task folder on JURECA as working directory and its `.venv` active; the commit is unpacked into `<task folder>/runs/<commit>/` and the paths of your command are resolved there.
 
-**Run time:** how long it takes on one A100 with 40 GB, and how you know. Say so if it needs more than one GPU.
+**Run time:** how long it takes on one A100 with 40 GB, and how you know. Say so if it needs more than one GPU. At most 90 minutes; one open request per task (Requests to the desk in `AGENTS.md`).
 
-**Writes:** the folder the run writes to, under `<task folder>/output/<name>/`, and the small files you want back (numbers, logs). Weights stay on JURECA.
+**Writes:** the folder the run writes to, under `<task folder>/output/<name>/`, how many files it creates (at most 50), and the small files you want back (numbers, logs; at most 20 MB in all). Weights stay on JURECA.
 
 **Done when:** what the log or an output file must show for the run to count as a success.
 
