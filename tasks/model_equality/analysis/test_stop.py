@@ -47,6 +47,24 @@ def test_lost_stop_flags_nothing_in_a_homogeneous_family():
     assert stop.lost_stop(hits, sorted(hits), alpha=0.01) == []
 
 
+def test_night_d_confirms_p3_verbatim_and_adds_two_new_ids():
+    import csv
+
+    probes = Path(__file__).resolve().parents[1] / "probes"
+    sys.path.insert(0, str(probes))
+    import build_night
+
+    with (probes / "night_d.csv").open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    prompts = {r["id"]: r["prompt"] for r in rows}
+    assert list(prompts) == ["d1_repeat150", "d2_story100", "d3_openlist"]
+    assert prompts["d1_repeat150"] == build_night.P3
+    with (probes / "night_b.csv").open(encoding="utf-8", newline="") as handle:
+        old = {r["id"]: r["prompt"] for r in csv.DictReader(handle)}
+    assert old["p3_repeat"] == build_night.P3
+    assert all("1." not in text and "e.g." not in text for text in prompts.values())
+
+
 def test_cap_hits_read_rows_by_endpoint_and_prompt():
     rows = [
         {"endpoint": "ref-01", "id": "p3_repeat", "repeat": 1, "response": "river " * 256},

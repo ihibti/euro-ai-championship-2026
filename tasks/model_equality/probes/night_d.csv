@@ -1,0 +1,6 @@
+id,prompt
+d1_repeat150,"Repeat the word river exactly 150 times, separated by single spaces. Output nothing else."
+d2_story100,"Continue this story in about 100 words. Output nothing else.
+
+The ferry left the harbour an hour late, and by the time the island came into view the passengers had"
+d3_openlist,"Write a list of animals that live in the sea, separated by commas. Output nothing else."
