@@ -18,6 +18,10 @@ may hold. Two numbers come out of them:
   closed-form edit of the last layer does the same job without training.
 - the retain proxy: accuracy and KL at temperature 2 against the class-dial model on them.
 
+With --targets, the held-out predictions of xfit.py come in: each image's target is blended, at
+temperature 2, with what a copy of the model that never trained on it predicts. --mix is the
+share given to that prediction, from 0 (ignore it) to 1 (trust it fully).
+
 With --spare-classes N, N thinned classes get no hedge and none of their images is trained on.
 They stand in for the 55 classes we hold no image of: the drift on them is what the fine-tune
 does to classes it was never shown.
@@ -35,6 +39,7 @@ import time
 from pathlib import Path
 
 import lib
+import numpy as np
 import torch
 import torch.nn.functional as F
 from lib import tt
@@ -50,6 +55,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--even", type=float, default=0.0, help="label hedge on every touched class"
     )
     parser.add_argument("--tau", type=float, default=1.0)
+    parser.add_argument("--targets", type=Path, help="xfit_<name>.npz with held-out predictions")
+    parser.add_argument("--mix", type=float, default=0.5)
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--batch", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-5)
@@ -102,6 +109,15 @@ def stratified_split(
     return torch.cat(train).sort().values, torch.cat(held).sort().values
 
 
+def load_proxy(path: Path | None, count: int) -> tuple[torch.Tensor, torch.Tensor] | None:
+    if path is None:
+        return None
+    with np.load(path) as data:
+        proxy = torch.from_numpy(data["pred_exact"][:count])
+        columns = torch.from_numpy(data["columns"])
+    return proxy, columns
+
+
 def train(
     student: torch.nn.Module,
     teacher: torch.nn.Module,
@@ -109,6 +125,7 @@ def train(
     labels: torch.Tensor,
     shift: torch.Tensor,
     beta: torch.Tensor,
+    proxy: tuple[torch.Tensor, torch.Tensor] | None,
     args: argparse.Namespace,
 ) -> list[dict[str, float]]:
     params = trainable(student, args)
@@ -136,6 +153,9 @@ def train(
             with torch.no_grad(), torch.autocast("cuda", dtype=torch.float16):
                 teacher_logits = teacher(lib.model_input(pixels)).float()
             target = lib.soft_targets(teacher_logits, batch_labels, shift, beta, args.tau)
+            if proxy is not None:
+                rows, columns = proxy[0][index].to(lib.DEVICE), proxy[1].to(lib.DEVICE)
+                target = lib.mix_with_proxy(target, rows, columns, args.mix)
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 logits = student(lib.model_input(pixels)).float()
             log_p = F.log_softmax(logits, dim=1)
@@ -170,11 +190,15 @@ def group_report(
     shift: torch.Tensor,
     beta: torch.Tensor,
     tau: float,
+    proxy: tuple[torch.Tensor, torch.Tensor] | None,
+    mix: float,
 ) -> dict[str, float]:
-    """One group of images on one view: the dial-only reference, the hedged target, the student."""
+    """One group of images on one view: the dial-only reference, the target, the student."""
     none = torch.zeros_like(beta)
     reference = lib.soft_targets(orig, labels, shift, none)
     target = lib.soft_targets(orig, labels, shift, beta, tau)
+    if proxy is not None:
+        target = lib.mix_with_proxy(target, proxy[0], proxy[1], mix)
     p_reference = float(lib.label_prob_t2(reference, labels).mean())
     p_target = float(lib.label_prob_t2(target, labels).mean())
     p_sub = float(lib.label_prob_t2(sub, labels).mean())
@@ -226,10 +250,19 @@ def main(argv: list[str] | None = None) -> None:
         f"spare={len(spare_index)}",
         flush=True,
     )
+    proxy = load_proxy(args.targets, len(images))
     history = []
     if args.epochs > 0:
+        trained_proxy = None if proxy is None else (proxy[0][train_index], proxy[1])
         history = train(
-            student, teacher, images[train_index], labels[train_index], shift, beta, args
+            student,
+            teacher,
+            images[train_index],
+            labels[train_index],
+            shift,
+            beta,
+            trained_proxy,
+            args,
         )
     report: dict = {"args": {k: str(v) for k, v in vars(args).items()}, "history": history}
     for part, index in (("trained", train_index), ("held", held_index), ("spare", spare_index)):
@@ -242,6 +275,7 @@ def main(argv: list[str] | None = None) -> None:
         for group, mask in (("full", is_full[index]), ("thinned", ~is_full[index])):
             if not mask.any():
                 continue
+            rows = None if proxy is None else (proxy[0][index][mask], proxy[1])
             report[part][group] = {
                 view: group_report(
                     orig_views[view][mask],
@@ -250,6 +284,8 @@ def main(argv: list[str] | None = None) -> None:
                     shift,
                     beta,
                     args.tau,
+                    rows,
+                    args.mix,
                 )
                 for view in lib.EVAL_VIEWS
             }

@@ -216,6 +216,24 @@ def soft_targets(
     return F.log_softmax(shifted / tau, dim=1)
 
 
+def mix_with_proxy(
+    log_probs: torch.Tensor, proxy: torch.Tensor, columns: torch.Tensor, mix: float
+) -> torch.Tensor:
+    """Blend targets with held-out predictions, at the scoring temperature, on the given columns.
+
+    Columns left out (classes the held-out predictor never trained on) keep their offset to the
+    rest, so the loss level set by the class dial is untouched.
+    """
+    allowed = log_probs[:, columns]
+    mass = torch.logsumexp(allowed, dim=1, keepdim=True)
+    own = F.softmax(allowed / TEMPERATURE, dim=1)
+    other = F.softmax(proxy[:, columns] / TEMPERATURE, dim=1)
+    blended = TEMPERATURE * torch.log(((1 - mix) * own + mix * other).clamp_min(1e-30))
+    out = log_probs.clone()
+    out[:, columns] = blended - torch.logsumexp(blended, dim=1, keepdim=True) + mass
+    return F.log_softmax(out, dim=1)
+
+
 def label_loss(log_probs: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
     return -log_probs.gather(1, labels.view(-1, 1)).squeeze(1)
 
