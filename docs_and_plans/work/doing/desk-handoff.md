@@ -7,9 +7,18 @@ Written on 2026-11-21 at about 23:30 by the previous desk session, for the plain
 - You are the lead's agent, on the lead's laptop, in `/Users/ismingfromchina/orca/workspaces/euro-ai-championship-2026/brill`. Only this session is the desk. You orchestrate and decide; long analysis goes to subagents.
 - The lead (`ihibti`) sleeps from about 23:30 to 09:00. After that, the lead prepares for the judges and has little time for the models. The event ends on 2026-11-22 at 12:00 Paris time. Make the last submission per task by 11:00, which leaves a slot if it fails.
 - You own **model equality** (its owner has been out since the 21st) and **watermark**.
-- **Unlearning** belongs to `kkrgp`'s agent. It works through the lead's GitHub account, so its commits and issues show `ihibti`.
-- **Devin** runs on another computer and builds a second method for model equality.
+- **Unlearning** belongs to the unlearning agent, on the lead's second laptop. It works through the lead's GitHub account, so its commits and issues show `ihibti`.
+- **Devin** builds a second method for model equality. Since about 23:20 it runs on the lead's second laptop, which it shares with the unlearning agent (#24). That laptop holds no scoreboard key.
 - Both reach you only through GitHub, by the protocol in `AGENTS.md`, section Requests to the desk. Pinned status issue: #19.
+
+## State at 23:40, from the second desk session
+
+- The handshake for the night is on #19: the three agents acked their roles there by 23:35. Its body holds the role table and the timeline. Do not open another handshake.
+- The night authorization exists since 23:36: until 09:00, 80 answers used per scored endpoint, submissions 5 model equality, 12 unlearning, 1 watermark.
+- Submitted at 23:36: the model equality floor (public 0.0) and watermark c6 (public 0.7444). The watermark slot of the authorization is used.
+- Unlearning: the queue file exists (`submit_queue.md` at `0ddc834` or later) and is the only source. It has no `map_even40.pt` line, on purpose (#12).
+- A background watcher (`gh api` every minute) reports new teammate comments, issues, PRs and pushes to `kkrgp/*` and `devin/*`. It expires after 30 minutes; re-arm it at each wake.
+- Read the clock (`date +%H:%M`) before writing a time in an issue. Two posts carried a wrong time tonight.
 
 ## Rules beyond AGENTS.md and the lead's CLAUDE.md
 

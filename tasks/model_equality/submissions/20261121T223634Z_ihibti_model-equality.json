@@ -1,0 +1,28 @@
+{
+  "attempted_at": "2026-11-21T22:36:34.598012+00:00",
+  "authorization": "night",
+  "bytes": 484,
+  "file": "tasks/model_equality/analysis/floor_all_different_ep.csv",
+  "git": {
+    "branch": "ihibti/setup-hackathon-swarm-workspace",
+    "commit": "5f3ed4dcae75a18322a9a156c402ff63d396f433",
+    "dirty": false
+  },
+  "http_status": 200,
+  "message": "score 0.0; previous best None; improved None; Submission accepted. Public-split score shown; the held out subset determines the final ranking.",
+  "person": "ihibti",
+  "response": {
+    "message": "Submission accepted. Public-split score shown; the held out subset determines the final ranking.",
+    "score": 0.0,
+    "status": "success",
+    "submission_id": 1958
+  },
+  "score": 0.0,
+  "server_task_id": "33-model-equality",
+  "sha256": "823e0ce7ae34d08d36452a42d22dea67390930ff74991437d0affb5148059084",
+  "status": "success",
+  "task": "model_equality",
+  "validation_notes": [
+    "33 endpoints, 33 family labels, 33 models"
+  ]
+}
