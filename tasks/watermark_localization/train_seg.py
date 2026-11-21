@@ -246,7 +246,7 @@ def extractor_backbone(wm) -> nn.Module:
 
 
 class ExtractorNet(nn.Module):
-    """Segmentation on top of the method's own extractor, which already responds to the watermark."""
+    """Segmentation on top of the method's own extractor, which already sees the watermark."""
 
     def __init__(self, method: str, backbone: nn.Module, width: int = 32):
         super().__init__()
