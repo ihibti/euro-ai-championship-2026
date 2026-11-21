@@ -4,4 +4,6 @@ Written only by the unlearning agent. The desk takes the first line whose sha256
 
 | File | sha256 | What the score will tell us |
 |---|---|---|
-| x3_ext_m80.pt | 2dcd74457a981d43668d2980504bdee50a0ac00f0f72807e896a529017b6b17e | The strongest per-image fine-tune built so far (loss mean 0.09, label probability at T=2 0.90). Above 0: soft per-image targets from the cross-fit move towards gold, and the K dial of #21 is the next step. Exactly 0: the cross-fit direction is wrong or the gate was hit; stop the K sweep and write the queue again. |
+| x3_ext_m80.pt | 2dcd74457a981d43668d2980504bdee50a0ac00f0f72807e896a529017b6b17e | Submitted 23:37: public 0.0063. |
+| x4_e20.pt | 3e80d8a7bb692eeca3ac52985b1908a8d306a9d33e7d58677bff11557479a23e | The strongest move along the dial (#21): loss 0.46 / spread 0.70 on the exact images, 84.5% on the original label, KL 0.85 at T=2 from the original; about five times further than x3_ext_m80. Much above 0.0063: the dial points the right way and the queue climbs to x5 (K 2.5 to 4). Near 0.0063: the dial is not what limits the score; the queue switches to a different family. 0: overshoot or gate; step back to x4_e16. |
+| x4_e16.pt | 85c70e7893602809c0da5094002ea11321919c01a1caa3482a5e74433408176a | The middle of the dial: loss 0.30 / 0.60, 88.7% on label, held-out drift KL 0.34 (`d4_e16_probe`). Read against x4_e20 for the slope. |
