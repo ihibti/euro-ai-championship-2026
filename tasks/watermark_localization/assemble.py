@@ -1,9 +1,11 @@
 """Build one candidate from per-method predictions, and score every option on the train split.
 
-For each method the mask comes either from a segmentation run (probabilities at 0.5) or, when no run
-is named, from the full-frame decode rule (all ones or all zeros). Run in the JURECA task folder:
+For each method the mask comes either from segmentation runs (probabilities at 0.5; several runs
+joined with "+" are averaged) or, when no run is named, from the full-frame decode rule (all ones or
+all zeros). Run in the JURECA task folder:
 
     python <repo>/tasks/watermark_localization/assemble.py --tag c2 --seg stegastamp=stegastamp_v1
+    python <repo>/tasks/watermark_localization/assemble.py --tag c6 --seg trustmark=trustmark_v3+trustmark_x1
 
 Writes output/candidates/<tag>.npz with train_names, train_masks, test_names and test_masks, the
 masks bit-packed. pack_submission.py turns that file into the train answer and the test submission
@@ -42,18 +44,27 @@ def decode_masks(split: str, method: str) -> tuple[list[str], np.ndarray]:
     return evidence["names"].tolist(), masks
 
 
-def seg_masks(split: str, run: str, threshold: float) -> tuple[list[str], np.ndarray]:
-    saved = np.load(f"output/seg/{run}/{split}.npz")
-    return saved["names"].tolist(), (saved["probs"].astype(np.float32) >= threshold).astype(
-        np.uint8
-    )
+def average(stack: list[np.ndarray]) -> np.ndarray:
+    return np.mean(np.stack([probs.astype(np.float32) for probs in stack]), axis=0)
+
+
+def seg_masks(split: str, runs: str, threshold: float) -> tuple[list[str], np.ndarray]:
+    names, stack = None, []
+    for run in runs.split("+"):
+        saved = np.load(f"output/seg/{run}/{split}.npz")
+        if names is None:
+            names = saved["names"].tolist()
+        if saved["names"].tolist() != names:
+            raise SystemExit(f"{run}: the {split} images are not in the order of the first run")
+        stack.append(saved["probs"])
+    return names, (average(stack) >= threshold).astype(np.uint8)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--tag", required=True)
     parser.add_argument(
-        "--seg", nargs="*", default=[], help="method=run, e.g. stegastamp=stegastamp_v1"
+        "--seg", nargs="*", default=[], help="method=run or method=run1+run2 (averaged)"
     )
     parser.add_argument("--threshold", type=float, default=0.5)
     args = parser.parse_args()
