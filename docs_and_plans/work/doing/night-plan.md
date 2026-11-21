@@ -82,3 +82,6 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 23:45 | `run_fifth.sh` at `442697b` started on GPU 3 (#21) | `run_fourth.sh` ended at 23:43, reports on `desk/unlearning` at `612ab76` |
 | 23:47 | The desk chained a 5-hour holder job (15903853) behind the running job | cancelled at 23:54 on the lead's reminder of the ban risk: one job in total, running or pending, and only for work that is ready |
 | 23:53 | Organizers' update on model equality labels: family `A`, model `A1` | `make check` now enforces it; `scripts/me_labels.py` rewrites any grouping |
+| 23:58 | Round 1 on the references at 40 answers: MCC 0 in both modes | not spent on the scored endpoints; near-tie probes `night_a` and `night_b` run on the references first (`tasks/model_equality/research_night.md`) |
+| 00:03 | `run_sixth.sh` at `2dcdbdd` started on the four GPUs of the running job (#21) | `run_fifth.sh` ended at 00:00, reports on `desk/unlearning` |
+| 00:07 | Unlearning `x4_e20.pt` submitted | public 0.0336, up from 0.0063; next slot at 00:38 (`scale_t4.pt`) |
