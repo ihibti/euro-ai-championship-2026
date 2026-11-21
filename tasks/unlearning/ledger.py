@@ -149,9 +149,7 @@ def main(argv: list[str] | None = None) -> None:
             f"loss {row['gold_loss'][0]:.2f}/{row['gold_loss'][1]:.2f} "
             f"acc {row['gold_acc']:.2f} | {observed}"
         )
-    print(
-        "\ncandidate: weighted mean | 10th to 90th percentile | P(score above the best so far)"
-    )
+    print("\ncandidate: weighted mean | 10th to 90th percentile | P(score above the best so far)")
     best_so_far = max(inputs["observed"].values())
     summary = {}
     for name in candidates:

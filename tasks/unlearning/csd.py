@@ -27,6 +27,12 @@ original logits plus K times (held-out prediction minus original), on the exact 
 applied to every view. K = 1 is the held-out prediction; K above 1 goes further, towards a model
 whose early blocks never saw the image either. It replaces --mix.
 
+With --retain-mix W, every batch also carries blends of two forget images of different classes
+(mixup, the second image's share drawn between 0.35 and 0.65). The original model never saw these
+blends, so its outputs on them stand for its behaviour on images it did not memorise: the student
+is pulled towards them with weight W (KL at temperature 2). It anchors the rest of the model
+while the forget images move, without any retained data.
+
 With --spare-classes N, N thinned classes get no hedge and none of their images is trained on.
 They stand in for the 55 classes we hold no image of: the drift on them is what the fine-tune
 does to classes it was never shown.
@@ -74,6 +80,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--aug-strength", type=float, default=1.0)
     parser.add_argument("--t2-weight", type=float, default=1.0)
     parser.add_argument("--holdout", type=float, default=0.0)
+    parser.add_argument("--retain-mix", type=float, default=0.0, help="weight of the mixup anchor")
     parser.add_argument("--spare-classes", type=int, default=0, help="thinned classes left alone")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--limit", type=int, default=0, help="first N images only, for smoke runs")
@@ -149,7 +156,7 @@ def train(
     for epoch in range(args.epochs):
         student.train()
         order = torch.randperm(len(images), generator=order_generator)
-        sums = {"loss": 0.0, "kl_t1": 0.0, "kl_t2": 0.0}
+        sums = {"loss": 0.0, "kl_t1": 0.0, "kl_t2": 0.0, "mix_anchor": 0.0}
         for start in range(0, len(order), args.batch):
             index = order[start : start + args.batch]
             pixels = lib.chw(images[index])
@@ -171,6 +178,21 @@ def train(
             kl_t1 = (target.exp() * (target - log_p)).sum(1).mean()
             kl_t2 = lib.kl_t2(target, logits).mean()
             loss = kl_t1 + args.t2_weight * kl_t2
+            mix_anchor = torch.zeros((), device=lib.DEVICE)
+            if args.retain_mix > 0:
+                partner = torch.randperm(len(index), generator=order_generator).to(lib.DEVICE)
+                other = batch_labels[partner] != batch_labels
+                share = 0.35 + 0.3 * torch.rand(len(index), generator=generator, device=lib.DEVICE)
+                share = torch.where(other, share, torch.zeros_like(share)).view(-1, 1, 1, 1)
+                blends = pixels * (1 - share) + pixels[partner] * share
+                with torch.no_grad(), torch.autocast("cuda", dtype=torch.float16):
+                    anchor_target = F.log_softmax(teacher(lib.model_input(blends)).float(), 1)
+                with torch.autocast("cuda", dtype=torch.bfloat16):
+                    anchor_logits = student(lib.model_input(blends)).float()
+                rows = other.float()
+                kl_rows = lib.kl_t2(anchor_target, anchor_logits)
+                mix_anchor = (kl_rows * rows).sum() / rows.sum().clamp(min=1.0)
+                loss = loss + args.retain_mix * mix_anchor
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(params, 1.0)
@@ -184,6 +206,7 @@ def train(
             sums["loss"] += float(loss) * len(index)
             sums["kl_t1"] += float(kl_t1) * len(index)
             sums["kl_t2"] += float(kl_t2) * len(index)
+            sums["mix_anchor"] += float(mix_anchor) * len(index)
         record = {key: value / len(images) for key, value in sums.items()}
         record["epoch"] = epoch + 1
         history.append(record)
