@@ -140,9 +140,11 @@ def make_sample(
     method: str,
     bank: list[np.ndarray],
     strength: float = 1.0,
+    bits: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, str]:
     kind = str(rng.choice(KINDS, p=KIND_WEIGHTS))
-    bits = rng.integers(0, 2, nbits)
+    if bits is None:
+        bits = rng.integers(0, 2, nbits)
     if kind == "rect":
         y0, y1, x0, x1 = rect_frame(rng, MAX_ASPECT[method])
         mask = np.zeros((SIDE, SIDE), np.uint8)
