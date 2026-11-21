@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import errno
 import json
 import math
 import queue
@@ -23,6 +24,7 @@ import sys
 import threading
 import time
 import zlib
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -42,6 +44,7 @@ from wmloc.watermarks import load_watermark  # noqa: E402
 
 VALIDATION_COVERS = 300
 SYNTHETIC_VALIDATION = 150
+FULL_DISK = (errno.EDQUOT, errno.ENOSPC)
 DATASET_COVERS = Path("covers/dataset_512.npy")
 DATASET_INDEX = Path("covers/dataset_512.json")
 DATASET_VALIDATION = 100
@@ -327,8 +330,24 @@ def predict(net: nn.Module, images: torch.Tensor, batch: int = 32) -> np.ndarray
 
 def save_probs(path: Path, names: list[str], probs: np.ndarray) -> None:
     partial = path.with_suffix(".partial.npz")
-    np.savez_compressed(partial, names=np.asarray(names), probs=probs.astype(np.float16))
-    partial.replace(path)
+    try:
+        np.savez_compressed(partial, names=np.asarray(names), probs=probs.astype(np.float16))
+        partial.replace(path)
+    except OSError:
+        partial.unlink(missing_ok=True)
+        raise
+
+
+def saved(label: str, write: Callable[..., object], *args: object) -> bool:
+    """Run one write; on a full disk or quota, keep the previous file and go on training."""
+    try:
+        write(*args)
+    except OSError as exc:
+        if exc.errno not in FULL_DISK:
+            raise
+        print(f"skipped saving {label}: {exc}", file=sys.stderr, flush=True)
+        return False
+    return True
 
 
 def score_groups(probs: np.ndarray, truth: np.ndarray, groups: dict[str, np.ndarray]) -> dict:
@@ -519,9 +538,10 @@ def main() -> None:
             print(json.dumps(record), flush=True)
             log.write(json.dumps(record) + "\n")
             log.flush()
-            torch.save(ema.state_dict(), out_dir / "last.pt")
-            save_probs(out_dir / "train.npz", names, real_probs)
-            save_probs(out_dir / "test.npz", test_names, predict(ema, test_images))
+            saved("last.pt", torch.save, ema.state_dict(), out_dir / "last.pt")
+            saved("train.npz", save_probs, out_dir / "train.npz", names, real_probs)
+            test_probs = predict(ema, test_images)
+            saved("test.npz", save_probs, out_dir / "test.npz", test_names, test_probs)
             running = 0.0
         if done:
             break

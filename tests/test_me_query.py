@@ -17,6 +17,8 @@ from euroai.me_query import (
     run_jobs,
     select_endpoints,
     spend_lines,
+    unrehearsed_prompts,
+    used_from_models,
 )
 
 PROMPTS = [("0", "a"), ("1", "b"), ("2", "c")]
@@ -214,3 +216,21 @@ def test_budget_lines_list_every_endpoint_and_total_the_scored_ones():
         "ref-01: 999988 left of 1000000",
         "scored answers left: 93 of 200",
     ]
+
+
+def test_used_from_models():
+    body = {"data": [{"id": "ep-01", "budget": {"limit": 100, "used": 7}}]}
+    assert used_from_models(body) == {"ep-01": 7}
+
+
+def test_unrehearsed_prompts_need_every_reference():
+    prompts = [("a", "first"), ("b", "second")]
+    rows = [
+        {"endpoint": "ref-01", "id": "a", "repeat": 0},
+        {"endpoint": "ref-02", "id": "a", "repeat": 0},
+        {"endpoint": "ref-01", "id": "b", "repeat": 0},
+        {"endpoint": "ep-01", "id": "b", "repeat": 0},
+    ]
+    assert unrehearsed_prompts(rows, prompts, ["ref-01", "ref-02"]) == ["b"]
+    assert unrehearsed_prompts(rows, prompts, ["ref-01"]) == []
+    assert unrehearsed_prompts([], prompts, ["ref-01"]) == ["a", "b"]

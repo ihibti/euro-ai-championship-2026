@@ -5,7 +5,8 @@ uv run --extra api python scripts/me_query.py --prompts prompts.txt --endpoints 
 uv run --extra api python scripts/me_query.py --budget
 
 The first form uses the free ref-* endpoints. Scored ep-* endpoints need --spend, and you must
-type the total number of scored answers at a terminal. Answers are appended to
+type the total number of scored answers at a terminal. Without a terminal, a spend runs only
+inside the lead's night authorization (euroai.night). Answers are appended to
 tasks/model_equality/answers/<name>.jsonl; commit that file. The third form asks nothing: it
 prints the answers left on every endpoint.
 """
@@ -14,8 +15,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -23,13 +26,19 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from euroai.challenge import SERVER_URL, get_task  # noqa: E402
-from euroai.credentials import API_KEY_VAR, get_secret, missing_secret_message  # noqa: E402
+from euroai.credentials import (  # noqa: E402
+    API_KEY_VAR,
+    get_secret,
+    missing_secret_message,
+    read_text_or_none,
+)
 from euroai.me_query import (  # noqa: E402
     Job,
     budget_from_models,
     budget_lines,
     confirm_spend,
     done_keys,
+    is_scored,
     plan_jobs,
     prompt_conflicts,
     read_prompts,
@@ -38,7 +47,10 @@ from euroai.me_query import (  # noqa: E402
     scored_total,
     select_endpoints,
     spend_lines,
+    unrehearsed_prompts,
+    used_from_models,
 )
+from euroai.night import night_file, spend_decision  # noqa: E402
 from euroai.provenance import slugify  # noqa: E402
 from euroai.tracking import read_jsonl  # noqa: E402
 
@@ -112,9 +124,25 @@ def main(argv: list[str] | None = None) -> int:
         for line in spend_lines(planned, remaining):
             print(line)
         human = sys.stdin.isatty() and sys.stdout.isatty()
-        if not confirm_spend(total, human, input):
-            print("refused: scored answers need a human at a terminal typing the total")
-            return 2
+        if human:
+            if not confirm_spend(total, human, input):
+                print("refused: scored answers need a human at a terminal typing the total")
+                return 2
+        else:
+            allowed, reason = spend_decision(
+                read_text_or_none(night_file(os.environ)),
+                datetime.now(timezone.utc),
+                {endpoint: count for endpoint, count in planned.items() if is_scored(endpoint)},
+                used_from_models(reply.json()),
+                unrehearsed_prompts(rows, prompts, [e for e in remaining if not is_scored(e)]),
+            )
+            if not allowed:
+                print(
+                    "refused: scored answers need a human at a terminal typing the total, "
+                    f"or a night authorization from the lead; {reason}"
+                )
+                return 2
+            print(f"no typed confirmation: {reason}")
     if not jobs:
         print("nothing to query")
         return 0
