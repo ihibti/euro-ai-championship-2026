@@ -120,6 +120,17 @@ Budget if all eight survive the ref check: 56 answers, which leaves room for 4 m
 3. The scored families may be larger models, or use 4-bit, where quantization is easier than on the weak ref model (F4: detection grows with size). The public 30% of pairs may also contain no fp8 pair, so 1.00 does not prove fp8 is solved.
 4. Unverified: a side channel such as latency (F13), or output length against the 256-token cap. Checking it costs nothing on answers we already hold.
 
+## Corrections from Devin's independent check (00:12, `analysis/second/research_night.md` on `devin/model-equality-second`)
+
+Row F3 misquotes the MET paper in four places. The corrected numbers:
+
+- int8 power ranges from 0.06 to 1.00 and nf4 from 0.12 to 1.00 over the 8 models of MET's Table 8. The 0.89 minimum for nf4 holds only for the five models of the main text.
+- N = 250 is per side.
+- The fp16 numbers are not in the paper's tables, only in figures; 0.04 to 0.07 is the false-positive column.
+- Watermark power is 0.43 to 1.00 at that budget. MET does not study system prompts: that result is AgentProv's section 4.3.
+
+Confirmed by both searches: a temperature mismatch is detected at about 1.00, and int8 goes from 0.30 to 0.96 in character space as samples per prompt rise from 10 to 50. Devin adds from AgentProv's Table 5: at a fixed 100 queries per endpoint, 10 probes x 10 samples reject 91.9% against 65.6% for 20 x 5. More repeats of the probes that pass beat more probes.
+
 ## Could not verify
 
 AgentProv code (not released); the power appendix of the watermark-detection paper; LLMmap's query list (abstract only); the timing method of the prompt-cache paper; the quantization results of DFA, KBF ([2605.29524](https://arxiv.org/abs/2605.29524)) and Ventor-QTest ([2608.16391](https://arxiv.org/abs/2608.16391)), all abstract only; IRIS's verbatim prompt templates (its appendix was not reached).
