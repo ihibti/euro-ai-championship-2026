@@ -69,7 +69,7 @@ A spend is a planned event with its plan written in the PR, never an experiment.
 
 ## Where to start looking
 
-`research.md` in this folder will rank the published methods; it is being written under issue #1. Until it lands, these are untested starting points, to confirm or kill on `ref-*`:
+`research.md` in this folder ranks the published methods and proposes three approaches; read it before designing the first prompt set. Its main bet, answers that are a choice between near-tied options, is points 2 and 3 below seen from the literature. The points below are our own untested starting points, to confirm or kill on `ref-*`:
 
 1. **Know the enemy.** Take about 20 varied prompts with 10 answers each on all nine references, and compare pairs with the simplest statistic you can write. Expect the five disguises of one model to look different from each other. The experiment shows by how much, and which disguise is loudest.
 2. **Constrained outputs.** Prompts that fix the form of the answer (long lists of numbers, sequences to continue, the same forced choice many times) leave less room for a persona or a system prompt. Each token is then one observation of what the model prefers.
@@ -84,7 +84,7 @@ A spend is a planned event with its plan written in the PR, never an experiment.
 2. Run `--budget`, then read `answers/smoke.jsonl` to see real answers.
 3. Write the "all different" CSV for the references and score it. `score=0.000000` is the floor, and it shows the scorer and the records working.
 4. Open an issue for the first experiment above from `.github/ISSUE_TEMPLATE/task.md`, assign it to your human, branch, and go.
-5. When the PR for issue #1 lands, read `research.md` and re-rank the list above.
+5. Read `research.md` and re-rank the list above before designing the first prompt set.
 
 ## Clock
 
