@@ -89,3 +89,5 @@ The search therefore starts low and climbs while the score rises. Gold is not on
 | 23:05 | Took over; asked the desk for sha256 values and reordered x3_ext_m80 before m40 (#12) | |
 | 23:15 | GPU request #21: four extrapolated candidates and a retain probe | |
 | 23:25 | Target statistics per K on the laptop; #21 retargeted to K = 1.2 to 2.0 (`02b0eb5`) | K = 1.5 asks for loss mean 1.03, spread 2.35 |
+| 23:37 | Desk submitted `x3_ext_m80` | **public 0.0063**, first score above 0 |
+| 23:45 | Reading: its losses (mean 0.090, spread 0.458) match the K = 0.9 target. Gold between K = 1.2 and 1.6 would have given 0.11 or more (`dial_matrix.py`); 0.0063 fits gold at K of 3.5 or more, or off the dial. The queue climbs from `x4_e20`; `run_fifth.sh` (K = 2.5 to 4, `442697b`) asked on #21 | |
