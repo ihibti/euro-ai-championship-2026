@@ -14,6 +14,11 @@
 - [ ] rsync repo; Option A `uv sync --extra dev --extra torch` on the login node.
 - [ ] Render sbatch, `mkdir -p logs`, submit the smoke job; confirm 4 GPUs + `cuda_available: true` in the log.
 
+## If watermarking is confirmed (talk signal, 2026-11-21)
+- [ ] Answer the watermark questions in NOTES.md "Signals from the opening talk" (role, media, white/black-box, metric).
+- [ ] Re-read `papers/briefs/2512.16874_pixel-seal.md` §6–§8 and `guides/baseline-options.md` §C.
+- [ ] On a login node: `uv sync --extra dev --extra vision`; try a Git install of videoseal; fetch any allowed checkpoint into `$SCRATCH`.
+
 ## Then
 - [ ] Choose project; write `docs_and_plans/work/doing/<project>.md` plan (task, baseline ladder from `guides/baseline-options.md`, eval protocol, compute budget).
 - [ ] Trivial baseline in the exact submission format first.

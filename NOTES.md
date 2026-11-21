@@ -20,6 +20,21 @@ The setup was prepared on 2026-11-21 during the opening talk, without interrupti
 11. **Job template uses all four GPUs.** It requests `--gres=gpu:4`, following the official docs, and not the `gpu:1` from the slides. The whole node is charged either way.
 12. **Organizer slide handling.** Technical facts from `~/Downloads/GPU-usage-paris.pdf` were copied into `jsc/README.md`. The PDF itself is not in the repo: it contains an organizer's personal contact details and stale project IDs.
 
+## Signals from the opening talk
+
+- **2026-11-21, during the talk.** Watermarking appears to be the main emphasis, according to a team member at the talk. The task statement is not confirmed yet, so no project has been chosen. The relevant brief is `papers/briefs/2512.16874_pixel-seal.md`, and the baselines are in section C of `docs_and_plans/guides/baseline-options.md`.
+- If watermarking is confirmed, we need answers to these questions:
+  - **Role:** are we embedding, detecting/decoding, removing (attacking), or forging?
+  - **Media:** images or video?
+  - **Watermark:** whose watermark, and do we have its weights or code (white-box) or not (black-box)?
+  - **Message:** is it a multi-bit message or zero-bit detection?
+  - **Scoring:** bit accuracy, TPR at fixed FPR, p-value, or quality (PSNR/SSIM/LPIPS)? If both robustness and quality are scored, what is the trade-off?
+  - **Resources:** which models are allowed (e.g. a VAE or diffusion model for regeneration), and what is the image resolution?
+- Practical notes on the official code are in the Pixel Seal brief §6:
+  - `videoseal` must be installed from Git, because the PyPI release predates Pixel Seal.
+  - The `decord` dependency can be hard to install.
+  - The `pixelseal` checkpoint is about 1.24 GB. It is not downloaded yet. On JURECA, fetch it on a login node into `$SCRATCH`.
+
 ## Open questions for the organizers
 
 - What are the challenge task, dataset, metric, submission format and endpoint, rules and deadlines? Which judging criteria apply, and how are they weighted?
