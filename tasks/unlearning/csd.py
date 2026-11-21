@@ -33,6 +33,10 @@ blends, so its outputs on them stand for its behaviour on images it did not memo
 is pulled towards them with weight W (KL at temperature 2). It anchors the rest of the model
 while the forget images move, without any retained data.
 
+With --no-start-edit, the student starts as the original model itself: the class dial is only in
+the targets, so the nine classes are lowered on the forget images the student trains on, and the
+anchor and the probes show how far that spreads to other images of those classes.
+
 With --spare-classes N, N thinned classes get no hedge and none of their images is trained on.
 They stand in for the 55 classes we hold no image of: the drift on them is what the fine-tune
 does to classes it was never shown.
@@ -81,6 +85,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--t2-weight", type=float, default=1.0)
     parser.add_argument("--holdout", type=float, default=0.0)
     parser.add_argument("--retain-mix", type=float, default=0.0, help="weight of the mixup anchor")
+    parser.add_argument("--no-start-edit", action="store_true", help="class dial in targets only")
     parser.add_argument("--spare-classes", type=int, default=0, help="thinned classes left alone")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--limit", type=int, default=0, help="first N images only, for smoke runs")
@@ -272,8 +277,9 @@ def main(argv: list[str] | None = None) -> None:
     order = torch.randperm(len(spareable), generator=torch.Generator().manual_seed(args.seed))
     spare = spareable[order[: args.spare_classes]]
     beta[spare] = 0
-    with torch.no_grad():
-        student.head.bias -= shift.to(student.head.bias)
+    if not args.no_start_edit:
+        with torch.no_grad():
+            student.head.bias -= shift.to(student.head.bias)
     is_full = shift[labels] > 0
     is_spare = torch.isin(labels, spare)
     train_index, held_index = stratified_split(labels, args.holdout, args.seed)
