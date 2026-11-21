@@ -34,7 +34,7 @@ uv run --extra api python scripts/me_query.py     the only way to query model-eq
 
 1. **Irreversible budgets.**
    - Model equality allows 100 answers per scored endpoint (`ep-01`…`ep-33`) for the whole event.
-   - Every task allows one submission per 30 minutes, and a failed submission counts.
+   - Treat every task as one submission per 30 minutes, and a failed submission counts, until the organizers say otherwise. Model equality states this limit officially.
    - Scored queries and submissions need a human at a terminal. Never call the server directly, from a loop, or from a cloud session.
 2. **Reference endpoints `ref-01`…`ref-09` are free.** Develop methods on them.
 3. **Secrets.**
