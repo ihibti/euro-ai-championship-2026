@@ -232,50 +232,39 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
 - The only non-zero P2 distances are between the endpoints that keep many positions: 04-07 0.67 (6), 04-06 0.22 (9), 06-07 0.20 (20), 02-07 0.17 (6) and 02-06 0.12 (8). The watermark copy (06) keeps more positions than plain because it falls into the same `0 1 0 1` alternation every time. That is an attractor, not a near-tie.
 - Conclusion: both probes fail for every pair type: fp8, LoRA 0.3, LoRA 0.7 and LoRA 1.5. The premise does not hold on the reference model: it is not near-greedy on these prompts. Two repeats of plain ref-01 part at the first continuation word on P1 (mean first divergence 0.1 words), and on P2 the plain model keeps 7 positions out of 60, with its own halves disagreeing on 62% of the positions they share. The P2 positions that are kept are format attractors (a leading `0`, the alternation) that every endpoint shares, which is why all distances from ref-01 are 0. The scored models may be larger and closer to greedy, but nothing on the references supports spending scored answers on P1 or P2.
 
-## Status at handoff (2026-11-21 23:12)
 
-Stopped by the coordinator before items 3 to 5 of the brief. No separation table, no reference MCC and no `results/` record exist yet.
+## Status at handoff (2026-11-22 00:25, interim; night_b still running)
+
+**Done in this run (23:30 to 00:25)**
+- Round 1 completed to 4 repeats (E4), and steps 2 to 5 of the previous list (E4 to E7): determinism, the separation table, the grouping at exactly 40 answers per endpoint with its two records, the ablations, and a permutation test per pair.
+- Side channels (E8): the saved rows record no latency, no `finish_reason` and no token usage, and the answer order carries no latency signal. Length shows the LoRA dose at 0.7 and 1.5 only.
+- night_a: P1 and P2 at 10 repeats, scored with `analysis/plurality.py` (E9).
 
 **Measured**
-- Throughput: 8.0 answers per minute on round 1 (142 answers in 1,062 s), 9.3 on cand1, no retries or 429s. One request takes about 24 s on the server with 4 in flight; length does not matter. Scored plan at this rate: 40 answers x 33 endpoints = 1,320 answers = 2.2 to 2.75 h; all 3,300 = 5.5 to 7 h. The scored round 1 has to start tonight for a second round to fit before 11:00.
-- Answer length: median 241 characters; free text hits the 256-token cap near 1,100 to 1,200 characters; a numbered battery near 30 to 35 lines.
-- Determinism: not measured with 6 repeats yet. What exists: on `count30` ref-06 gave 4 identical answers out of 4 and ref-01/02 3 of 4, while 03/05/07/08 gave 4 distinct answers. Decoding is sampled, often near-greedy on constrained prompts.
-- The reference model is very weak (E1): batteries collapse into copied examples and echoed questions, persona and temperature 1.0 often leave the task, copy is perfect for all but LoRA 1.5.
+- Throughput: 9.1 to 9.5 answers per minute, 0 failures over 398 answers tonight.
+- Round 1, 40 answers per endpoint: **MCC 0.000** pooled and with `--mode prompt` (`results/20261121T225541Z_ihibti_practice-mcc*.json`). Only a factor tuned down to 1 gives 0.351.
+- Permutation test of same answer distribution, 4 against 4 answers per prompt:
+  - inseparable: fp8 against plain (p 0.15), LoRA 0.3 against plain (0.08), LoRA 0.3 against LoRA 0.7 (0.46);
+  - separated: LoRA 0.7 and 1.5 against plain (0.010, 0.005);
+  - 4 of the 10 disguise pairs also reject at p < 0.05.
+- P1 and P2 fail for fp8 and for every LoRA. The reference model is not near-greedy: on P1 two of its own repeats part at the first continuation word.
 
-**Frozen**
-- `probes/round1.csv` (built by `probes/build_round1.py`): 10 prompts, ids `seq_count30, seq_alphabet, seq_months, seq_days, seq_words40, bat_trivia, bat_choice, txt_story, txt_health, idn_identity`. At `--repeats 4` it costs 40 answers per endpoint. Do not edit it: the reference answers are under these ids.
+**Not fit as is**
+- `analysis/group.py` merges every reference into one model at 40 answers. Do not run it unchanged on `round1-ep.jsonl` expecting a model split. Its family cut (0.5 on word profiles) is unvalidated and cannot be checked locally.
 
-**Not frozen**
-- `analysis/group.py`: statistic and cut described above (factor 3 x RMS self-split distance, average linkage, families as a coarse merge of model clusters at distance 0.5 on `txt`/`idn` features). Never run on real data with 4 repeats; the factor and the family cut are unvalidated guesses. It now refuses to run with fewer than 4 repeats per prompt. Known weakness: an endpoint whose answers share no feature (K_xx near 0, typical of ref-08 on free text) makes the pooled ratio explode because of the `1e-9` floor; check its row before trusting a cut, or use `--mode prompt` (per-prompt normalisation, skips such prompts).
-- Its tests are in `analysis/test_group.py`, outside the repo's `testpaths`: run `uv run pytest tasks/model_equality/analysis`.
+**Frozen prompt files** (answers are stored under these ids; never edit them)
+- `probes/round1.csv` (10 ids), `probes/night_a.csv` (`p1_copycont`, `p2_binary`), `probes/night_b.csv` (`p4_nextword`, `p3_repeat`, `p5_perm01` to `p5_perm10`), all written by their `build_*.py`.
 
-**Answer files** (all `ref-*`, all committed)
-- `answers/smoke.jsonl`: 18 answers, 2 prompts x 9 endpoints (earlier session).
-- `answers/cand1.jsonl`: 104 answers, `probes/cand1.jsonl` (20 prompt types), repeat 0 complete for the first 12 prompts (`count30` to `copy`), `story` on 5 endpoints, the 8 domain prompts not asked.
-- `answers/round1.jsonl`: 142 answers, `probes/round1.csv`; repeat 0 complete (90), repeat 1 complete for the five `seq_*` prompts and 7 of 9 endpoints of `bat_trivia`.
+**Answer files** (all `ref-*`, all committed except where noted)
+- `smoke` 18, `cand1` 104, `round1` 360 (10 prompts x 9 x repeats 0 to 3), `night-a` 180 (2 prompts x 9 x 10).
+- `night-b`: part 1 running at 00:25 (P4 and P3 x 9 x 10 = 180 answers). It was started from a scratch copy of the two `night_b.csv` rows with `--name night_b --repeats 10`, because one `--repeats` applies to the whole file and the P5 ids are asked once each.
 
 **Next steps**
-1. Finish 4 repeats of round 1 on the references (218 more answers, about 27 min). Only one querying process at a time; to stop it, kill the `.venv/bin/python -u scripts/me_query.py` process by PID (a `pkill` pattern without `-u` misses it).
-   `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/round1.csv --repeats 4`
-2. Determinism and cross-endpoint identical-answer rates:
-   `uv run python tasks/model_equality/analysis/collisions.py tasks/model_equality/answers/round1.jsonl --matrix`
-3. Separation table (items (a), (b), (c) of the brief) per prompt and feature, and the temperature-robust choice table:
-   `uv run python tasks/model_equality/analysis/explore.py tasks/model_equality/answers/round1.jsonl --repeats 0-3`
-   `uv run python tasks/model_equality/analysis/explore.py tasks/model_equality/answers/round1.jsonl --choice`
-4. Grouping at exactly 40 answers, printed distance matrix and self-split noise, then the scored record:
-   `uv run python tasks/model_equality/analysis/group.py --prefix ref- --answers tasks/model_equality/answers/round1.jsonl --below 4 --out tasks/model_equality/analysis/round1_refs.csv`
-   `make score TASK=model_equality ANSWER=tasks/model_equality/analysis/round1_refs.csv NOTES="round1 x4, pooled kernel seq+bat+txt, avg linkage cut 3x rms self-split"`
-5. Ablations at the same count (do not pick a winner on 9 endpoints by MCC alone; prefer the one with a reason):
-   `uv run python tasks/model_equality/analysis/evaluate.py --answers tasks/model_equality/answers/round1.jsonl --per-prompt 4 --draws 0` with `--kinds seq`, `--kinds seq,bat`, `--mode prompt`.
-6. Collect repeats 4 to 7 for resampling (360 answers, about 45 min), then the spread of the MCC at 4 repeats per prompt and the MCC at 8:
-   `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/round1.csv --repeats 8`
-   `uv run python tasks/model_equality/analysis/evaluate.py --answers tasks/model_equality/answers/round1.jsonl --per-prompt 4 --draws 200`
-   `uv run python tasks/model_equality/analysis/evaluate.py --answers tasks/model_equality/answers/round1.jsonl --per-prompt 8 --draws 0`
-7. LoRA direction and dose (which words rise from 0.3 to 0.7 to 1.5):
-   `uv run python tasks/model_equality/analysis/lora_dose.py tasks/model_equality/answers/round1.jsonl --ids txt_story,txt_health`
-8. Optional, for the LoRA domain: finish repeat 0 of cand1 (76 answers, about 9 min), which asks the 8 domain prompts once each:
-   `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/cand1.jsonl --repeats 1`
-9. Only once steps 4 to 6 show round 1 is worth it, the human spends the scored round (1,320 answers, 2.2 to 2.75 h, types 1320 to confirm); the command is valid nu:
-   `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/round1.csv --name round1-ep --endpoints ep --repeats 4 --spend`
-   then commit `answers/round1-ep.jsonl` at once and run step 4 with `--prefix ep- --answers tasks/model_equality/answers/round1-ep.jsonl`.
-10. Recommendation for the remaining 60 is open. The default to test in step 6: if the MCC at 8 repeats is clearly above the MCC at 4, spend 40 more of the same round-1 prompts (validated on the references at 80) and hold 20 back. Merge two look-alike endpoints when nothing separates them: among look-alikes the references hold 5 same-model copies for one fp8 copy.
+1. When part 1 ends, commit `answers/night-b.jsonl`. Then add the ten P5 ids once each (90 answers, about 10 min); P4 and P3 repeat 0 already exist, so only P5 is asked:
+   `uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/night_b.csv --repeats 1`
+   Never run `night_b.csv` with `--repeats` above 1: that would ask the P5 ids again.
+2. Tables for P3, P4 and P5, with the same pass rule as E9:
+   `uv run python tasks/model_equality/analysis/plurality.py --answers tasks/model_equality/answers/night-b.jsonl`
+3. For a pairwise check of two scored endpoints the clustering leaves borderline:
+   `uv run python tasks/model_equality/analysis/permtest.py --answers <file> --prefix ep- --pairs ep-01:ep-02`
+4. Ask the lead to make `answer_row` in `src/euroai/me_query.py` save `finish_reason`, `usage.completion_tokens` and a timestamp before any scored spend. It is shared code, outside this task's folder.
