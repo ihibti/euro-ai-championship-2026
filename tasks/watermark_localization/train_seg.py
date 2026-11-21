@@ -1,8 +1,8 @@
 """Train a segmentation network for one watermark method on synthetic composites.
 
-A background thread keeps embedding fresh watermarks into clean covers with the organizers' embedder
-(synth.py); the network trains on those plus a few real train images, and is scored with the
-official metric on real train images it never saw (a fixed fifth of the split).
+Background processes keep embedding fresh watermarks into clean covers with the organizers'
+embedder (synth.py); the network trains on those plus a few real train images, and is scored with
+the official metric on real train images it never saw (a fixed fifth of the split).
 
 Run in the JURECA task folder:
 
@@ -18,6 +18,7 @@ import argparse
 import copy
 import json
 import math
+import queue
 import sys
 import threading
 import time
@@ -26,6 +27,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import torch.multiprocessing as mp
 import torch.nn.functional as F
 from PIL import Image
 from torch import nn
@@ -98,11 +100,14 @@ class Buffer:
         return self.images[index], self.masks[index]
 
 
-def generate(buffer, covers, wm, method, bank, seed, stop) -> None:
+def produce(samples, stop, covers_path: Path, method: str, bank, seed: int) -> None:
+    covers = np.load(covers_path, mmap_mode="r")
+    usable = len(covers) - VALIDATION_COVERS
+    wm = load_watermark(method, models_dir=Path("models"), device="cuda")
     rng = np.random.default_rng(seed)
     failures = 0
     while not stop.is_set():
-        cover = np.ascontiguousarray(covers[int(rng.integers(len(covers)))])
+        cover = np.ascontiguousarray(covers[int(rng.integers(usable))])
         if rng.random() < 0.5:
             cover = np.ascontiguousarray(cover[:, ::-1])
         try:
@@ -110,9 +115,18 @@ def generate(buffer, covers, wm, method, bank, seed, stop) -> None:
         except Exception as error:
             failures += 1
             if failures <= 5:
-                print(f"generator: {type(error).__name__}: {error}", flush=True)
+                print(f"generator {seed}: {type(error).__name__}: {error}", flush=True)
             continue
-        buffer.add(image, to_grid(mask))
+        samples.put((image, to_grid(mask)))
+
+
+def collect(samples, buffer: Buffer, stop) -> None:
+    while not stop.is_set():
+        try:
+            image, mask = samples.get(timeout=1)
+        except queue.Empty:
+            continue
+        buffer.add(image, mask)
 
 
 def conv_bn(cin: int, cout: int, stride: int = 1) -> nn.Sequential:
@@ -222,6 +236,7 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--width", type=int, default=32)
     parser.add_argument("--buffer", type=int, default=3000)
+    parser.add_argument("--workers", type=int, default=3, help="generator processes")
     parser.add_argument("--eval-every", type=int, default=1000)
     parser.add_argument("--init", type=Path, default=None)
     parser.add_argument("--all-real", action="store_true", help="train on the held-out fifth too")
@@ -274,14 +289,23 @@ def main() -> None:
     synthetic = torch.from_numpy(np.stack(synthetic)).to(device)
     synthetic_truth = np.stack(synthetic_truth)
 
+    del wm
+    torch.cuda.empty_cache()
     buffer = Buffer(args.buffer, device)
-    stop = threading.Event()
-    worker = threading.Thread(
-        target=generate,
-        args=(buffer, covers[: len(covers) - VALIDATION_COVERS], wm, args.method, bank, 2, stop),
-        daemon=True,
-    )
-    worker.start()
+    context = mp.get_context("spawn")
+    samples = context.Queue(maxsize=64)
+    stop = context.Event()
+    workers = [
+        context.Process(
+            target=produce,
+            args=(samples, stop, args.covers, args.method, bank, 100 + index),
+            daemon=True,
+        )
+        for index in range(args.workers)
+    ]
+    for worker in workers:
+        worker.start()
+    threading.Thread(target=collect, args=(samples, buffer, stop), daemon=True).start()
     while buffer.count < 200:
         time.sleep(1)
 
@@ -352,6 +376,8 @@ def main() -> None:
         running += float(loss)
         step += 1
     stop.set()
+    for worker in workers:
+        worker.terminate()
     print(f"finished {out_dir} after {step} steps", flush=True)
 
 
