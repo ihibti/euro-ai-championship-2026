@@ -5,7 +5,7 @@ joined with "+" are averaged) or, when no run is named, from the full-frame deco
 all zeros). Run in the JURECA task folder:
 
     python <repo>/tasks/watermark_localization/assemble.py --tag c2 --seg stegastamp=stegastamp_v1
-    python <repo>/tasks/watermark_localization/assemble.py --tag c6 --seg trustmark=trustmark_v3+trustmark_x1
+    python <repo>/tasks/watermark_localization/assemble.py --tag c6 --seg trustmark=v3+x1
 
 Writes output/candidates/<tag>.npz with train_names, train_masks, test_names and test_masks, the
 masks bit-packed. pack_submission.py turns that file into the train answer and the test submission
