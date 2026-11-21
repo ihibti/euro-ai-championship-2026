@@ -103,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=20261122)
     args = parser.parse_args(argv)
 
-    corpus, stats, kind = statistics_for(
+    corpus, stats, probe_kind = statistics_for(
         s.build_corpus(s.read_jsonl(args.answers), prefix="ref-"), args.probes
     )
     rng = np.random.default_rng(args.seed)
@@ -116,19 +116,29 @@ def main(argv: list[str] | None = None) -> int:
         for e in endpoints:
             for first, second in halves(reps[e])[: args.halves]:
                 test = run_test(
-                    kind, data, select(kind, data, e, first), select(kind, data, e, second), rng
+                    probe_kind,
+                    data,
+                    select(probe_kind, data, e, first),
+                    select(probe_kind, data, e, second),
+                    rng,
                 )
                 within.setdefault(e, []).append(test)
         rows = []
         for a, b in itertools.combinations(endpoints, 2):
-            full = run_test(kind, data, select(kind, data, a), select(kind, data, b), rng)
+            full = run_test(
+                probe_kind, data, select(probe_kind, data, a), select(probe_kind, data, b), rng
+            )
             size = min(reps[a], reps[b]) // 2
             matched = []
             if size >= 2:
                 parts = [list(range(size)), list(range(size, 2 * size))]
                 for pa, pb in itertools.product(parts, parts):
                     test = run_test(
-                        kind, data, select(kind, data, a, pa), select(kind, data, b, pb), rng
+                        probe_kind,
+                        data,
+                        select(probe_kind, data, a, pa),
+                        select(probe_kind, data, b, pb),
+                        rng,
                     )
                     matched.append(test.z)
             rows.append((a, b, pair_type(a, b), full, matched))
