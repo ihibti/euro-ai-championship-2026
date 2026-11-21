@@ -16,6 +16,10 @@ Decision inside one family: the endpoint whose cap-hit rate differs most from th
 of the family's other remaining endpoints (two-sided Fisher exact test) is set apart while
 p < alpha (0.01, fixed in advance for about 30 tests on the scored endpoints); the pool is then
 rebuilt without it and the test repeated. The endpoints left are the same-model majority.
+
+Copy-only, frozen at 00:53 Paris before any fresh P1 answer existed (p1_copycont, d4_copycont):
+the answer, stripped, is at most 10 characters longer than the passage it was told to copy and
+continue, so it stops at the end of the copy or before it. Same decision, same alpha.
 """
 
 from __future__ import annotations
@@ -30,13 +34,18 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "probes"))
 
+from build_night import P1  # noqa: E402
 from melib import load_rows  # noqa: E402
 
 PIECE = re.compile(r"\w+|[^\w\s]|\s{2,}|\n")
 CAP_TOKENS = 256
 CAP_PIECES = 192
 ALPHA = 0.01
+PASSAGE = P1.split("\n\n", 1)[1].strip()
+COPY_SLACK = 10
+COPY_IDS = ("p1_copycont", "d4_copycont")
 
 
 def pieces(text: str) -> int:
@@ -47,9 +56,14 @@ def cap_hit(text: str) -> bool:
     return pieces(text) >= CAP_PIECES
 
 
+def copy_only(text: str, passage: str = PASSAGE) -> bool:
+    return len(text.strip()) <= len(passage) + COPY_SLACK
+
+
 def cap_hits(
     rows: Iterable[Mapping[str, object]], prompt_id: str, prefix: str
 ) -> dict[str, list[bool]]:
+    rule = copy_only if prompt_id in COPY_IDS else cap_hit
     cells: dict[str, list[tuple[int, bool]]] = defaultdict(list)
     for row in rows:
         endpoint = str(row["endpoint"])
@@ -57,7 +71,7 @@ def cap_hits(
             continue
         if row.get("response") is None:
             continue
-        cells[endpoint].append((int(row["repeat"]), cap_hit(str(row["response"]))))
+        cells[endpoint].append((int(row["repeat"]), rule(str(row["response"]))))
     return {e: [hit for _, hit in sorted(v)] for e, v in sorted(cells.items())}
 
 
@@ -115,7 +129,12 @@ def main(argv: list[str] | None = None) -> int:
     rows = load_rows(args.answers)
     for prompt_id in filter(None, args.ids.split(",")):
         hits = cap_hits(rows, prompt_id, args.prefix)
-        print(f"\n== {prompt_id}: cap hit = at least {CAP_PIECES} pieces")
+        if prompt_id in COPY_IDS:
+            print(
+                f"\n== {prompt_id}: x = copy only, at most {len(PASSAGE) + COPY_SLACK} characters"
+            )
+        else:
+            print(f"\n== {prompt_id}: x = cap hit, at least {CAP_PIECES} pieces")
         print("| endpoint | cap hits per repeat | rate |")
         print("|---|---|---|")
         for endpoint, values in hits.items():
