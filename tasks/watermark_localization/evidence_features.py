@@ -82,4 +82,4 @@ def miou_image(pred: np.ndarray, truth: np.ndarray) -> float:
 
 
 def mean_miou(preds: np.ndarray, truths: np.ndarray) -> float:
-    return float(np.mean([miou_image(p, t) for p, t in zip(preds, truths)]))
+    return float(np.mean([miou_image(p, t) for p, t in zip(preds, truths, strict=True)]))
