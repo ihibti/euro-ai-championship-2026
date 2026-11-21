@@ -1,0 +1,27 @@
+{
+  "answer": {
+    "path": "data/watermark_localization/output/candidates/c4a_train.npz",
+    "sha256": "cf910e1f1cd1146a43309eb1c4e21fb422f5a45b5f0a87d931393fb1f0323dbb"
+  },
+  "command": "make score TASK=watermark_localization ANSWER=data/watermark_localization/output/candidates/c4a_train.npz",
+  "details": {
+    "by_method": {
+      "pixelseal": 0.6769161703065321,
+      "stegastamp": 0.9506883972379014,
+      "trustmark": 0.8371572799696995
+    },
+    "ignored_predictions": 0,
+    "images": 510
+  },
+  "git": {
+    "branch": "ihibti/setup-hackathon-swarm-workspace",
+    "commit": "652c3f2e0de1f310050569fd433ca0f4f9d806e1",
+    "dirty": false
+  },
+  "metric": "train_miou",
+  "notes": "c4a: networks for all three methods. StegaStamp v1 step 32000 (held-out fifth 0.8068), TrustMark v3 step 8000 (0.6650), PixelSeal on its own extractor x1 step 2000 (0.5808). Mean on the held-out fifth 0.684; the train score includes images the networks trained on.",
+  "person": "ihibti",
+  "recorded_at": "2026-11-21T18:06:29.369153+00:00",
+  "score": 0.821587282504711,
+  "task": "watermark_localization"
+}
