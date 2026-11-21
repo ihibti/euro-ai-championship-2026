@@ -2,7 +2,7 @@
 
 Source: the organizers' task description "Unlearning" (European AI Championship Paris 2026). Supervisors: Adam Dziedzic and Franziska Boenisch. Developed by Maitri Shah, Jack Le and Vincent Hanke. Rewritten here, with numbers and formulas copied exactly.
 
-Owner: TBD. Server task id: `31-unlearning`.
+Owner: `kkrgp`. How we play the task: `PLAYBOOK.md`. Server task id: `31-unlearning`.
 
 ## Goal
 

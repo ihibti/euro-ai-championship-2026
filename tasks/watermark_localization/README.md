@@ -2,7 +2,7 @@
 
 Source: the organizers' task description "Localize Image Watermark" (European AI Championship Paris 2026). Supervisors: Adam Dziedzic and Franziska Boenisch. Developed by Simon Hector, Michel Meintz, Louis Kerner and Maitri Shah. Rewritten here, with numbers and formulas copied exactly.
 
-Owner: TBD. Server task id: `34-watermark-localisation-image`.
+Owner: `ihibti` (the lead). Server task id: `34-watermark-localisation-image`.
 
 ## Goal
 
