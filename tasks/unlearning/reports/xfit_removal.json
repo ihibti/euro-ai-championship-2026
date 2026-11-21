@@ -1,0 +1,115 @@
+{
+  "args": {
+    "name": "removal",
+    "reading": "removal",
+    "cut": "9",
+    "folds": "5",
+    "epochs": "30",
+    "batch": "256",
+    "lr": "0.0005",
+    "weight_decay": "0.05",
+    "ce_weight": "0.1",
+    "fresh_scale": "False",
+    "seed": "0",
+    "limit": "0",
+    "out": "output/kkrgp"
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "train_images": 1848,
+      "last_train_loss": 0.020596527708170217,
+      "seen_agreement": 1.0,
+      "held_agreement": 0.933747410774231,
+      "seconds": 163.19242000579834
+    },
+    {
+      "fold": 1,
+      "train_images": 1858,
+      "last_train_loss": 0.024507555080050415,
+      "seen_agreement": 1.0,
+      "held_agreement": 0.9598308801651001,
+      "seconds": 280.44677090644836
+    },
+    {
+      "fold": 2,
+      "train_images": 1867,
+      "last_train_loss": 0.02074952693142288,
+      "seen_agreement": 1.0,
+      "held_agreement": 0.9568965435028076,
+      "seconds": 398.3247218132019
+    },
+    {
+      "fold": 3,
+      "train_images": 1873,
+      "last_train_loss": 0.020504133167213702,
+      "seen_agreement": 1.0,
+      "held_agreement": 0.9585152864456177,
+      "seconds": 516.3370294570923
+    },
+    {
+      "fold": 4,
+      "train_images": 1878,
+      "last_train_loss": 0.020566651913019034,
+      "seen_agreement": 1.0,
+      "held_agreement": 0.9580574035644531,
+      "seconds": 634.5200245380402
+    }
+  ],
+  "held_out": {
+    "agreement_with_label": 0.9532389640808105,
+    "loss_mean": 0.14330781996250153,
+    "loss_std": 0.6416359543800354,
+    "label_prob_t2": 0.8620915412902832,
+    "agreement_by_view": {
+      "exact": 0.9532389640808105,
+      "flip": 0.9489489197731018,
+      "crop85": 0.9712569713592529,
+      "shift10": 0.9219219088554382,
+      "jitter": 0.9180608987808228,
+      "blur1": 0.9296439290046692,
+      "jpeg50": 0.9412269592285156,
+      "noise8": 0.9506649374961853
+    }
+  },
+  "whole_classes": {
+    "images": 1169,
+    "top_prob_t2": 0.5055527687072754,
+    "entropy_t2": 1.9917635917663574,
+    "top_destinations": {
+      "0": {
+        "1": 0.123,
+        "2": 0.531
+      },
+      "6": {
+        "5": 0.326,
+        "86": 0.116
+      },
+      "7": {
+        "5": 0.346
+      },
+      "8": {
+        "5": 0.246,
+        "83": 0.162
+      },
+      "29": {
+        "32": 0.492
+      },
+      "30": {
+        "32": 0.392
+      },
+      "31": {
+        "32": 0.377
+      },
+      "33": {
+        "23": 0.108,
+        "32": 0.362
+      },
+      "38": {
+        "36": 0.315,
+        "37": 0.108
+      }
+    }
+  },
+  "seconds": 635.119081735611
+}
