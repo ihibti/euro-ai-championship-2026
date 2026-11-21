@@ -234,3 +234,12 @@ def test_unrehearsed_prompts_need_every_reference():
     assert unrehearsed_prompts(rows, prompts, ["ref-01", "ref-02"]) == ["b"]
     assert unrehearsed_prompts(rows, prompts, ["ref-01"]) == []
     assert unrehearsed_prompts([], prompts, ["ref-01"]) == ["a", "b"]
+
+
+def test_answer_row_keeps_the_elapsed_time_when_given():
+    from euroai.me_query import Job, answer_row
+
+    job = Job("ep-01", "p1", 0, "hello")
+    body = {"choices": [{"message": {"content": "hi"}}], "budget": {"used": 1, "limit": 100}}
+    assert "elapsed_s" not in answer_row(job, body)
+    assert answer_row(job, {**body, "elapsed_s": 1.25})["elapsed_s"] == 1.25

@@ -201,6 +201,15 @@ def main(argv: list[str] | None = None) -> int:
     for e in endpoints:
         for text in cells[e].get("idn_identity", []):
             print(f"- {e}: {text[:150]!r}")
+    print("\ntxt_health openings (a persona or a system prompt shows here first)")
+    for e in endpoints:
+        for text in cells[e].get("txt_health", []):
+            print(f"- {e}: {text[:110]!r}")
+    print("\nbat_choice: share of items answered A (copying the example '1. A' gives 1.00)")
+    for e in endpoints:
+        letters = [v for a in choice[e] for v in a if v in ("a", "b")]
+        share = fmt(letters.count("a") / len(letters)) if letters else "-"
+        print(f"- {e}: {share} over {len(letters)} items")
     similarity: dict[Pair, float] = {}
     own: dict[str, float] = {}
     for e in endpoints:
