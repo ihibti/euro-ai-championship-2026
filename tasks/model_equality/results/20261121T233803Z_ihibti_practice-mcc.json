@@ -1,0 +1,60 @@
+{
+  "answer": {
+    "path": "tasks/model_equality/analysis/second/grouping_refs_night-b.csv",
+    "sha256": "4aa1818f8f522ac3910e57bf28d3b8e7f0367df4d8cf3b7f9f66085330d1b878"
+  },
+  "command": "make score TASK=model_equality ANSWER=tasks/model_equality/analysis/second/grouping_refs_night-b.csv",
+  "details": {
+    "pairs": {
+      "fn": 0,
+      "fp": 8,
+      "tn": 18,
+      "tp": 10
+    },
+    "wrong_pairs": [
+      [
+        "ref-01",
+        "ref-02"
+      ],
+      [
+        "ref-02",
+        "ref-03"
+      ],
+      [
+        "ref-02",
+        "ref-05"
+      ],
+      [
+        "ref-02",
+        "ref-06"
+      ],
+      [
+        "ref-02",
+        "ref-08"
+      ],
+      [
+        "ref-04",
+        "ref-07"
+      ],
+      [
+        "ref-04",
+        "ref-09"
+      ],
+      [
+        "ref-07",
+        "ref-09"
+      ]
+    ]
+  },
+  "git": {
+    "branch": "devin/model-equality-second",
+    "commit": "91f962a23ad13fe62667ea037bcf70916f0f5097",
+    "dirty": true
+  },
+  "metric": "practice_mcc",
+  "notes": "second method on night-b (p3_repeat, p4_nextword, 10 repeats): per-view mode agreement, permutation, average linkage z<1.645; subsample-7 mean 0.270",
+  "person": "ihibti",
+  "recorded_at": "2026-11-21T23:38:03.936115+00:00",
+  "score": 0.6201736729460423,
+  "task": "model_equality"
+}
