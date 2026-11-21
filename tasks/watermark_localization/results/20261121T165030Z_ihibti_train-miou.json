@@ -1,0 +1,27 @@
+{
+  "answer": {
+    "path": "data/watermark_localization/output/global_decode_train.npz",
+    "sha256": "f61a789b232ce4430f2d5dae9b183aa49d8629e66d1e783b83a8860fc4b256b9"
+  },
+  "command": "make score TASK=watermark_localization ANSWER=data/watermark_localization/output/global_decode_train.npz",
+  "details": {
+    "by_method": {
+      "pixelseal": 0.44931963752297793,
+      "stegastamp": 0.45873879825367647,
+      "trustmark": 0.45066905302159926
+    },
+    "ignored_predictions": 0,
+    "images": 510
+  },
+  "git": {
+    "branch": "ihibti/setup-hackathon-swarm-workspace",
+    "commit": "9a3b0c529161b4348aab654a7499ac3210b34927",
+    "dirty": true
+  },
+  "metric": "train_miou",
+  "notes": "whole-image decode: all ones if bit accuracy above a per-method threshold, else all zeros",
+  "person": "ihibti",
+  "recorded_at": "2026-11-21T16:50:30.405177+00:00",
+  "score": 0.45290916293275124,
+  "task": "watermark_localization"
+}
