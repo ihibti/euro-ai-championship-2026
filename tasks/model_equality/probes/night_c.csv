@@ -1,0 +1,77 @@
+id,prompt
+c1_equiv,"Each numbered line below lists four options that are equally good. For each line, pick one of its four options. Reply with exactly 25 lines in the form 'number. option', with the option copied from that line, and nothing else.
+
+1. save_note, store_note, keep_note, write_note
+2. get_user, fetch_user, load_user, read_user
+3. delete_file, remove_file, erase_file, drop_file
+4. send_email, post_email, mail_email, dispatch_email
+5. start_timer, begin_timer, launch_timer, run_timer
+6. add_item, insert_item, append_item, push_item
+7. find_city, search_city, lookup_city, locate_city
+8. close_window, shut_window, quit_window, exit_window
+9. big, large, huge, vast
+10. quick, fast, rapid, swift
+11. happy, glad, cheerful, joyful
+12. start, begin, commence, initiate
+13. house, home, dwelling, residence
+14. small, little, tiny, petite
+15. smart, clever, bright, wise
+16. road, street, avenue, lane
+17. answer, reply, response, retort
+18. 17, 42, 63, 88
+19. red, blue, green, yellow
+20. Monday, Tuesday, Thursday, Saturday
+21. circle, square, triangle, hexagon
+22. Anna, Maria, Laura, Sofia
+23. north, south, east, west
+24. apple, pear, plum, peach
+25. 3, 5, 7, 9"
+c2_edge,"Answer each question with one word or one number. Reply with exactly 25 lines in the form 'number. answer', and nothing else.
+
+1. What is the capital of Australia?
+2. What is the capital of Canada?
+3. What is the capital of Turkey?
+4. What is the capital of Switzerland?
+5. What is the capital of Brazil?
+6. What is the capital of Nigeria?
+7. What is the capital of New Zealand?
+8. What is the capital of Morocco?
+9. What is the capital of Pakistan?
+10. What is the capital of Vietnam?
+11. What is the chemical symbol for tungsten?
+12. What is the chemical symbol for potassium?
+13. Which planet has the most moons?
+14. How many keys does a standard piano have?
+15. In which year did the First World War begin?
+16. In which year did the French Revolution begin?
+17. Who wrote Don Quixote?
+18. Who painted The Night Watch?
+19. What is 17 times 23?
+20. What is 13 squared?
+21. What is the largest desert in Asia?
+22. What is the smallest country in the world?
+23. Which element has the atomic number 79?
+24. What is the longest river in Europe?
+25. Who discovered the electron?"
+c3_next,"For each numbered sentence start below, give the single word that most naturally comes next. Reply with exactly 20 lines in the form 'number. word', and nothing else.
+
+1. She opened the window and felt the
+2. The committee will announce its decision on
+3. After the storm, the fishermen
+4. He poured the coffee into a
+5. The museum is closed every
+6. In the corner of the room stood an old
+7. They walked along the beach until they reached the
+8. The recipe calls for two cups of
+9. Most of the students preferred to
+10. The train was delayed because of
+11. Her favourite colour has always been
+12. The old man sat on the bench and
+13. We need to buy more
+14. The dog barked at the
+15. On Sundays the market sells fresh
+16. The letter was written in
+17. The children were playing in the
+18. The company plans to open a new
+19. At night the city looks
+20. The scientist carefully placed the sample on the"
