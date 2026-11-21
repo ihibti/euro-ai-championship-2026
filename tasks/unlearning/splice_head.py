@@ -12,7 +12,11 @@ login node in the unlearning task folder:
     python <repo>/tasks/unlearning/splice_head.py --shift 15 --save output/kkrgp/dial15.pt
 
 With --shift d, the bias of the nine classes that lost 130 images (0, 6, 7, 8, 29, 30, 31, 33, 38)
-is lowered by d: the class dial of head_edit.py, on the last layer only.
+is lowered by d: the class dial of head_edit.py, on the last layer only. --classes names another
+set, for example the four small-boat classes:
+
+    python <repo>/tasks/unlearning/splice_head.py --shift 15 --classes 29,30,31,33 \
+        --save output/kkrgp/boats15.pt
 """
 
 from __future__ import annotations
@@ -54,6 +58,15 @@ def shift_classes(state: dict[str, torch.Tensor], classes: tuple[int, ...], shif
     return splice(state, state["head.weight"].float().numpy(), bias)
 
 
+def parse_classes(text: str | None) -> tuple[int, ...]:
+    if text is None:
+        return NINE_CLASSES
+    classes = tuple(sorted({int(part) for part in text.split(",") if part.strip()}))
+    if not classes or min(classes) < 0 or max(classes) > 99:
+        raise ValueError(f"classes must be in 0..99: {text}")
+    return classes
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--model", type=Path, default=Path("model.pt"))
@@ -61,13 +74,16 @@ def main(argv: list[str] | None = None) -> None:
     source.add_argument("--head", type=Path)
     source.add_argument("--scale", type=float, help="divide the last layer by this temperature")
     source.add_argument("--shift", type=float, help="lower the nine classes' bias by this much")
+    parser.add_argument("--classes", help="comma-separated classes for --shift; default the nine")
     parser.add_argument("--save", type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.classes is not None and args.shift is None:
+        parser.error("--classes needs --shift")
     state = torch.load(args.model, map_location="cpu", weights_only=True)
     if args.scale is not None:
         out = scale_head(state, args.scale)
     elif args.shift is not None:
-        out = shift_classes(state, NINE_CLASSES, args.shift)
+        out = shift_classes(state, parse_classes(args.classes), args.shift)
     else:
         with np.load(args.head) as head:
             out = splice(state, head["weight"], head["bias"])
