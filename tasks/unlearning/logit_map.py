@@ -11,6 +11,9 @@ its effect on every saved view of the forget images is exact and needs no GPU. T
                  where share is the average destination of class k's images once the forgotten
                  classes are out. An image that looks like class k then counts as evidence for
                  the classes its kind is sent to, which sharpens "which wrong class".
+    --even S     scale the logit of every touched class by 1 - S, the nine included. This is the
+                 hedge for the other reading of the data, in which no class is removed and the
+                 forget images are extra images of classes gold still knows.
 
 Dry run (numpy only):
 
@@ -65,13 +68,20 @@ def destination_shares(logits: np.ndarray, labels: np.ndarray, full: np.ndarray)
 
 
 def build_map(
-    logits: np.ndarray, labels: np.ndarray, full_shift: float, shrink: float, tilt: float
+    logits: np.ndarray,
+    labels: np.ndarray,
+    full_shift: float,
+    shrink: float,
+    tilt: float,
+    even: float = 0.0,
 ) -> tuple[np.ndarray, np.ndarray]:
     counts, full, thinned = groups(labels)
     matrix = np.eye(CLASSES)
     offset = np.zeros(CLASSES)
     offset[full] -= full_shift
     matrix[thinned, thinned] -= shrink * counts[thinned] / CLASS_SIZE
+    touched = np.flatnonzero(counts > 0)
+    matrix[touched, touched] -= even
     if tilt:
         shares = destination_shares(logits, labels, full)
         matrix[:, full] += tilt * shares[full].T
@@ -131,6 +141,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--full", type=float, default=0.0)
     parser.add_argument("--shrink", type=float, default=0.0)
     parser.add_argument("--tilt", type=float, default=0.0)
+    parser.add_argument("--even", type=float, default=0.0)
     parser.add_argument("--model", type=Path)
     parser.add_argument("--save", type=Path)
     parser.add_argument("--views", default="exact")
@@ -138,7 +149,12 @@ def main(argv: list[str] | None = None) -> None:
     with np.load(args.logits) as loaded:
         data = {name: loaded[name] for name in loaded.files}
     matrix, offset = build_map(
-        data["exact"].astype(np.float64), data["labels"], args.full, args.shrink, args.tilt
+        data["exact"].astype(np.float64),
+        data["labels"],
+        args.full,
+        args.shrink,
+        args.tilt,
+        args.even,
     )
     result = report(data, matrix, offset)
     shown = result if args.views == "all" else {v: result[v] for v in args.views.split(",")}
@@ -147,7 +163,12 @@ def main(argv: list[str] | None = None) -> None:
         if not args.model:
             raise SystemExit("--save needs --model")
         save_candidate(args.model, matrix, offset, args.save)
-        settings = {"full": args.full, "shrink": args.shrink, "tilt": args.tilt}
+        settings = {
+            "full": args.full,
+            "shrink": args.shrink,
+            "tilt": args.tilt,
+            "even": args.even,
+        }
         record = {"settings": settings, "views": result}
         args.save.with_suffix(".json").write_text(json.dumps(record, indent=1) + "\n")
         print(f"saved {args.save}")

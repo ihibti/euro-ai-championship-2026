@@ -18,6 +18,35 @@ Second fact, read from the confidences: the original model's median top probabil
 
 Open point: LayerScale at 1e-4 is the DeiT-III default, and DeiT-III trains with a binary cross-entropy. Under that loss a class gold never saw sits at the level of any other negative class, and an unseen-class image may fire no class at all: gold's loss would then be nearer 5 to 10 and its distribution at temperature 2 flatter. The check is on the logits: under a binary cross-entropy the non-top logits share one strongly negative level and their mean is far below zero.
 
+## 1b. A second reading that the last layer supports: the forget images are extras
+
+Measured on 2026-11-21 from `head.npz`, `features.npz` and the saved logits. Over the 100 classes, the original model's last layer moves with the number of forget images of the class:
+
+| Statistic of the class | Rank correlation with its forget count | Nine classes | Thinned | Untouched |
+|---|---|---|---|---|
+| Last-layer bias | +0.74 (all 100), +0.47 (45 touched) | +0.021 | +0.007 | -0.020 |
+| Last-layer row norm | -0.53 (all 100), -0.56 (45 touched) | 1.087 | 1.158 | 1.199 |
+| Cosine between a feature and its own row | +0.57 (45 touched) | 0.615 | 0.574 | not seen |
+| Spread of the class's features | -0.50 (45 touched) | 25.9 | 26.8 | not seen |
+| Mean logit of the other classes on its images | -0.69 (45 touched) | -0.80 | -0.33 | not seen |
+
+The pattern holds class by class inside one semantic block, so it is not a property of the kind of object. A model trained on a balanced set does not show it: in a CIFAR-100 replica with 130 images per class the bias difference between groups is 0.003 and the row-norm ratio 1.00.
+
+Classes with more forget images are the best-learned classes of the original model: tighter, better aligned, with a higher bias. That is what more training data does. It fits this construction:
+
+- **Extras reading:** every class has a base of images that gold also trains on, and the forget set is extra images that only the original model saw: 130 more for nine classes, 35 to 80% more for 36 classes (the counts 46 to 104 fit this as well as they fit removal). Gold then knows all 100 classes, and every forget image is a plain unseen image for it: right on most, wrong on some, most often towards a sibling class.
+
+Under the removal reading of section 1 the nine classes would be ordinary classes of the original model and nothing would single them out. Both readings stay open until the server speaks:
+
+| | Removal reading | Extras reading |
+|---|---|---|
+| Gold on the nine classes' images | never right, loss about 15 to 25 | right on most, test-like loss |
+| Class dial (`--full 30`) | scores well | scores exactly 0 |
+| Right move | dial, then hedge and tilt | an even hedge (`--even`), then image-level targets |
+| Replica (small CNN, CIFAR-100), best training-free score | 0.20 | 0.04 |
+
+The first submission, the class dial at 30, separates them.
+
 ## 2. What gold does, group by group
 
 | Group | Images | Gold's behavior | Gold's loss on the true label (estimate) |
