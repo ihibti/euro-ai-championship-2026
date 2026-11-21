@@ -1,0 +1,27 @@
+{
+  "answer": {
+    "path": "data/watermark_localization/output/candidates/c6_train.npz",
+    "sha256": "60d8e828d2cd3281585ffd50ca5f4aa193a5212ae033d6e22ceed6e3eb86376b"
+  },
+  "command": "make score TASK=watermark_localization ANSWER=data/watermark_localization/output/candidates/c6_train.npz",
+  "details": {
+    "by_method": {
+      "pixelseal": 0.8737539428223087,
+      "stegastamp": 0.9748837739462113,
+      "trustmark": 0.9257196814819244
+    },
+    "ignored_predictions": 0,
+    "images": 510
+  },
+  "git": {
+    "branch": "ihibti/setup-hackathon-swarm-workspace",
+    "commit": "2ead4696262cad78e01caca2daa002019cb82881",
+    "dirty": false
+  },
+  "metric": "train_miou",
+  "notes": "c6: stegastamp_n1 + trustmark_n1 + pixelseal_x1_snap3; held-out 0.7331 vs c5 0.7227, paired gain +0.0104 (90% +0.0015..+0.0201)",
+  "person": "ihibti",
+  "recorded_at": "2026-11-21T21:20:32.958718+00:00",
+  "score": 0.9247857994168146,
+  "task": "watermark_localization"
+}
