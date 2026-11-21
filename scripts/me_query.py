@@ -2,10 +2,12 @@
 
 uv run --extra api python scripts/me_query.py --prompts prompts.txt
 uv run --extra api python scripts/me_query.py --prompts prompts.txt --endpoints ep --spend
+uv run --extra api python scripts/me_query.py --budget
 
 The first form uses the free ref-* endpoints. Scored ep-* endpoints need --spend, and you must
 type the total number of scored answers at a terminal. Answers are appended to
-tasks/model_equality/answers/<name>.jsonl; commit that file.
+tasks/model_equality/answers/<name>.jsonl; commit that file. The third form asks nothing: it
+prints the answers left on every endpoint.
 """
 
 from __future__ import annotations
@@ -25,6 +27,7 @@ from euroai.credentials import API_KEY_VAR, get_secret, missing_secret_message  
 from euroai.me_query import (  # noqa: E402
     Job,
     budget_from_models,
+    budget_lines,
     confirm_spend,
     done_keys,
     plan_jobs,
@@ -57,25 +60,18 @@ def make_send(session: Any):
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument(
-        "--prompts", required=True, type=Path, help=".txt, .csv (id,prompt), .jsonl"
-    )
+    parser.add_argument("--prompts", type=Path, help=".txt, .csv (id,prompt), .jsonl")
+    parser.add_argument("--budget", action="store_true", help="print the answers left and exit")
     parser.add_argument("--name", help="answers file name; defaults to the prompts file name")
     parser.add_argument("--endpoints", default="ref", help="ref, ep, all, or a comma list")
     parser.add_argument("--repeats", type=int, default=1, help="answers per prompt and endpoint")
     parser.add_argument("--spend", action="store_true", help="allow scored ep-* endpoints")
     args = parser.parse_args(argv)
+    if args.prompts is None and not args.budget:
+        parser.error("give --prompts <file>, or --budget to list the answers left")
     lookup = get_secret(API_KEY_VAR)
     if lookup.value is None:
         print(f"refused: {missing_secret_message(lookup)}")
-        return 2
-    prompts = read_prompts(args.prompts)
-    answers = ANSWERS_DIR / f"{slugify(args.name or args.prompts.stem)}.jsonl"
-    rows = read_jsonl(answers) if answers.exists() else []
-    conflicts = prompt_conflicts(rows, prompts)
-    if conflicts:
-        print(f"refused: {answers} holds other prompts under ids {', '.join(conflicts[:5])}")
-        print("use another --name for a different prompt set")
         return 2
     import requests
 
@@ -85,6 +81,17 @@ def main(argv: list[str] | None = None) -> int:
     if reply.status_code != 200:
         print(f"error: HTTP {reply.status_code} from /models")
         return 1
+    if args.budget:
+        print("\n".join(budget_lines(reply.json())))
+        return 0
+    prompts = read_prompts(args.prompts)
+    answers = ANSWERS_DIR / f"{slugify(args.name or args.prompts.stem)}.jsonl"
+    rows = read_jsonl(answers) if answers.exists() else []
+    conflicts = prompt_conflicts(rows, prompts)
+    if conflicts:
+        print(f"refused: {answers} holds other prompts under ids {', '.join(conflicts[:5])}")
+        print("use another --name for a different prompt set")
+        return 2
     remaining = budget_from_models(reply.json())
     done = done_keys(rows)
     try:

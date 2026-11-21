@@ -160,6 +160,16 @@ def budget_from_models(body: Mapping[str, Any]) -> dict[str, int]:
     }
 
 
+def budget_lines(body: Mapping[str, Any]) -> list[str]:
+    limits = {item["id"]: int(item["budget"]["limit"]) for item in body["data"]}
+    left = budget_from_models(body)
+    scored = [endpoint for endpoint in limits if is_scored(endpoint)]
+    return [
+        *(f"{endpoint}: {left[endpoint]} left of {limits[endpoint]}" for endpoint in limits),
+        f"scored answers left: {sum(left[e] for e in scored)} of {sum(limits[e] for e in scored)}",
+    ]
+
+
 def request_body(job: Job, max_tokens: int = MAX_TOKENS) -> dict[str, Any]:
     return {
         "model": job.endpoint,

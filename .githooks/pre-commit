@@ -1,0 +1,8 @@
+#!/bin/sh
+root=$(git rev-parse --show-toplevel) || exit 1
+python="$root/.venv/bin/python"
+if [ ! -x "$python" ]; then
+  echo "pre-commit: the secret check needs the project environment; run make setup, then commit again" >&2
+  exit 1
+fi
+exec "$python" "$root/scripts/check_secrets.py" --staged

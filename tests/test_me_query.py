@@ -5,6 +5,7 @@ import pytest
 from euroai.me_query import (
     Job,
     budget_from_models,
+    budget_lines,
     classify,
     confirm_spend,
     done_keys,
@@ -197,3 +198,19 @@ def test_budget_and_request_body():
         "max_tokens": 256,
         "messages": [{"role": "user", "content": "hello"}],
     }
+
+
+def test_budget_lines_list_every_endpoint_and_total_the_scored_ones():
+    body = {
+        "data": [
+            {"id": "ep-01", "budget": {"limit": 100, "used": 7}},
+            {"id": "ep-02", "budget": {"limit": 100, "used": 100}},
+            {"id": "ref-01", "budget": {"limit": 1000000, "used": 12}},
+        ]
+    }
+    assert budget_lines(body) == [
+        "ep-01: 93 left of 100",
+        "ep-02: 0 left of 100",
+        "ref-01: 999988 left of 1000000",
+        "scored answers left: 93 of 200",
+    ]
