@@ -105,3 +105,23 @@ def test_chosen_name_is_the_first_name_mentioned():
     names = ("store_note", "save_memo")
     assert plurality.chosen_name("B) save_memo, or store_note", names) == "save_memo"
     assert plurality.chosen_name("none of them", names) is None
+
+
+def test_ks_distance_between_count_samples():
+    assert plurality.ks_distance([1, 2, 3], [1, 2, 3]) == pytest.approx(0.0)
+    assert plurality.ks_distance([1, 1], [5, 6]) == pytest.approx(1.0)
+    assert plurality.ks_distance([1, 2, 3, 4], [3, 4, 5, 6]) == pytest.approx(0.5)
+    assert math.isnan(plurality.ks_distance([], [1]))
+
+
+def test_tv_distance_between_choice_counts():
+    assert plurality.tv_distance({"a": 2, "b": 2}, {"a": 1, "b": 1}) == pytest.approx(0.0)
+    assert plurality.tv_distance({"a": 4}, {"b": 3}) == pytest.approx(1.0)
+    assert plurality.tv_distance({"a": 3, "b": 1}, {"a": 1, "b": 3}) == pytest.approx(0.5)
+    assert math.isnan(plurality.tv_distance({}, {"a": 1}))
+
+
+def test_chosen_letter_follows_the_permutation_of_the_id():
+    orders = {"p5_perm01": ("x", "y", "z", "w")}
+    assert plurality.chosen_letter("p5_perm01", "z", orders) == "C"
+    assert plurality.chosen_letter("p5_perm01", None, orders) is None

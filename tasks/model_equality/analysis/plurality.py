@@ -30,7 +30,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "probes"))
 
-from build_night import P1, P5_NAMES  # noqa: E402
+from build_night import P1, P5_NAMES, p5_orders  # noqa: E402
 from melib import load_rows, parse_numbered  # noqa: E402
 
 WORD = re.compile(r"[a-z0-9']+")
@@ -106,6 +106,32 @@ def repeat_stats(text: str, word: str) -> tuple[int, int]:
 def chosen_name(text: str, names: Sequence[str]) -> str | None:
     found = [(text.find(name), name) for name in names if name in text]
     return min(found)[1] if found else None
+
+
+def chosen_letter(
+    prompt_id: str, name: str | None, orders: Mapping[str, Sequence[str]]
+) -> str | None:
+    if name is None or prompt_id not in orders:
+        return None
+    return "ABCD"[list(orders[prompt_id]).index(name)]
+
+
+def ks_distance(first: Sequence[float], second: Sequence[float]) -> float:
+    if not len(first) or not len(second):
+        return float("nan")
+    a, b = np.sort(np.asarray(first, float)), np.sort(np.asarray(second, float))
+    grid = np.union1d(a, b)
+    fa = np.searchsorted(a, grid, side="right") / len(a)
+    fb = np.searchsorted(b, grid, side="right") / len(b)
+    return float(np.max(np.abs(fa - fb)))
+
+
+def tv_distance(first: Mapping[str, int], second: Mapping[str, int]) -> float:
+    total_a, total_b = sum(first.values()), sum(second.values())
+    if not total_a or not total_b:
+        return float("nan")
+    keys = set(first) | set(second)
+    return 0.5 * sum(abs(first.get(k, 0) / total_a - second.get(k, 0) / total_b) for k in keys)
 
 
 def profile(sequences: Sequence[Sequence[Token]], length: int) -> Profile:
@@ -249,35 +275,80 @@ def report_copy(rows) -> None:
         print(f"| {e} | {len(values)} | {perfect} | {mean:.1f} of {len(PASSAGE)} | {found} |")
 
 
+def decision_table(title: str, dist: Callable[[str, str], float], present: set[str]) -> None:
+    if not all(e in present for e in S + [p for p, _ in PAIRS]):
+        return
+    spread = [dist(a, b) for a, b in itertools.combinations(S, 2)]
+    finite = [v for v in spread if math.isfinite(v)] or [float("nan")]
+    top = max(finite)
+    print(
+        f"\n{title}: S spread over {sum(map(math.isfinite, finite))} of 10 disguise pairs: "
+        f"min {fmt(min(finite))}, median {fmt(float(np.median(finite)))}, max {fmt(top)}"
+    )
+    print("| pair | distance | passes (> max S spread) |")
+    print("|---|---|---|")
+    for other in ["ref-03", "ref-05", "ref-06", "ref-08"]:
+        print(f"| 01-{other[-2:]} same model | {fmt(dist('ref-01', other))} | |")
+    for other, name in PAIRS:
+        d = dist("ref-01", other)
+        verdict = "yes" if math.isfinite(d) and math.isfinite(top) and d > top else "no"
+        print(f"| 01-{other[-2:]} {name} | {fmt(d)} | {verdict} |")
+
+
 def report_repeat(rows) -> None:
     print("\n== p3_repeat: count of 'river' and position of the first other word")
-    print("| endpoint | counts | first other word |")
-    print("|---|---|---|")
-    counts: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    print("| endpoint | counts | first other word | split-half KS of counts |")
+    print("|---|---|---|---|")
+    stats: dict[str, list[tuple[int, int]]] = defaultdict(list)
     for row in sorted(rows, key=lambda r: int(r["repeat"])):
         if row["id"] == "p3_repeat" and row.get("response") is not None:
-            counts[str(row["endpoint"])].append(repeat_stats(str(row["response"]), "river"))
-    for e in sorted(counts):
+            stats[str(row["endpoint"])].append(repeat_stats(str(row["response"]), "river"))
+    for e in sorted(stats):
+        counts = [c for c, _ in stats[e]]
         print(
-            f"| {e} | {' '.join(str(c) for c, _ in counts[e])} | "
-            f"{' '.join(str(o) for _, o in counts[e])} |"
+            f"| {e} | {' '.join(map(str, counts))} | "
+            f"{' '.join(str(o) for _, o in stats[e])} | "
+            f"{fmt(ks_distance(counts[0::2], counts[1::2]))} |"
+        )
+    for index, label in ((0, "count"), (1, "first other word")):
+        decision_table(
+            f"p3_repeat, KS distance of the {label}",
+            lambda x, y, i=index: ks_distance(
+                [v[i] for v in stats.get(x, [])], [v[i] for v in stats.get(y, [])]
+            ),
+            set(stats),
         )
 
 
 def report_choice(rows) -> None:
-    chosen: dict[str, Counter[str]] = defaultdict(Counter)
+    orders = {f"p5_perm{k:02d}": order for k, order in enumerate(p5_orders(), start=1)}
+    names: dict[str, Counter[str]] = defaultdict(Counter)
+    letters: dict[str, Counter[str]] = defaultdict(Counter)
     for row in rows:
-        if str(row["id"]).startswith("p5_") and row.get("response") is not None:
+        prompt_id = str(row["id"])
+        if prompt_id.startswith("p5_") and row.get("response") is not None:
             name = chosen_name(str(row["response"]), P5_NAMES)
-            chosen[str(row["endpoint"])][name or "none"] += 1
-    if not chosen:
+            names[str(row["endpoint"])][name or "none"] += 1
+            letters[str(row["endpoint"])][chosen_letter(prompt_id, name, orders) or "none"] += 1
+    if not names:
         return
-    print("\n== p5: function name chosen over the ten permutations")
+    print("\n== p5: function name and letter chosen over the permutations")
     labels = list(P5_NAMES) + ["none"]
-    print("| endpoint | " + " | ".join(labels) + " |")
-    print("|---" * (len(labels) + 1) + "|")
-    for e in sorted(chosen):
-        print(f"| {e} | " + " | ".join(str(chosen[e][n]) for n in labels) + " |")
+    print("| endpoint | " + " | ".join(labels) + " | A | B | C | D |")
+    print("|---" * (len(labels) + 5) + "|")
+    for e in sorted(names):
+        cells = [str(names[e][n]) for n in labels] + [str(letters[e][x]) for x in "ABCD"]
+        print(f"| {e} | " + " | ".join(cells) + " |")
+    decision_table(
+        "p5, total variation of the names",
+        lambda x, y: tv_distance(names.get(x, {}), names.get(y, {})),
+        set(names),
+    )
+    decision_table(
+        "p5, total variation of the letters",
+        lambda x, y: tv_distance(letters.get(x, {}), letters.get(y, {})),
+        set(letters),
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
