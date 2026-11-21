@@ -1,0 +1,21 @@
+{
+  "command": "python submission_template.py --data release (unmodified kit; predict() returns all zeros)",
+  "details": {
+    "code": "tasks/watermark_localization/upstream, identical to the kit that was run",
+    "images": 510,
+    "predictor": "all zeros",
+    "split": "train",
+    "where": "JURECA team folder"
+  },
+  "git": {
+    "branch": "ihibti/setup-hackathon-swarm-workspace",
+    "commit": "414fdd3ae82aa620483f05e52533eabc3750d11c",
+    "dirty": false
+  },
+  "metric": "train_miou",
+  "notes": "Official all-zeros baseline from the organizers' starter kit, run by the lead on JURECA in Hackathon_Watermark_Localisation_Task/ on 2026-11-21. Score as printed by the template (4 decimals). Its test file, output/baseline_allzeros.pt, is valid and was not submitted.",
+  "person": "ihibti",
+  "recorded_at": "2026-11-21T15:46:31.949872+00:00",
+  "score": 0.2518,
+  "task": "watermark_localization"
+}
