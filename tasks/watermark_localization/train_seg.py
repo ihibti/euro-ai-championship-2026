@@ -8,8 +8,8 @@ Run in the JURECA task folder:
 
     python <repo>/tasks/watermark_localization/train_seg.py --method pixelseal --minutes 50 --tag v1
 
-Writes output/seg/<method>_<tag>/: last.pt, log.jsonl, and train.npz / test.npz holding names and
-probabilities on the 128 x 128 grid.
+Writes output/seg/<method>_<tag>/: log.jsonl and, refreshed at every evaluation, last.pt and
+train.npz / test.npz holding names and probabilities on the 128 x 128 grid.
 """
 
 from __future__ import annotations
@@ -198,6 +198,12 @@ def predict(net: nn.Module, images: torch.Tensor, batch: int = 32) -> np.ndarray
     return torch.cat(out).numpy()
 
 
+def save_probs(path: Path, names: list[str], probs: np.ndarray) -> None:
+    partial = path.with_suffix(".partial.npz")
+    np.savez_compressed(partial, names=np.asarray(names), probs=probs.astype(np.float16))
+    partial.replace(path)
+
+
 def score_groups(probs: np.ndarray, truth: np.ndarray, groups: dict[str, np.ndarray]) -> dict:
     pred = (probs >= 0.5).astype(np.uint8)
     return {
@@ -249,6 +255,13 @@ def main() -> None:
         flush=True,
     )
 
+    test_names = [
+        row["image_name"]
+        for row in json.loads(Path("release/test/metadata.json").read_text())
+        if row["method"] == args.method
+    ]
+    test_images = torch.from_numpy(load_images(Path("release/test/images"), test_names)).to(device)
+
     covers = np.load(args.covers, mmap_mode="r")
     wm = load_watermark(args.method, models_dir=Path("models"), device=device)
     rng = np.random.default_rng(1)
@@ -293,12 +306,13 @@ def main() -> None:
         elapsed = time.time() - started
         done = elapsed >= budget
         if step % args.eval_every == 0 or done:
+            real_probs = predict(ema, real)
             record = {
                 "step": step,
                 "minutes": round(elapsed / 60, 1),
                 "loss": round(running / max(1, min(step, args.eval_every)), 4),
                 "generated": buffer.total,
-                **score_groups(predict(ema, real), truth, groups),
+                **score_groups(real_probs, truth, groups),
                 "synthetic": round(
                     mean_miou((predict(ema, synthetic) >= 0.5).astype(np.uint8), synthetic_truth), 4
                 ),
@@ -307,6 +321,8 @@ def main() -> None:
             log.write(json.dumps(record) + "\n")
             log.flush()
             torch.save(ema.state_dict(), out_dir / "last.pt")
+            save_probs(out_dir / "train.npz", names, real_probs)
+            save_probs(out_dir / "test.npz", test_names, predict(ema, test_images))
             running = 0.0
         if done:
             break
@@ -336,23 +352,7 @@ def main() -> None:
         running += float(loss)
         step += 1
     stop.set()
-
-    np.savez_compressed(
-        out_dir / "train.npz", names=np.asarray(names), probs=predict(ema, real).astype(np.float16)
-    )
-    test_rows = [
-        row
-        for row in json.loads(Path("release/test/metadata.json").read_text())
-        if row["method"] == args.method
-    ]
-    test_names = [row["image_name"] for row in test_rows]
-    test_images = torch.from_numpy(load_images(Path("release/test/images"), test_names)).to(device)
-    np.savez_compressed(
-        out_dir / "test.npz",
-        names=np.asarray(test_names),
-        probs=predict(ema, test_images).astype(np.float16),
-    )
-    print(f"wrote {out_dir}/train.npz and test.npz after {step} steps", flush=True)
+    print(f"finished {out_dir} after {step} steps", flush=True)
 
 
 if __name__ == "__main__":
