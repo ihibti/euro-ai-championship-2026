@@ -10,11 +10,11 @@ mkdir -p $OUT/fourth
 read -r FIRST _ <<<"$GPUS"
 CUDA_VISIBLE_DEVICES=$FIRST python "$HERE/csd.py" --name smoke_x4 --limit 300 --epochs 1 --extrapolate 2 --holdout 0.2 $TUNE --out $OUT/fourth
 RUNS=(
-  "--name x4_e15 --extrapolate 1.5"
+  "--name x4_e12 --extrapolate 1.2"
+  "--name x4_e14 --extrapolate 1.4"
+  "--name x4_e16 --extrapolate 1.6"
   "--name x4_e20 --extrapolate 2.0"
-  "--name x4_e30 --extrapolate 3.0"
-  "--name x4_e45 --extrapolate 4.5"
-  "--name d4_e30_probe --extrapolate 3.0 --holdout 0.2 --spare-classes 6"
+  "--name d4_e16_probe --extrapolate 1.6 --holdout 0.2 --spare-classes 6"
 )
 read -r -a DEVICES <<<"$GPUS"
 for slot in "${!DEVICES[@]}"; do
@@ -28,4 +28,4 @@ for slot in "${!DEVICES[@]}"; do
 done
 wait
 tail -n 12 $OUT/fourth/log_*.txt
-cd $OUT && sha256sum x4_e15.pt x4_e20.pt x4_e30.pt x4_e45.pt | tee fourth/sha256.txt
+cd $OUT && sha256sum x4_e12.pt x4_e14.pt x4_e16.pt x4_e20.pt | tee fourth/sha256.txt
