@@ -2,7 +2,7 @@
 
 Team workspace for the European AI Championship 2026 hackathon (CISPA EU AI Championship 26–27, JSC project `training2666`).
 
-**Status:** this is scaffolding only. **We have not chosen a project.** The challenge, data and rules are still TBD (see below). Assumptions and open questions live in [NOTES.md](NOTES.md).
+**Status:** the three tasks are known (see [Challenge](#challenge)). Agents start with [AGENTS.md](AGENTS.md); each task's full statement is in `tasks/<task>/README.md`. Assumptions and open questions live in [NOTES.md](NOTES.md).
 
 ## Quickstart (local, CPU only)
 
@@ -79,17 +79,17 @@ docs_and_plans/     guides/ (references), work/{todo,doing,done}/ (plans)
 3. Run it with `scripts/run_experiment.py --config ...`. Each run writes `manifest.json`, `metrics.json` and any extra files to `outputs/`.
 4. Keep the logic pure where possible (data in, numbers out) and test it with synthetic inputs.
 
-## Challenge — TBD
+## Challenge
 
-| Item | Status |
-|---|---|
-| Task / problem statement | **TBD** |
-| Dataset (source, licence, size, personal data?) | **TBD** |
-| Evaluation metric and scorer | **TBD** |
-| Submission format and endpoint | **TBD**. Paris slides showed `id,label` with probability in [0,1], posted to a leaderboard server. Unconfirmed for this event. |
-| Rules: external data, pretrained models, team size, compute limits | **TBD** |
-| Deadlines | **TBD** |
-| Judging criteria | **TBD** |
+Three tasks, all scored at http://34.147.229.55/leaderboard_page, where our team name is **Begg**. The hackathon ends at 2026-11-22 12:00 Europe/Paris. Each task's full statement is in `tasks/<task>/README.md`.
+
+| Task | Goal | Metric | Local score |
+|---|---|---|---|
+| [watermark_localization](tasks/watermark_localization/README.md) | Mark the watermarked cells (128 x 128 grid) of 1,020 test images | mean over images of the two-class mIoU | exact, on the 510 labelled training images |
+| [model_equality](tasks/model_equality/README.md) | Give family and model labels for 33 LLM endpoints | 0.1 · MCC_family + 0.9 · MCC_model over 528 pairs | exact, on the 9 free reference endpoints |
+| [unlearning](tasks/unlearning/README.md) | Make a ViT-B/16 forget 3,500 training images | forget score × retain score; 0 below 70% validation accuracy | proxy only |
+
+The organizers have not stated rules on external data, pretrained models or paid APIs, nor the submission limits for watermark and unlearning. `make submit` applies the model-equality limit (one per 30 minutes, failures included) to all three.
 
 ## Reference papers
 

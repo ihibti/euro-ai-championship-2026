@@ -12,3 +12,12 @@ Host jureca jureca?? judac
   ControlPath ~/.ssh/control-%h-%p-%r
   ControlPersist 8h
   ServerAliveInterval 60
+
+# Agent-only alias: reuses the connection opened by `ssh -fN jureca` and never opens a new one.
+Host jureca-mux
+  HostName jureca.fz-juelich.de
+  User <JUDOOR_USERNAME>
+  ControlMaster no
+  ControlPath ~/.ssh/control-%h-%p-%r
+  ProxyCommand /usr/bin/false
+  BatchMode yes

@@ -4,6 +4,48 @@ This page records official JSC documentation fetched on 2026-11-21 and the organ
 
 **Nothing here has been run against the cluster yet.** We have not opened an SSH connection, tested a Jupyter login or submitted a job.
 
+## Event setup (2026-11-21, from the organizers)
+
+The organizers publish a README and two scripts in the Hugging Face dataset `SprintML/hackathon`. For this event they replace most of the manual steps further down this page.
+
+1. **Team lead, once:**
+   - Download `hackathon_setup.sh` and set `TEAM_LEAD` (it must equal your own Jülich username), `TEAMMATE_1`…`TEAMMATE_3` (at least one) and `TEAM_FOLDER`.
+   - Export `HF_TOKEN` from a Hugging Face account approved for the gated watermark dataset.
+   - Run `source hackathon_setup.sh`. It creates `/p/scratch/training2666/<lead>/<team-folder>/` and sets ACLs for the listed users. It also installs uv, downloads the three task datasets, and builds one `.venv` per task folder: `Hackathon_Watermark_Localisation_Task/`, `model_equality/`, `unlearning/`.
+   - The team folder name is not decided yet.
+2. **Everyone else, after the lead finishes:**
+   - Download `teammate.sh`, set `TEAM_LEAD` and `TEAM_FOLDER` to the lead's values, and run `source teammate.sh`.
+   - **Re-download `teammate.sh` if you fetched it before 2026-11-21 15:44 Paris time.** Earlier copies set `PROJECT_NAME="training2625"`.
+3. **Failed downloads.** A task whose download fails is skipped, and a rerun skips every task folder that already exists. Delete a half-created task folder before rerunning. The lead grants access to teammates added later (organizers' README, section 6).
+4. **Jobs**, per the organizers' README:
+   - Flags: `--account=training2666`, `--reservation=cispahack`, `--partition=dc-gpu`, `--gres=gpu:1`, `--cpus-per-task=8`, `--output=output/%j.out`, `--error=output/%j.err`.
+   - Run `mkdir -p output` before `sbatch`.
+   - Our `jureca_gpu.sbatch.template` still requests a full node (`gpu:4`, 128 CPUs) and has to be aligned with these values.
+5. **This repo on JURECA.** SSH agent forwarding is disabled on the server, so cloning the private repo from JURECA needs its own credential there, such as a read-only deploy key. Otherwise rsync from a laptop over the open connection.
+
+### Laptop agents and the shared connection
+
+A human opens one authenticated connection. It stays up for 8 hours (`ControlPersist 8h`):
+
+```
+ssh -fN jureca          # key passphrase and TOTP, once
+ssh -O check jureca     # prints "Master running"
+```
+
+Agents use only the `jureca-mux` alias. It reuses that connection and never opens a new one, so it causes no prompts and no extra connections that could trip JSC's firewall. It is included in `ssh_config.template`:
+
+```
+Host jureca-mux
+  HostName jureca.fz-juelich.de
+  User <JUDOOR_USERNAME>
+  ControlMaster no
+  ControlPath ~/.ssh/control-%h-%p-%r
+  ProxyCommand /usr/bin/false
+  BatchMode yes
+```
+
+While the connection is open, `ssh jureca-mux '<command>'` and `rsync -e ssh <src> jureca-mux:<path>` work. When it is closed, they fail at once without touching the network. The `ControlPath` must be the same as in the `jureca` block.
+
 Official sources:
 - **ACC**: https://apps.fz-juelich.de/jsc/hps/jureca/access.html
 - **BATCH**: …/jureca/batchsystem.html
