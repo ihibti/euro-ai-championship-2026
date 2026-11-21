@@ -7,7 +7,9 @@ cross-fitted held-out step (`xfit_extras.npz`):
 - other: the same with the step of another image of the same class. Gold errs as often and
   towards the same classes, on other images.
 K sets how often gold is wrong, tau_g how soft it is (also standing for the average of several
-gold models).
+gold models). A third family follows the removal reading of `analysis.md`:
+- removal: gold never saw the nine classes that lost 130 images, so their logits sit d_g below
+  on every image; on the other images gold = orig + K * step; all divided by tau_g.
 
 Candidates:
 - a fine-tune is described by its measured loss mean and std (exact images), which give its
@@ -15,6 +17,12 @@ Candidates:
   (orig + a * step) / b, fitted to its measured label probability and KL from the original;
   its retain score is estimated from the spill probes (`ledger_inputs.json`);
 - `scale_t<t>`: every logit divided by t, exactly; retain from our own logits.
+- `dial<d>`: the nine classes' bias lowered by d, exactly (`bias_full30` is dial30).
+
+The utility gate: the original's validation accuracy A lies in the band given in the inputs (from
+`bias_full30` failing and `x4_e20` passing). A candidate that changes a share f of validation
+predictions passes when A (1 - f) >= 70%; the predicted score is multiplied by the share of the
+band where it passes.
 
 Each observed public score weighs every gold by how well it is predicted (log-normal error with
 a factor of 1.6, plus 0.003). Printed: the golds that carry the weight, and for every candidate
@@ -67,6 +75,24 @@ def fit_proxy(
     return best
 
 
+NINE_CLASSES = (0, 6, 7, 8, 29, 30, 31, 33, 38)
+DIALS = (10.0, 12.0, 15.0, 20.0, 30.0)
+REMOVAL_SHIFTS = (10.0, 15.0, 25.0)
+REMOVAL_KS = (0.5, 1.0, 2.0)
+REMOVAL_TAUS = (1.0, 1.5, 2.0, 3.0)
+
+
+def gate_pass(flip: float, low: float, high: float, threshold: float = 70.0) -> float:
+    """Share of the band [low, high] of the original's validation accuracy where A (1 - flip)
+    stays at or above the threshold."""
+    if flip >= 1.0:
+        return 0.0
+    need = threshold / (1.0 - flip)
+    if high <= low:
+        return 1.0 if low >= need else 0.0
+    return min(max((high - need) / (high - low), 0.0), 1.0)
+
+
 def weight(predicted: float, observed: float) -> float:
     gap = math.log(predicted + FLOOR) - math.log(observed + FLOOR)
     return math.exp(-0.5 * (gap / math.log(ERROR_FACTOR)) ** 2)
@@ -101,33 +127,63 @@ def main(argv: list[str] | None = None) -> None:
             "retain": spec["retain"],
             "proxy": (round(a, 2), round(b, 2)),
         }
+    band = inputs["gate_band"]
+    for name, spec in inputs["candidates"].items():
+        candidates[name]["gate"] = gate_pass(spec.get("flip", 0.0), band[0], band[1])
     for t in SCALES:
         candidates[f"scale_t{t:g}"] = {
             "logits": orig / t,
             "stats": None,
             "retain": scoring.retain_score(orig / t, orig, labels),
             "proxy": None,
+            "gate": 1.0,
+        }
+    nine = torch.tensor(NINE_CLASSES)
+    in_nine = torch.isin(labels, nine)
+    for d in DIALS:
+        dialed = orig.clone()
+        dialed[:, nine] -= d
+        flipped = float((dialed.argmax(1) != labels)[in_nine].float().mean())
+        flip = 0.09 * min(1.0, 2.0 * flipped)
+        kl_nine = float(scoring.kl_rows(orig[in_nine], dialed[in_nine]).mean())
+        candidates[f"dial{d:g}"] = {
+            "logits": dialed,
+            "stats": None,
+            "retain": (1.0 - flip) / (1.0 + 0.09 * kl_nine),
+            "proxy": None,
+            "gate": gate_pass(flip, band[0], band[1]),
         }
 
+    hypotheses = [
+        (family, k, tau, 0.0, (orig + k * direction) / tau)
+        for family, direction in (("aligned", step), ("other", other))
+        for k in KS
+        for tau in GOLD_TAUS
+    ]
+    outside = (~in_nine).float().view(-1, 1)
+    for shift in REMOVAL_SHIFTS:
+        for k in REMOVAL_KS:
+            for tau in REMOVAL_TAUS:
+                gold = orig + k * step * outside
+                gold[:, nine] -= shift
+                hypotheses.append(("removal", k, tau, shift, gold / tau))
     golds = []
-    for family, direction in (("aligned", step), ("other", other)):
-        for k in KS:
-            for tau in GOLD_TAUS:
-                gold = (orig + k * direction) / tau
-                row = {"family": family, "K": k, "tau_g": tau}
-                mean, std = scoring.loss_stats(gold, labels)
-                row["gold_loss"] = (round(mean, 3), round(std, 3))
-                row["gold_acc"] = round(float((gold.argmax(1) == labels).float().mean()), 3)
-                row["pred"] = {}
-                for name, cand in candidates.items():
-                    terms = scoring.forget_terms(cand["logits"], gold, orig, labels, cand["stats"])
-                    row["pred"][name] = scoring.forget_score([terms]) * cand["retain"]
-                w = 1.0
-                for name, observed in inputs["observed"].items():
-                    if name in row["pred"]:
-                        w *= weight(row["pred"][name], observed)
-                row["weight"] = w
-                golds.append(row)
+    for family, k, tau, shift, gold in hypotheses:
+        row = {"family": family, "K": k, "tau_g": tau, "d_g": shift}
+        mean, std = scoring.loss_stats(gold, labels)
+        row["gold_loss"] = (round(mean, 3), round(std, 3))
+        row["gold_acc"] = round(float((gold.argmax(1) == labels).float().mean()), 3)
+        row["pred"] = {}
+        for name, cand in candidates.items():
+            terms = scoring.forget_terms(cand["logits"], gold, orig, labels, cand["stats"])
+            forget = scoring.forget_score([terms])
+            row["pred"][name] = forget * cand["retain"] * cand["gate"]
+        w = 1.0
+        for name, observed in inputs["observed"].items():
+            if name in row["pred"]:
+                w *= weight(row["pred"][name], observed)
+        row["weight"] = w
+        golds.append(row)
 
     total = sum(row["weight"] for row in golds)
     for row in golds:
@@ -146,6 +202,7 @@ def main(argv: list[str] | None = None) -> None:
         )
         print(
             f"  {row['posterior']:.3f} {row['family']:<7} K={row['K']:<4} tau_g={row['tau_g']:<3} "
+            f"d_g={row['d_g']:<4g} "
             f"loss {row['gold_loss'][0]:.2f}/{row['gold_loss'][1]:.2f} "
             f"acc {row['gold_acc']:.2f} | {observed}"
         )

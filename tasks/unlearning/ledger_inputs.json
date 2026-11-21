@@ -3,10 +3,12 @@
     "x3_ext_m80": "tasks/unlearning/reports/x3_ext_m80.json (this branch)",
     "x4_*, x5_*, d4_e16_probe, d5_e30_probe": "desk/unlearning at 1c00ab5, tasks/unlearning/reports/21/",
     "scores": "#12, public board, posted by the desk",
-    "retain": "estimated from the spill probes: control KL = 0.45 x held + 0.55 x spare, accuracy likewise (45 of 100 classes have forget images)"
+    "retain": "estimated from the spill probes: control KL = 0.45 x held + 0.55 x spare, accuracy likewise (45 of 100 classes have forget images)",
+    "gate_band": "upper: bias_full30 (dial30) changes the 9% of validation images in the nine classes and failed, so A x 0.91 < 70; lower: x4_e20 passed with about 4.7% of predictions changed (probe interpolation), so A x 0.953 >= 70",
+    "flip": "share of validation predictions changed, estimated as 0.45 x held-out flips + 0.55 x spare-class flips from the probes"
   },
   "observed": {
-    "bias_full30": 0.0,
+    "dial30": 0.0,
     "x3_ext_m80": 0.0063,
     "x4_e20": 0.0336
   },
@@ -18,7 +20,8 @@
         "label_prob_t2_sub": 0.8969,
         "kl_orig_sub_t2": 0.1075
       },
-      "retain": 0.98
+      "retain": 0.98,
+      "flip": 0.001
     },
     "x4_e12": {
       "realized": {
@@ -27,7 +30,8 @@
         "label_prob_t2_sub": 0.7572,
         "kl_orig_sub_t2": 0.3003
       },
-      "retain": 0.88
+      "retain": 0.88,
+      "flip": 0.004
     },
     "x4_e16": {
       "realized": {
@@ -36,7 +40,8 @@
         "label_prob_t2_sub": 0.6033,
         "kl_orig_sub_t2": 0.5783
       },
-      "retain": 0.79
+      "retain": 0.79,
+      "flip": 0.008
     },
     "x4_e20": {
       "realized": {
@@ -45,7 +50,8 @@
         "label_prob_t2_sub": 0.4784,
         "kl_orig_sub_t2": 0.851
       },
-      "retain": 0.63
+      "retain": 0.63,
+      "flip": 0.047
     },
     "x5_e25": {
       "realized": {
@@ -54,7 +60,8 @@
         "label_prob_t2_sub": 0.3716,
         "kl_orig_sub_t2": 1.1419
       },
-      "retain": 0.51
+      "retain": 0.51,
+      "flip": 0.089
     },
     "x5_e30": {
       "realized": {
@@ -63,7 +70,8 @@
         "label_prob_t2_sub": 0.3043,
         "kl_orig_sub_t2": 1.3669
       },
-      "retain": 0.45
+      "retain": 0.45,
+      "flip": 0.114
     },
     "x5_e40": {
       "realized": {
@@ -72,7 +80,12 @@
         "label_prob_t2_sub": 0.2342,
         "kl_orig_sub_t2": 1.6433
       },
-      "retain": 0.37
+      "retain": 0.37,
+      "flip": 0.15
     }
-  }
+  },
+  "gate_band": [
+    73.5,
+    76.9
+  ]
 }
