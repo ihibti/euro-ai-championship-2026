@@ -25,10 +25,10 @@ images of the nine classes, so a dial pays at the gate and in retain; and `remov
 hold none, so a dial passes the gate and keeps retain near 1 (drift read on the other forget
 images).
 
-The utility gate: the original's validation accuracy A lies in the band given in the inputs (from
-`bias_full30` failing and `x4_e20` passing). A candidate that changes a share f of validation
-predictions passes when A (1 - f) >= 70%; the predicted score is multiplied by the share of the
-band where it passes.
+The utility gate: a candidate that changes a share f of validation predictions passes when A (1 - f)
+>= 70%, where A is the original's validation accuracy, and scores 0 otherwise. A is unknown: it gets
+a uniform prior over `gate_prior` in the inputs and is inferred jointly with gold, so a 0 can be
+explained by the gate (`dial15`, `bias_full30`) and a positive score bounds A from below (`x4_e20`).
 
 Each observed public score weighs every gold by how well it is predicted (log-normal error with
 a factor of 1.6, plus 0.003). Printed: the golds that carry the weight, and for every candidate
@@ -81,6 +81,9 @@ def fit_proxy(
     return best
 
 
+GATE_THRESHOLD = 70.0
+A_POINTS = 61
+SAVED_KEYS = ("family", "K", "tau_g", "d_g", "gold_loss", "gold_acc", "pred", "weight", "posterior")
 NINE_CLASSES = (0, 6, 7, 8, 29, 30, 31, 33, 38)
 BOATS = (29, 30, 31, 33)
 DIALS = (10.0, 12.0, 15.0, 20.0, 30.0)
@@ -140,9 +143,9 @@ def dial_candidate(
         "logits": dialed,
         "stats": None,
         "retain": (1.0 - flip) / (1.0 + share * kl_inside),
-        "gate": gate_pass(flip, band[0], band[1]),
+        "flip": flip,
         "retain_without": kept / (1.0 + kl_outside),
-        "gate_without": 1.0,
+        "flip_without": 0.0,
         "proxy": None,
     }
 
@@ -172,9 +175,9 @@ def composite_candidate(
         "logits": logits,
         "stats": None,
         "retain": base["retain"] * dial["retain"],
-        "gate": gate_pass(base_flip + dial_flip, band[0], band[1]),
+        "flip": base_flip + dial_flip,
         "retain_without": base["retain"] * dial["retain_without"],
-        "gate_without": gate_pass(base_flip, band[0], band[1]),
+        "flip_without": base_flip,
         "proxy": "dumped+dial",
     }
 
@@ -222,16 +225,16 @@ def main(argv: list[str] | None = None) -> None:
                     candidates[name]["logits"] = torch.from_numpy(dumped[key].astype(np.float32))
                     candidates[name]["stats"] = None
                     candidates[name]["proxy"] = "dumped"
-    band = inputs["gate_band"]
+    band = inputs.get("gate_prior", inputs.get("gate_band"))
     for name, spec in inputs["candidates"].items():
-        candidates[name]["gate"] = gate_pass(spec.get("flip", 0.0), band[0], band[1])
+        candidates[name]["flip"] = spec.get("flip", 0.0)
     for t in SCALES:
         candidates[f"scale_t{t:g}"] = {
             "logits": orig / t,
             "stats": None,
             "retain": scoring.retain_score(orig / t, orig, labels),
             "proxy": None,
-            "gate": 1.0,
+            "flip": 0.0,
         }
     nine = torch.tensor(NINE_CLASSES)
     in_nine = torch.isin(labels, nine)
@@ -262,29 +265,36 @@ def main(argv: list[str] | None = None) -> None:
                 for without in (False, True):
                     family = "removal_b" if without else "removal"
                     hypotheses.append((family, k, tau, shift, gold / tau, without))
+    grid = np.linspace(band[0], band[1], A_POINTS)
     golds = []
     for family, k, tau, shift, gold, without in hypotheses:
         row = {"family": family, "K": k, "tau_g": tau, "d_g": shift}
         mean, std = scoring.loss_stats(gold, labels)
         row["gold_loss"] = (round(mean, 3), round(std, 3))
         row["gold_acc"] = round(float((gold.argmax(1) == labels).float().mean()), 3)
-        row["pred"] = {}
+        ungated, passes = {}, {}
         for name, cand in candidates.items():
             terms = scoring.forget_terms(cand["logits"], gold, orig, labels, cand["stats"])
             forget = scoring.forget_score([terms])
-            gate = cand.get("gate_without", cand["gate"]) if without else cand["gate"]
             retain = cand.get("retain_without", cand["retain"]) if without else cand["retain"]
-            row["pred"][name] = forget * retain * gate
-        w = 1.0
+            flip = cand.get("flip_without", cand["flip"]) if without else cand["flip"]
+            ungated[name] = forget * retain
+            passes[name] = grid * (1.0 - flip) >= GATE_THRESHOLD
+        weights_a = np.ones(len(grid))
         for name, observed in inputs["observed"].items():
-            if name in row["pred"]:
-                w *= weight(row["pred"][name], observed)
-        row["weight"] = w
+            if name in ungated:
+                hit, miss = weight(ungated[name], observed), weight(0.0, observed)
+                weights_a = weights_a * np.where(passes[name], hit, miss)
+        row["pred"] = {name: ungated[name] * float(passes[name].mean()) for name in candidates}
+        row["ungated"], row["passes"], row["weight_a"] = ungated, passes, weights_a
+        row["weight"] = float(weights_a.mean())
         golds.append(row)
 
-    total = sum(row["weight"] for row in golds)
+    total = sum(float(row["weight_a"].sum()) for row in golds)
     for row in golds:
-        row["posterior"] = row["weight"] / total if total > 0 else 0.0
+        row["joint"] = row["weight_a"] / total if total > 0 else np.zeros(len(grid))
+        row["posterior"] = float(row["joint"].sum())
+    a_posterior = sum(row["joint"] for row in golds)
     ranked = sorted(golds, key=lambda row: -row["posterior"])
     print(
         "proxies (a, b) for the fine-tunes:",
@@ -307,12 +317,20 @@ def main(argv: list[str] | None = None) -> None:
     for row in golds:
         shares[row["family"]] = shares.get(row["family"], 0.0) + row["posterior"]
     print("\nposterior by family:", {f: round(v, 3) for f, v in shares.items()})
+    a_mean = float((grid * a_posterior).sum())
+    a_cumulative = np.cumsum(a_posterior)
+    a_low = float(grid[np.searchsorted(a_cumulative, 0.1)])
+    a_high = float(grid[min(np.searchsorted(a_cumulative, 0.9), len(grid) - 1)])
+    print(f"original's validation accuracy A: mean {a_mean:.1f}, 10th to 90th", end=" ")
+    print(f"{a_low:.1f} to {a_high:.1f}")
     print("\ncandidate: weighted mean | 10th to 90th percentile | P(score above the best so far)")
     best_so_far = max(inputs["observed"].values())
     summary = {}
     for name in candidates:
-        values = np.array([row["pred"][name] for row in golds])
-        weights = np.array([row["posterior"] for row in golds])
+        values = np.concatenate(
+            [np.where(row["passes"][name], row["ungated"][name], 0.0) for row in golds]
+        )
+        weights = np.concatenate([row["joint"] for row in golds])
         order = np.argsort(values)
         cumulative = np.cumsum(weights[order])
         low = float(values[order][np.searchsorted(cumulative, 0.1)])
@@ -322,7 +340,7 @@ def main(argv: list[str] | None = None) -> None:
         summary[name] = {"mean": mean, "p10": low, "p90": high, "p_above_best": above}
         by_family = {}
         for family in shares:
-            mask = np.array([row["family"] == family for row in golds])
+            mask = np.repeat(np.array([row["family"] == family for row in golds]), len(grid))
             total_f = weights[mask].sum()
             weighted = float((values[mask] * weights[mask]).sum())
             by_family[family] = weighted / total_f if total_f else 0.0
@@ -334,8 +352,9 @@ def main(argv: list[str] | None = None) -> None:
         json.dumps(
             {
                 "observed": inputs["observed"],
+                "a_posterior": {"grid": grid.round(2).tolist(), "mass": a_posterior.tolist()},
                 "summary": summary,
-                "golds": [{k: v for k, v in row.items()} for row in ranked],
+                "golds": [{k: v for k, v in row.items() if k in SAVED_KEYS} for row in ranked],
             },
             indent=1,
         )

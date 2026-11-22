@@ -7,13 +7,15 @@
   "gate_band": "upper: bias_full30 (dial30) changes the 9% of validation images in the nine classes and failed, so A x 0.91 < 70; lower: x4_e20 passed with about 4.7% of predictions changed (probe interpolation), so A x 0.953 >= 70",
   "flip": "share of validation predictions changed, estimated as 0.45 x held-out flips + 0.55 x spare-class flips from the probes",
   "t6_*": "desk/unlearning at 0735d6f, reports/21/t6_*.json; their spill probes were cut, so retain assumes the spill ratios of d4_e16_probe (held 0.6, spare 0.3 of the trained KL); targets keep the predicted class, so flips are near 0",
-  "k7_*": "desk/unlearning at b23dad1, reports/21/seventh/: k7_e3t2 and k7_e3t2_rm full runs (exact images); k7_e3t2_rm3 from the trained part of d7_e3t2_rm3_probe until its full run is back; retain and flip from d7_e3t2_probe, d7_e3t2_rm_probe and d7_e3t2_rm3_probe"
+  "k7_*": "desk/unlearning at b23dad1, reports/21/seventh/: k7_e3t2 and k7_e3t2_rm full runs (exact images); k7_e3t2_rm3 from the trained part of d7_e3t2_rm3_probe until its full run is back; retain and flip from d7_e3t2_probe, d7_e3t2_rm_probe and d7_e3t2_rm3_probe",
+  "gate_prior": "uniform prior on the original's validation accuracy A, inferred jointly with gold from the scores (01:15): a candidate passes when A (1 - flip) >= 70, else it scores 0. gate_band (the earlier fixed band) is kept for reference only"
  },
  "observed": {
   "dial30": 0.0,
   "x3_ext_m80": 0.0063,
   "x4_e20": 0.0336,
-  "scale_t4": 0.0057
+  "scale_t4": 0.0057,
+  "dial15": 0.0
  },
  "candidates": {
   "x3_ext_m80": {
@@ -160,5 +162,9 @@
  "gate_band": [
   73.5,
   76.9
+ ],
+ "gate_prior": [
+  70.0,
+  85.0
  ]
 }
