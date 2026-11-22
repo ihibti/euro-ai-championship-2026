@@ -76,7 +76,7 @@ Team Begg, European AI Championship, Paris, 21 and 22 November 2026. What we did
 
 **Task.** We get an image classifier and 3,500 of its training images to forget. The submission is scored against "gold", models retrained without those images: its losses and predictions on those images must match gold's. A control set penalises drift elsewhere, and a model under 70% validation accuracy scores 0. We had no gold model, no retained data and no labels beyond the original model's own predictions.
 
-**What we did**, condensed from the unlearning agent's method write-up on its branch:
+**What we did**, condensed from `tasks/unlearning/method.md`:
 - **Gold, parametrised.** Since gold is unknown, a family of gold hypotheses was built from a cross-fitted prediction: each image predicted by blocks that never saw it.
 - **A written prediction per submission.** Every candidate was scored under every hypothesis with the server's formulas, tested in code. Each submission carried a written prediction, posted on #12 before its score. Each score then reweighted the hypotheses.
 - **The recipe.** Fine-tune the last 6 of 12 blocks towards that prediction, pushed further in the direction a model that never saw the image would err, softened by a temperature of 2. Then multiply the last layer by 2. That changes no predicted class and restores confidence.
