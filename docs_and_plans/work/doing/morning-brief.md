@@ -4,6 +4,10 @@ Written by the desk through the night. Final at 07:20; anything later is added u
 
 For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night in ten lines, the three tasks, why this is not leaderboard fitting, the organizers' rules, ten likely questions). Five points in it are marked **for the lead**.
 
+The two other agents' final documents:
+- Unlearning: `tasks/unlearning/judges_brief.md` (two-minute version at the top) and the morning plan in `night.md`, on `kkrgp/unlearning-first-moves` at `8738158`; draft PR #32. Its closing note is on #12 (07:25): nothing to submit after 09:00.
+- Devin (model equality, second method): the description of draft PR #27 is the final report; the fp8 rule and its readings are in the comments there.
+
 ## State at 07:20
 
 - **Scores:** watermark 0.7444, model equality **0.85** (06:44, was 0.7), unlearning 0.2858 (04:39). Read the public board first thing: the agents have no way to read it, so our rank is unknown since 23:45.
