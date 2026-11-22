@@ -593,6 +593,108 @@
     "spare_acc": 0.98,
     "spare_p_lab": 0.579
    }
+  },
+  "k11_b_bl4": {
+   "realized": {
+    "loss_mean": 2.376,
+    "loss_std": 1.922,
+    "label_prob_t2_sub": 0.203,
+    "kl_orig_sub_t2": 2.055
+   },
+   "retain": 0.513,
+   "flip": 0.069,
+   "spill": {
+    "held_kl": 1.01,
+    "held_acc": 0.89,
+    "spare_kl": 0.658,
+    "spare_acc": 0.965,
+    "spare_p_lab": 0.564
+   }
+  },
+  "k11_b_ep20": {
+   "realized": {
+    "loss_mean": 2.006,
+    "loss_std": 1.651,
+    "label_prob_t2_sub": 0.207,
+    "kl_orig_sub_t2": 1.944
+   },
+   "retain": 0.517,
+   "flip": 0.057,
+   "spill": {
+    "held_kl": 1.032,
+    "held_acc": 0.896,
+    "spare_kl": 0.657,
+    "spare_acc": 0.982,
+    "spare_p_lab": 0.561
+   }
+  },
+  "k11_b_k25": {
+   "realized": {
+    "loss_mean": 1.89,
+    "loss_std": 1.787,
+    "label_prob_t2_sub": 0.247,
+    "kl_orig_sub_t2": 1.823
+   },
+   "retain": 0.551,
+   "flip": 0.035,
+   "spill": {
+    "held_kl": 0.917,
+    "held_acc": 0.935,
+    "spare_kl": 0.612,
+    "spare_acc": 0.989,
+    "spare_p_lab": 0.575
+   }
+  },
+  "k11_b_rm2": {
+   "realized": {
+    "loss_mean": 1.969,
+    "loss_std": 1.661,
+    "label_prob_t2_sub": 0.222,
+    "kl_orig_sub_t2": 1.879
+   },
+   "retain": 0.533,
+   "flip": 0.056,
+   "spill": {
+    "held_kl": 0.965,
+    "held_acc": 0.898,
+    "spare_kl": 0.615,
+    "spare_acc": 0.982,
+    "spare_p_lab": 0.585
+   }
+  },
+  "k11_b_s1": {
+   "realized": {
+    "loss_mean": 2.228,
+    "loss_std": 1.818,
+    "label_prob_t2_sub": 0.208,
+    "kl_orig_sub_t2": 1.996
+   },
+   "retain": 0.534,
+   "flip": 0.049,
+   "spill": {
+    "held_kl": 0.961,
+    "held_acc": 0.915,
+    "spare_kl": 0.632,
+    "spare_acc": 0.981,
+    "spare_p_lab": 0.571
+   }
+  },
+  "k11_b_s2": {
+   "realized": {
+    "loss_mean": 2.259,
+    "loss_std": 1.824,
+    "label_prob_t2_sub": 0.202,
+    "kl_orig_sub_t2": 2.034
+   },
+   "retain": 0.548,
+   "flip": 0.058,
+   "spill": {
+    "held_kl": 1.01,
+    "held_acc": 0.896,
+    "spare_kl": 0.483,
+    "spare_acc": 0.98,
+    "spare_p_lab": 0.647
+   }
   }
  },
  "gate_band": [
