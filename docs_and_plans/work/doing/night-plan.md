@@ -127,3 +127,10 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 04:23 | Model equality: `labelled_copies_v1.csv` submitted: per family the five identified same-model copies as one model, every other endpoint alone | public 0.7 (was 0.1) |
 | 04:26 | Job 15904844 completed (24 minutes), no failed run | reports and logits on `desk/unlearning` at `8c443bf`; the six checkpoints on the lead's main laptop; no job in the queue |
 | 04:39 | Unlearning `k11_b_soup3_x2.pt` submitted (the average of the weights of the 0.2837 run and its two new seeds, last layer times 2) | public 0.2858, a new best |
+| 04:46 | The unlearning agent asked for a twelfth batch (eight more seeds) | not staged: the desk stopped one minute later |
+| 04:47 | The desk session reached its usage limit and stopped; its two agents stopped on the same limit | no job in the queue, no slot armed; state written in the morning brief and on #21 |
+| 04:54 | The unlearning agent withdrew the twelfth batch: at temperature 2 the seeds are the same model, so more seeds cannot move the average | no open GPU request; the night's unlearning submissions end at 0.2858 |
+| 05:04 | The purchase of free reference answers on the plain and fp8 references ended | 30 repeats of the stop probes and the three hint probes, 14 of round 1; committed on `ihibti/model-equality-refs` |
+| 06:00 | The desk resumed | defense pack found on `ihibti/model-equality-refs` (`8568af4`), brought to this branch and its gaps filled |
+| 06:02 | First test that sees fp8 on the references: likelihood ratio between a simulated fp8 copy of the base model and the plain base model, over every returned token | fp8 reference +7.6 standard errors, plain -4.8, watermark -4.9, temperature copy -6.7; holds on both halves of the rows |
+| 06:03 | The same test started on the nine non-prompted endpoints of each family; decision rule registered on PR #27 before any family number was read, amended with Devin at 06:16 | results expected from 06:30 (B), then C, then A |
