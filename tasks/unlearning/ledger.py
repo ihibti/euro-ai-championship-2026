@@ -185,11 +185,6 @@ def composite_candidate(
 SHARPEN = (1.5, 2.0, 2.5)
 
 
-def temper_kl(orig: torch.Tensor, temperature: float) -> float:
-    """Mean KL(orig || orig / temperature) at T=2 over the forget images."""
-    return float(scoring.kl_rows(orig, orig / temperature).mean())
-
-
 def effective_temperature(orig: torch.Tensor, labels: torch.Tensor, label_prob: float) -> float:
     """The temperature that brings the original's label probability at T=2 down to label_prob."""
     best, best_gap = 1.0, math.inf
@@ -200,14 +195,29 @@ def effective_temperature(orig: torch.Tensor, labels: torch.Tensor, label_prob: 
     return best
 
 
-def sharpened_retain(spill: dict, factor: float, orig: torch.Tensor, labels: torch.Tensor) -> float:
-    """Retain of a fine-tune whose last layer is multiplied by `factor`. Its spill on the spare
-    classes is read as a temperature (the one matching their label probability) plus a residual;
-    the factor divides that temperature, the residual and the agreement stay."""
-    temperature = effective_temperature(orig, labels, spill["spare_p_lab"])
-    change = temper_kl(orig, temperature / factor) - temper_kl(orig, temperature)
-    held = max(spill["held_kl"] + change, 0.0)
-    spare = max(spill["spare_kl"] + change, 0.0)
+def sharpened_retain(spill: dict, factor: float, orig: torch.Tensor, sub: torch.Tensor) -> float:
+    """Retain of a fine-tune whose last layer is multiplied by `factor`.
+
+    The fine-tune's own forget logits `sub` show how the factor moves the KL to the original,
+    separately on the images whose predicted class it changed and on the others. The held-out
+    probe mixes the two at its measured share of changed predictions; the spare classes move like
+    the unchanged images. The factor never changes a predicted class, so the agreements stay.
+    """
+    changed = sub.argmax(1) != orig.argmax(1)
+    kept = ~changed
+    before = scoring.kl_rows(orig, sub)
+    after = scoring.kl_rows(orig, sub * factor)
+    kept_before = max(float(before[kept].mean()), 1e-12) if kept.any() else 1e-12
+    kept_after = float(after[kept].mean()) if kept.any() else 0.0
+    if changed.any():
+        changed_before, changed_after = float(before[changed].mean()), float(after[changed].mean())
+    else:
+        changed_before, changed_after = kept_before, kept_after
+    share = 1.0 - spill["held_acc"]
+    mix_before = share * changed_before + (1.0 - share) * kept_before
+    mix_after = share * changed_after + (1.0 - share) * kept_after
+    held = spill["held_kl"] * mix_after / mix_before
+    spare = spill["spare_kl"] * kept_after / kept_before
     kl = 0.45 * held + 0.55 * spare
     agreement = 0.45 * spill["held_acc"] + 0.55 * spill["spare_acc"]
     return agreement / (1.0 + kl)
@@ -280,7 +290,9 @@ def main(argv: list[str] | None = None) -> None:
             candidates[f"{name}x{factor:g}"] = {
                 "logits": candidates[name]["logits"] * factor,
                 "stats": None,
-                "retain": sharpened_retain(spec["spill"], factor, orig, labels),
+                "retain": sharpened_retain(
+                    spec["spill"], factor, orig, candidates[name]["logits"]
+                ),
                 "flip": spec.get("flip", 0.0),
                 "proxy": "dumped x" if candidates[name]["proxy"] == "dumped" else "proxy x",
             }

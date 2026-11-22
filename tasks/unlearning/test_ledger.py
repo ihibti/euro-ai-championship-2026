@@ -44,15 +44,46 @@ def test_effective_temperature_inverts_a_known_temperature():
     assert ledger.effective_temperature(orig, labels, target) == pytest.approx(2.5, abs=0.05)
 
 
-def test_sharpening_back_by_the_spill_temperature_removes_a_pure_temperature_spill():
-    orig, labels = _orig()
+def _flipped(orig: torch.Tensor, labels: torch.Tensor, share: float, seed: int = 1):
+    generator = torch.Generator().manual_seed(seed)
+    sub = orig / 2.5
+    rows = torch.rand(len(labels), generator=generator) < share
+    wrong = (labels + 1) % orig.shape[1]
+    sub[rows, labels[rows]] -= 6.0
+    sub[rows, wrong[rows]] += 6.0
+    return sub
+
+
+def test_sharpening_back_by_the_temperature_removes_a_pure_temperature_spill():
+    orig, _ = _orig()
     tempered = orig / 2.5
     kl = float(scoring.kl_rows(orig, tempered).mean())
-    p_lab = float(scoring.label_prob_t2(tempered, labels).mean())
-    spill = {"held_kl": kl, "held_acc": 1.0, "spare_kl": kl, "spare_acc": 1.0, "spare_p_lab": p_lab}
+    spill = {"held_kl": kl, "held_acc": 1.0, "spare_kl": kl, "spare_acc": 1.0}
     unsharpened = 1.0 / (1.0 + kl)
-    assert ledger.sharpened_retain(spill, 2.5, orig, labels) == pytest.approx(1.0, abs=0.02)
-    assert ledger.sharpened_retain(spill, 1.5, orig, labels) > unsharpened
+    assert ledger.sharpened_retain(spill, 2.5, orig, tempered) == pytest.approx(1.0, abs=1e-4)
+    assert ledger.sharpened_retain(spill, 1.5, orig, tempered) > unsharpened
+
+
+def test_a_factor_of_one_keeps_the_measured_retain():
+    orig, labels = _orig()
+    sub = _flipped(orig, labels, 0.3)
+    spill = {"held_kl": 1.1, "held_acc": 0.87, "spare_kl": 0.78, "spare_acc": 0.987}
+    measured = (0.45 * 0.87 + 0.55 * 0.987) / (1.0 + 0.45 * 1.1 + 0.55 * 0.78)
+    assert ledger.sharpened_retain(spill, 1.0, orig, sub) == pytest.approx(measured)
+
+
+def test_changed_predictions_keep_their_drift_when_sharpened():
+    orig, labels = _orig()
+    sub = _flipped(orig, labels, 0.3)
+    clean = {"held_kl": 1.0, "held_acc": 1.0, "spare_kl": 1.0, "spare_acc": 1.0}
+    spilled = {"held_kl": 1.0, "held_acc": 0.6, "spare_kl": 1.0, "spare_acc": 1.0}
+    gain_clean = ledger.sharpened_retain(clean, 2.0, orig, sub) / ledger.sharpened_retain(
+        clean, 1.0, orig, sub
+    )
+    gain_spilled = ledger.sharpened_retain(spilled, 2.0, orig, sub) / ledger.sharpened_retain(
+        spilled, 1.0, orig, sub
+    )
+    assert gain_clean > gain_spilled > 1.0
 
 
 def test_unseen_flip_counts_only_images_right_before_the_dial():
