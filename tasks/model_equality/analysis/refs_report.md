@@ -420,7 +420,7 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
 - **modal.py** (frozen 02:18, 627b081). Battery modal-answer flips with a hold-out null. Calibrated on the references (prompted and temperature copies stay), but it has no power on SmolLM. Nothing is set apart at 2 scored repeats.
 - **leaksplit.py** (frozen 02:28, f1301d4). The pre-registered e2 split inside A, Y = 01, 17, 24, 25, 33 against N = 04, 12, 14, 18, confirmed on fresh rows only. Orientation comes from the prompted-copy anchor on the batteries, then homogeneity; otherwise no split.
 
-## Status at handoff (2026-11-22 04:32; desk submitted at 04:23, public 0.7)
+## Status at handoff (2026-11-22 04:40; judges' brief pushed, fp8 stop check read)
 
 **Done in this run (23:30 to 01:44)**
 - Round 1 completed to 4 repeats, determinism, separation table, grouping at 40 answers, ablations, permutation tests (E4 to E7). Side channels (E8). night_a P1/P2 (E9): both fail.
@@ -474,6 +474,9 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
   None is above 0.5. fp8 is invisible on every probe, so the closest candidate is about as likely fp8 as plain.
 - C's orientation waits for the base-model probability of the story opening. If it is low, all four C candidates are shifted.
 - Registered story-prefix results: the watermark copies have the longest prefix in A and C and the second longest in B; the temperature copies have the shortest in A and B but not in C.
+
+- The judges' brief is in `tasks/model_equality/judges_brief.md` (c614150).
+- fp8 stop check (E15): not revived. On p3 the direction is right (p 0.10), but nothing decides.
 
 **Next steps**
 1. Set my ranking beside the laptop's exact stop and first-token probabilities when the desk sends them.
