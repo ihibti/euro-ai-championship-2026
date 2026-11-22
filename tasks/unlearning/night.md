@@ -96,10 +96,19 @@ The search therefore starts low and climbs while the score rises. Gold is not on
 
 ## Submission plan
 
-1. `map_even40` (the lead, before sleeping): a class-level softening of all 45 touched classes. A small positive score confirms the extras reading's direction.
-2. `x3_ext_m80`: the strongest candidate built so far (loss mean 0.09).
-3. The K sweep from #21, starting near the K whose target loss mean is about 1, then up or down by the result, like a bisection on a tent-shaped curve.
-4. Refinements only on the best K: more blocks trained, a T=2 hedge on top, or a wider spread.
+The plan written at 23:00 (`map_even40`, `x3_ext_m80`, then a K sweep) was carried out through `x4_e20`. From 01:20 the plan follows the ledger:
+
+1. **01:38 `k7_e3t2_rm`, 02:08 `k7_e3t2_rm_x2`.** The fine-tune, then the same fine-tune with its last layer doubled. The pair measures the sharpening effect with everything else fixed.
+2. **After that:** the candidate the ledger ranks first once those two scores and the seventh batch's logits are in. That is a sharpened fine-tune from the seventh batch, or from the eighth if it is back. The eighth batch is 16 runs on the confidently wrong reading: further and sharper targets, longer training.
+3. **Each line goes into the queue at least 10 minutes before its slot,** with its predicted score. A line whose base candidate failed the gate is withdrawn.
+
+## Morning plan (for the humans, from 09:00)
+
+- **State to read first:** this file's log, `submit_queue.md` (every submission with its prediction and score), and `judges_brief.md`.
+- **Slots after 09:00:** 09:08, 09:38, 10:08, 10:38, and 11:08 at the latest. The cap of the night authorization ends at 09:00, so from then on a human at a terminal submits with `make submit`.
+- **What to submit:** the ledger's first-ranked candidate among the files on the lead's laptop (`ledger.py --targets output/kkrgp/xfit_extras.npz`, plus `--logits` with the latest dumped logits). Among close candidates, take the one with the smaller drift on held-out and spare classes (#19).
+- **What not to do:** no candidate without a probe; nothing from `u7_*` (it changes half of the predictions on unseen classes); no class dial on the nine classes (the gate, `dial15` = 0).
+- **Defending the work:** `judges_brief.md`. The likely questions are answered at its end.
 
 ## Log
 
