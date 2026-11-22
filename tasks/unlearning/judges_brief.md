@@ -182,6 +182,14 @@ So the 10:46 slot depends on the 10:16 score, by a rule written before it.
 
 **The weight-average caveat, measured.** The blend averages runs of 25 and 40 epochs, and the model stands it in with the average of their logits. The only real soup with dumped logits is the thirteenth batch's seed twins: its forget loss sits 0.8% below its logit average's, with a KL of 0.0004 at T=2. The blend's members sit 1.3 times further apart than seed twins (logit RMS 0.53 against 0.42). The second-order gap grows with the square of that distance, so we expect about 2% in forget loss and under 1% in score.
 
+**The fourth run (10:48), and what the last two slots test.** The 0.3019 averages the 0.2938's three runs with a fourth: the same recipe at learning rate 2e-4, 40 epochs, seed 1 (`k10_t2_lr2e4_ep40_s1`), last layer x1.95. The model predicted 0.2949; with the 0.3019 left out it predicts 0.2900, a 4% miss in our favour. Two readings fit, and the last two slots were set to tell them apart, by rules written before each score (#12 at 10:32, 11:00 and 11:04).
+- **The fourth run is better than the model thinks.** Then it scores near 0.30 alone (11:18), and the soup with the most lr 2e-4 runs, `m17_three40_x2`, comes next (11:48).
+- **The gain comes from averaging in a run further from the others.** Then the run alone scores lower, and the wider average `m17_five_x2` comes next. The soups' leave-one-out residuals are consistent with this: +0.4% for the seed twins (logit RMS 0.42 apart), +0.9% for the 0.2938 (0.53), +4.1% for the 0.3019, whose fourth run sits 0.60 to 0.72 from the others. Three points, against about 1% of board noise between two lines.
+
+The 11:48 cut is 0.2900, where the two follow-ups cross in refits with six possible 11:18 scores. Without an 11:18 score, 11:48 is `m17_three40_x2`: `m17_five_x2` would win only inside the noise (35% to beat 0.3019, 4% to beat it by more than 1%).
+
+**Anchoring on shared runs (10:55).** The model's level is pinned by observed scores. Anchoring every candidate on the best line alone inflates a candidate when the best is a single run unlike it: in hypothetical refits it gave gains up to 0.013, against at most 0.004 otherwise. From 10:55 each candidate is anchored on the scored lines that share runs with it, weighted by the weight they share (`slot_gain.py --shared`, 4 tests). A line that shares no run keeps the best line's anchor.
+
 ## The utility gate, and localisation
 
 A submission under 70% accuracy on the hidden validation set scores 0. Inferred A leaves a margin: a candidate may change about 5 to 17% of validation predictions (1 − 70/A for A from 74 to 84), depending on where A really is.
