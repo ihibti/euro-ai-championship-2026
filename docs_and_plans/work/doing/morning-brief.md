@@ -2,10 +2,9 @@
 
 Written by the desk through the night. Final at 07:20; anything later is added under "State". The event ends at 12:00; last submissions by 11:00.
 
-For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night in ten lines, the three tasks, why this is not leaderboard fitting, the organizers' rules, ten likely questions). Four points in it are marked **for the lead**.
 
 The two other agents' final documents:
-- Unlearning: `tasks/unlearning/judges_brief.md` (two-minute version at the top) and the morning plan in `night.md`, on `kkrgp/unlearning-first-moves`, final at `538147e` (07:38); draft PR #32. Its closing note is on #12 (07:25): nothing to submit after 09:00.
+- Unlearning: the method write-up and the morning plan in `night.md`, on `kkrgp/unlearning-first-moves`, final at `538147e` (07:38); draft PR #32. Its closing note is on #12 (07:25): nothing to submit after 09:00.
 - Devin (model equality, second method): the description of draft PR #27 is the final report; the fp8 rule and its readings are in the comments there.
 
 ## On arrival at the venue (written 08:25)
@@ -41,7 +40,7 @@ Honest outlook: this axis looks worth a few percent on unlearning (towards 0.30)
 1. **Model equality: done, submit nothing more.** You said go at 08:06; the file with ep-32 added to family B's group scored **1.0** on the public part at 08:07.
    - *Do not submit the second prepared file* (`labelled_copies_v2_b26_b32.csv`) or any other grouping. At 1.0 every public pair is right. A further addition can no longer be confirmed by the board: a drop would refute it, and no change would prove nothing, because the score also stays at 1.0 when none of the endpoint's pairs is in the public part.
    - *What the 1.0 says about the hidden part.* A same-model endpoint that we still keep alone would put 5 or 6 wrong pairs in its family. If the public part is about 30% of the pairs (the team's working figure), the chance that none of them is public is about 1 in 6. Rough reading: about 1 chance in 5 that family A still hides one such endpoint, about 1 in 10 for ep-26 in B. The hidden score should be close to the public one, not guaranteed equal.
-   - *For the jury:* the fifth submission was a single endpoint named by a test that stopped just under its own threshold, submitted on your decision. The defense pack says so (section 3).
+   - *For the record:* the fifth submission was a single endpoint named by a test that stopped just under its own threshold, submitted on your decision. The methods summary says so (section 3).
 2. **Delete two unused Python environments on scratch?** `model_equality/.venv` (6,703 files) and `Hackathon_Watermark_Localisation_Task/.venv` (26,655 files). An organizer asked every team at about 01:35 to delete files: scratch ran out of file slots. They are not this session's to delete without your word. The unlearning environment stays; jobs use it.
 3. **Which submission counts** for the final ranking: the last one or the best public one? The server now answers each submission with "the final ranking uses the held out subset". On all three tasks our last submission is also our best, so the question matters only if someone submits again. Worth asking an organizer before any further submission.
 4. **Ask an organizer** whether `sbatch --chdir=<team folder>` from a login node that does not show scratch counts as "from inside the team folder". Tonight only one login node of four showed scratch after JSC's reboots.

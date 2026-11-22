@@ -1,11 +1,11 @@
-# Judges' defense pack
+# Methods and results
 
-Team Begg, European AI Championship, Paris, 22 November 2026. Written during the night for the lead, who slept through it, and through the lead for the jury. Every number here comes from a committed file or a posted score. Points only the lead can settle are marked **for the lead** (four of them).
+Team Begg, European AI Championship, Paris, 21 and 22 November 2026. What we did on the three tasks, the evidence behind each step, what failed, the limits, and how the organizers' rules were kept. Most of the work ran overnight, done by coding agents under limits the team lead set before sleeping. Every number here comes from a committed file or a posted score.
 
 ## 1. The night in ten lines
 
 1. At 23:45 the public board had us 20th of 32, with an overall 0.33. The sixth team had 0.73. The overall is the mean over the three tasks of (ours − lowest) / (best − lowest).
-2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **1.0** (08:07; 0.85 at 06:44, 0.7 at 04:23), unlearning **0.2938** (10:18 on the 22nd; 0.2858 at 04:39).
+2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **1.0** (08:07; 0.85 at 06:44, 0.7 at 04:23), unlearning **0.3019** (10:48 on the 22nd; 0.2858 at 04:39).
 3. On the public board at 10:21 on the 22nd: **9th of 44 teams, overall 0.79** (model equality tied first with 15 teams, watermark 12th, unlearning about 17th). The board's overall is the mean over tasks of (ours − lowest) / (best − lowest). Only a team's best public submission counts, and the final ranking is on the hidden 70%.
 4. One human, the team lead, set the rules and the night authorization, a file written at a terminal that caps answers and submissions until 09:00, and then slept.
 5. One agent, the desk, was the only one allowed to touch the GPU cluster (JURECA) and the organizers' server. It spent scored answers, submitted, reviewed and merged.
@@ -47,7 +47,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 
 **Task.** 33 chat endpoints. For every pair, say whether they share a base model and whether they serve the same model: same weights, quantization and adapter. A system prompt, a decoding setting or a watermark does not change the model. Score: 0.1 × MCC on families + 0.9 × MCC on same-model pairs inside families. Each endpoint has a budget of 100 answers.
 
-**What we did**, condensed from `tasks/model_equality/judges_brief.md`, which has every number:
+**What we did**, condensed from the model equality agent's write-up:
 1. **Families.** Three families of eleven: Qwen2.5-3B-Instruct, which writes numbers as digits; Qwen2.5-1.5B-Instruct, which writes them as words; Llama-3.2-1B-Instruct. The public pairs confirm them.
 2. **Prompted copies.** We asked each endpoint for its hidden instructions. One copy per family quoted a fixed system prompt, and one gave a different persona each time.
 3. **Likelihood under the public base model.** We ran each base model on a laptop and scored every token we had received. That gives each endpoint's sampling temperature, and shows whether the temperature is the same on every prompt.
@@ -76,7 +76,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 
 **Task.** We get an image classifier and 3,500 of its training images to forget. The submission is scored against "gold", models retrained without those images: its losses and predictions on those images must match gold's. A control set penalises drift elsewhere, and a model under 70% validation accuracy scores 0. We had no gold model, no retained data and no labels beyond the original model's own predictions.
 
-**What we did**, condensed from `tasks/unlearning/judges_brief.md` on the unlearning branch:
+**What we did**, condensed from the unlearning agent's method write-up on its branch:
 - **Gold, parametrised.** Since gold is unknown, a family of gold hypotheses was built from a cross-fitted prediction: each image predicted by blocks that never saw it.
 - **A written prediction per submission.** Every candidate was scored under every hypothesis with the server's formulas, tested in code. Each submission carried a written prediction, posted on #12 before its score. Each score then reweighted the hypotheses.
 - **The recipe.** Fine-tune the last 6 of 12 blocks towards that prediction, pushed further in the direction a model that never saw the image would err, softened by a temperature of 2. Then multiply the last layer by 2. That changes no predicted class and restores confidence.
@@ -90,7 +90,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 
 **Result.** From 0.00 at 22:19, through 0.066 (01:38), 0.2133 (02:08) and 0.2837 (02:38), to 0.2858 (04:39). The steps in between scored 0.2222, 0.256 and 0.2665, each lower, and each said why.
 
-**The morning of the 22nd.** With the lead back and confirming each submission by hand: 0.2687 at 08:21 (a longer, slower run; the desk had predicted 0.29), an upload that timed out at 09:45 with no score, then **0.2938 at 10:18**: the weight average of two seeds of the recipe and one 40-epoch run, last layer times 2. The unlearning agent's refitted score model had predicted 0.291 for it. From then on only files we would accept as final were submitted, because the best public file is the one ranked on the hidden data.
+**The morning of the 22nd.** With the lead back and confirming each submission by hand: 0.2687 at 08:21 (a longer, slower run; the desk had predicted 0.29), an upload that timed out at 09:45 with no score, then **0.2938 at 10:18**: the weight average of two seeds of the recipe and one 40-epoch run, last layer times 2 (the unlearning agent's refitted score model had predicted 0.291), and **0.3019 at 10:48**: the same average with a fourth run, trained 40 epochs at twice the learning rate, last layer times 1.95 (predicted 0.295). From then on only files we would accept as final were submitted, because the best public file is the one ranked on the hidden data.
 
 **Limits and another day.**
 - Gold is modelled by a few parametric families, and the truth may lie outside them.
@@ -106,7 +106,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
   | task | at night | before | reason recorded |
   |---|---|---|---|
   | model equality | 5: floor 0.0, families 0.1, labelled copies 0.7, the same plus C's two plain-like endpoints 0.85, the same plus B's ep-32 1.0 | none | yes, in the night log |
-  | unlearning | 11: ten with a written prediction on #12, the last a seed average chosen without a score model. On the morning of the 22nd: 08:21 (0.2687), 09:45 (upload timed out, no score), 10:18 (0.2938), each with a prediction on #12 | 1, at 22:19 (0.00) | yes |
+  | unlearning | 11: ten with a written prediction on #12, the last a seed average chosen without a score model. On the morning of the 22nd: 08:21 (0.2687), 09:45 (upload timed out, no score), 10:18 (0.2938), 10:48 (0.3019), each with a prediction on #12 | 1, at 22:19 (0.00) | yes |
   | watermark | 1 (c6, 0.7444) | 3: 18:11 (0.4421), 19:09 (0.6876), 22:19 (c5, 0.7251) | held-out gain |
 
   Four of the five model equality groupings were named by a rule fixed beforehand. The fifth (08:07) was not: the fp8 test read B's candidate at +2.81 against a threshold of 3, the desk declined to act, and the lead decided to submit the one endpoint the test pointed to. It is the only submission of the event made on a reading that had missed its own threshold.
@@ -144,7 +144,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 - **01:30, a misjudged submission.** The desk submitted "one model per family", expecting more than 0.1. The model part is scored only inside families, where "all the same" scores zero. That cost one of the five night slots. It also confirmed the families.
 - **00:41, the cluster link dropped.** Login nodes were rebooted during the night. The lead reopened the link at 00:54 and allowed one guarded reconnect attempt per host. No JURECA work was done while the link was down.
 
-## 5. Ten questions a jury would ask
+## 5. Questions and short answers
 
 1. **How do you know two endpoints serve the same model?** We do not claim it from similarity. Each label is a specific disguise (prompt, temperature, top-p, watermark), identified by a method that recovered the same disguise on the published references.
 2. **Did you tune to the public board?** No. Rules were committed before their data, and no grouping was submitted as a trial. In unlearning, each submission carried a written prediction, and the board was used to reject hypotheses.

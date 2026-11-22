@@ -27,7 +27,7 @@ The lead at 00:15: the final ranking uses other data than the board. The board s
 ## You are the desk
 
 - You are the lead's agent, on the lead's laptop, in `/Users/ismingfromchina/orca/workspaces/euro-ai-championship-2026/brill`. Only this session is the desk. You orchestrate and decide; long analysis goes to subagents.
-- The lead (`ihibti`) sleeps from about 23:30 to 09:00. After that, the lead prepares for the judges and has little time for the models. The event ends on 2026-11-22 at 12:00 Paris time. Make the last submission per task by 11:00, which leaves a slot if it fails.
+- The lead (`ihibti`) sleeps from about 23:30 to 09:00. After that, the lead is taken by the closing session and has little time for the models. The event ends on 2026-11-22 at 12:00 Paris time. Make the last submission per task by 11:00, which leaves a slot if it fails.
 - You own **model equality** (its owner has been out since the 21st) and **watermark**.
 - **Unlearning** belongs to the unlearning agent, on the lead's second laptop. It works through the lead's GitHub account, so its commits and issues show `ihibti`.
 - **Devin** builds a second method for model equality. Since about 23:20 it runs on the lead's second laptop, which it shares with the unlearning agent (#24). That laptop holds no scoreboard key.
@@ -39,7 +39,7 @@ The lead at 00:15: the final ranking uses other data than the board. The board s
 - **Nothing more is to be submitted** unless the lead decides otherwise. Model equality: at 1.0 the public score can refute an addition but not confirm one; do not submit `labelled_copies_v2_b26_b32.csv`. Unlearning: its agent closed the night at 07:25. Watermark: c6 stands.
 - **Night authorization** ends at 09:00. Used: model equality 5 of 5, unlearning 11 of 12, watermark 1 of 1.
 - **Cluster:** no job running or pending, and no request open. The four connections to JURECA dropped between 07:39 and 08:04 and were not reopened. Reopen one (`~/.config/euroai/jureca_relog.sh jureca03`, one attempt) only if a job is needed.
-- **The lead is awake** since about 08:05 and decides from here. Documents: `morning-brief.md`, `docs_and_plans/guides/judges-defense.md`, the night log in `night-plan.md`.
+- **The lead is awake** since about 08:05 and decides from here. Documents: `morning-brief.md`, `docs_and_plans/guides/methods-and-results.md`, the night log in `night-plan.md`.
 - **Model equality record:** the fp8 test and its rule are on PR #27 and in `tasks/model_equality/analysis/local_anchor/`. The fifth submission (ep-32 into B's group) was the lead's decision on a reading under the rule's threshold.
 
 ## State at 02:45
@@ -248,7 +248,7 @@ Stopped after c6. The `n2` runs end at 00:28. `tasks/watermark_localization/asse
 
 - May `kkrgp`'s own JSC account run one job on the general queue when the desk is down? Until the lead says yes, hard rule 5 holds.
 - Recommended: a fine-grained GitHub token for `kkrgp`, limited to this repository and expiring on the 22nd, instead of full access to the lead's account.
-- The judges' defense pack, `docs_and_plans/guides/judges-defense.md`: per task the method, the evidence, what failed, the limits, and hard questions with answers. One subagent writes it overnight. The format of the judging is not known yet.
+- The methods summary, `docs_and_plans/guides/methods-and-results.md`: per task the method, the evidence, what failed, the limits, and questions with short answers. One subagent writes it overnight.
 
 ## Morning brief, by 08:30
 
