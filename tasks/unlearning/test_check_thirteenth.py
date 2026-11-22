@@ -45,3 +45,20 @@ def test_factor_for_loss_reaches_the_level():
     factor = ct.factor_for_loss(z, labels, 3.0)
     assert ct.loss_stats(z * factor, labels)[0] == pytest.approx(3.0, abs=1e-6)
     assert ct.factor_for_loss(z, labels, 2.0) < factor
+
+
+def test_target_losses_without_a_step_are_the_original_loss():
+    orig = np.random.default_rng(2).normal(size=(50, 6)) * 4
+    columns = np.arange(6)
+    single, mixture = ct.target_losses(orig, [orig, orig], columns)
+    expected = ct.loss_stats(orig, orig.argmax(1))
+    assert single == pytest.approx(expected)
+    assert mixture == pytest.approx(expected)
+
+
+def test_target_losses_mixture_of_equal_steps_is_the_single_target():
+    rng = np.random.default_rng(3)
+    orig = rng.normal(size=(50, 6)) * 4
+    pred = orig + rng.normal(size=(50, 6))
+    single, mixture = ct.target_losses(orig, [pred, pred, pred], np.arange(6))
+    assert mixture == pytest.approx(single)

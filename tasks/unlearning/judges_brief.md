@@ -74,20 +74,22 @@ This keeps the number of submissions small and makes each one an experiment with
 
 ## Submissions and what each one taught
 
-| Time | Candidate | What it is | Prediction written before | Public score | What it taught |
-|---|---|---|---|---|---|
-| 22:19 | `bias_full30` | nine classes' outputs lowered by 30 everywhere | positive under the reading that whole classes were removed | 0.00 | that reading is wrong, or the gate failed (it loses the nine classes on the validation set) |
-| 23:37 | `x3_ext_m80` | fine-tune of the last 3 blocks towards a blend of the original and the cross-fitted prediction | small but positive | 0.0063 | first positive score, far smaller than the golds the dial assumed |
-| 00:08 | `x4_e20` | the same, towards the cross-fitted step extrapolated 2 times | much above 0.0063 if the dial points the right way | 0.0336 | the dial points the right way: five times the previous score |
-| 00:38 | `scale_t4` | every logit divided by 4 (last layer / 4), no training | about 0.008 (0.004 to 0.013) under the golds that fit the scores so far; 0.1 or more under soft golds | 0.0057 | the prediction held; soft golds, and with them a temperature as the answer, are out |
-| 01:08 | `dial15` | the nine classes' bias lowered by 15, last layer only | 0 under the confidently wrong golds; 0.076 under removal with the gate; 0.29 under removal with no nine-class validation images | 0.0 | removal survives only if A is between 73.4 and 75.4: 4% of the weight |
-| 01:38 | `k7_e3t2_rm` | the last 6 blocks fine-tuned towards the cross-fitted step extrapolated 3 times and tempered by 2, with an anchor | mean 0.047, 89% chance above 0.0336; 0 if it fails the gate (it changes about 6% of validation predictions) | **0.066** | twice the previous best. It passed the gate, so A × 0.94 ≥ 70. The score sits at the upper end of the prediction: the ledger underpredicts this fine-tune by about 1.3 times |
-| 02:08 | `k7_e3t2_rm_x2` | the same model with its last layer multiplied by 2 | mean 0.086, 10th to 90th 0.060 to 0.118, 75% chance above 0.066 (0.106 once the exact logits arrived at 02:04) | **0.2133** | sharpening is the recipe: the same checkpoint scores more than three times as much once the spill's temperature is taken out. The ledger gets the direction right and the size wrong: the gain is about twice what it predicts |
-| 02:38 | `k8_e3t2_rm1_lr1e4_x2` | one dial from the 0.2133: the same recipe trained at learning rate 1e-4, sharpened by 2 | ledger mean 0.229, 10th to 90th 0.142 to 0.301, 66% chance above 0.2133; 1.7 times `k7_e3t2_rm_x2` relative to the ledger | **0.2837** | more reach pays at the same factor (1.33 times). Golds that err on other images of the same classes drop to 2% of the weight |
-| 03:08 | `k8_e3t2_rm1_lr1e4_x2p5` | the same fine-tune with the factor one notch further, 2.5 | ledger mean 0.283, 10th to 90th 0.211 to 0.373, 54% chance above 0.2837 | 0.2222 | **one notch more sharpening cost 22%**: the forget-set loss has a peak near the 0.2837's level. The ledger cannot represent it and is set aside for the factor (section below) |
-| 03:38 | `k9_e3t1_lr1e4_x1p25` | the ninth batch's untempered (tau 1) fine-tune, last layer times 1.25 | `peak_check.py` mean 0.294, 0.281 to 0.316 over the 13 gold settings that reproduce both scores. It replaces the line fixed at 02:56, which the same check puts at 0.185 | 0.256 | **at the 0.2837's forget-loss level, half the probe spill scored 10% less.** The factor left a third of the drift's temperature (f/T = 0.76): on unseen images, sharpening must match the drift's temperature. The probes' lower spill does not carry over by itself |
-| 04:08 | `k8_e3t2_rm1_ep40_x2p25` | the eighth batch's 40-epoch run, last layer times 2.25: exactly its measured spill temperature | `peak_check.py` 0.292 to 0.294 over three readings of retain; written down as a test, not a likely new best | 0.2665 | its forget loss, probes and spill temperature match the 0.2837's base; only the factor relative to the temperature differs (1.00 against 0.89), and it scores 6% lower. Every neighbour of the 0.2837's point has now scored lower. With all five scores the check fits no setting and is retired as a predictor |
-| 04:39 | `k11_b_soup3_x2` | the weight average of the 0.2837's base and its two seed twins (same recipe, seeds 1 and 2), last layer times 2 | no score model; written before the score: above 0.2837 averaging pays, about 0.28 the 0.2837 is a typical draw, clearly below a lucky draw | **0.2858** | a typical draw: +0.7% is inside the board's 1% noise between two lines. Our final line, for its lower seed noise on the hidden 70% |
+| Time | Candidate | What it is | Prediction written before | Written | Public score | What it taught |
+|---|---|---|---|---|---|---|
+| 22:19 | `bias_full30` | nine classes' outputs lowered by 30 everywhere | positive under the reading that whole classes were removed | #12, 19:42 | 0.00 | that reading is wrong, or the gate failed (it loses the nine classes on the validation set) |
+| 23:37 | `x3_ext_m80` | fine-tune of the last 3 blocks towards a blend of the original and the cross-fitted prediction | above 0 if the cross-fit's soft targets move towards gold; exactly 0 if their direction is wrong or the gate was hit (no number written) | queue `0ddc834`, 23:31 | 0.0063 | first positive score, far smaller than the golds the dial assumed |
+| 00:07 | `x4_e20` | the same, towards the cross-fitted step extrapolated 2 times | much above 0.0063 if the dial points the right way | queue `1bb1b53`, 00:05 | 0.0336 | the dial points the right way: five times the previous score |
+| 00:37 | `scale_t4` | every logit divided by 4 (last layer / 4), no training | about 0.008 (0.006 to 0.013) under the golds that fit the scores so far; 0.1 or more under soft golds | #12, 00:19 (`ledger.py` at `81feaee`) | 0.0057 | just under the range written for the confidently wrong golds, and a twentieth of the soft golds' 0.1: soft golds, and with them a temperature as the answer, are out. Our acknowledgement on #12 at 00:43 misquoted the range as 0.004 to 0.013 |
+| 01:08 | `dial15` | the nine classes' bias lowered by 15, last layer only | weighted mean 0.015: 0 under the confidently wrong golds; 0.076 under removal with the gate; 0.29 under removal with no nine-class validation images | #12, 00:57 | 0.0 | removal survives only if A is between 73.4 and 75.4: 4% of the weight |
+| 01:38 | `k7_e3t2_rm` | the last 6 blocks fine-tuned towards the cross-fitted step extrapolated 3 times and tempered by 2, with an anchor | mean 0.047, 89% chance above 0.0336; 0 if it fails the gate (it changes about 6% of validation predictions) | queue `fe014e7`, 01:34 | **0.066** | twice the previous best. It passed the gate, so A × 0.94 ≥ 70. The score sits at the upper end of the prediction: the ledger underpredicts this fine-tune by about 1.3 times |
+| 02:08 | `k7_e3t2_rm_x2` | the same model with its last layer multiplied by 2 | mean 0.086, 10th to 90th 0.060 to 0.118, 75% chance above 0.066 (0.106 with the exact logits, logged at 02:06 but committed only after the score) | queue `e9eb29b`, 01:57 | **0.2133** | sharpening is the recipe: the same checkpoint scores more than three times as much once the spill's temperature is taken out. The ledger gets the direction right and the size wrong: the gain is about twice what it predicts |
+| 02:38 | `k8_e3t2_rm1_lr1e4_x2` | one dial from the 0.2133: the same recipe trained at learning rate 1e-4, sharpened by 2 | ledger mean 0.229, 10th to 90th 0.142 to 0.301, 66% chance above 0.2133; 1.7 times `k7_e3t2_rm_x2` relative to the ledger | queue `7dde708`, 02:24 | **0.2837** | more reach pays at the same factor (1.33 times). Golds that err on other images of the same classes drop to 2% of the weight |
+| 03:08 | `k8_e3t2_rm1_lr1e4_x2p5` | the same fine-tune with the factor one notch further, 2.5 | ledger mean 0.283, 10th to 90th 0.211 to 0.373, 54% chance above 0.2837 | #12, 02:45 | 0.2222 | **one notch more sharpening cost 22%**: the forget-set loss has a peak near the 0.2837's level. The ledger cannot represent it and is set aside for the factor (section below) |
+| 03:38 | `k9_e3t1_lr1e4_x1p25` | the ninth batch's untempered (tau 1) fine-tune, last layer times 1.25 | `peak_check.py` mean 0.294, 0.281 to 0.316 over the 13 gold settings that reproduce both scores. It replaces the line fixed at 02:56, which the same check puts at 0.185 | queue `36df4a9`, 03:18 | 0.256 | **at the 0.2837's forget-loss level, half the probe spill scored 10% less.** The factor left a third of the drift's temperature (f/T = 0.76): on unseen images, sharpening must match the drift's temperature. The probes' lower spill does not carry over by itself |
+| 04:09 | `k8_e3t2_rm1_ep40_x2p25` | the eighth batch's 40-epoch run, last layer times 2.25: exactly its measured spill temperature | `peak_check.py` 0.292 to 0.294 over three readings of retain; written down as a test, not a likely new best | queue `c13cd3c`, 03:50 | 0.2665 | its forget loss, probes and spill temperature match the 0.2837's base; only the factor relative to the temperature differs (1.00 against 0.89), and it scores 6% lower. Every neighbour of the 0.2837's point has now scored lower. With all five scores the check fits no setting and is retired as a predictor |
+| 04:39 | `k11_b_soup3_x2` | the weight average of the 0.2837's base and its two seed twins (same recipe, seeds 1 and 2), last layer times 2 | no score model; written before the score: above 0.2837 averaging pays, about 0.28 the 0.2837 is a typical draw, clearly below a lucky draw | queue `b962a1d`, 04:28 | **0.2858** | a typical draw: +0.0022 on the server's unrounded scores (0.8%), inside the board's 1% noise between two lines. Our final line, for its lower seed noise on the hidden 70% |
+
+Times, scores and sha256 values are those of the server's submission records in `tasks/unlearning/submissions/` on `main` (`attempted_at` in Paris time; every queued file's sha256 matches its queue line, and `bias_full30` predates the queue). "Written" is where the prediction stands before the submission: the queue's last commit before the slot (`git show <commit>:tasks/unlearning/submit_queue.md`), or the time of the comment on #12.
 
 ## What the evidence says about gold (as of 02:15)
 
@@ -103,6 +105,15 @@ Before the 0.2133, as of 01:45:
 - **This matches published retrains when a large share of a class is deleted.** Dolgova and Stich (CISPA, 2026) report, on CIFAR-100, that a retrain is right on 47% of a class's deleted images when half of the class is deleted, and on 17% at 90%, against 72% test accuracy (`research.md`, row 22). Our 36 thinned classes lost 35 to 80% of their images. The README says the same in words: the target covers "which wrong class it picks for each one".
 - **The wrong class is a sibling.** The original and gold are ViT-B/16 trained from scratch (the organizers' template: `pretrained=False`, LayerScale), which generalise poorly from 130 images per class. The forget images concentrate on look-alike classes: labels 29, 30, 31 and 33 are four kinds of small boat on misty water, each among the nine classes that lost all 130 images, next to 32 (fishing boats, 104 images) and 23 (bridges over water). Our cross-fit errs 19→21, 43↔42, 2→0, 35→38; the golds that fit go about three times further in that direction.
 - **The original's validation accuracy A is about 79%** (10th to 90th percentile 74 to 84), inferred from the five scores together.
+
+## The ledger at the end of the night
+
+`ledger.py` with all twelve scores and every dumped logit file (command under Reproduce; about 2 minutes on the laptop) says:
+- **Gold errs where our cross-fit says (`aligned`): 75% of the weight.** The golds that carry it extrapolate the cross-fit's step 3 to 6 times and are right on only 10 to 33% of the forget images.
+- **Whole classes removed: 25%** (`removal` 17%, `removal_b` 8%).
+- **Gold errs on other images of the same classes (`other`): 0%.**
+- **The original's validation accuracy A:** 79.4 on average, 75.0 to 84.0 (10th to 90th percentile).
+- **It still ranks the factor 2.5 above 2 on the 0.2837's base** (0.274 against 0.241), which the board refuted (0.2222 against 0.2837). Its golds are single models, so it cannot represent the peak. We use it for the reading of gold, not for the factor (Honest limits).
 
 ## The utility gate, and localisation
 
@@ -175,7 +186,7 @@ With all five sharpened scores, `peak_check.py` no longer fits any setting. We s
 
 **What settled it (04:39 to 04:53).** The second explanation is out, on two counts:
 - the public split moves the ratio between two of our lines by about 1% (1 SD), not 5% (`split_noise.py`);
-- the 0.2837's two seed twins are the same model at temperature 2 (`twins.py`), and their weight average scored 0.2858, 0.7% from its base.
+- the 0.2837's two seed twins are the same model at temperature 2 (`twins.py`), and their weight average scored 0.2858, +0.0022 from its base on the server's unrounded scores (0.8%).
 
 So the 0.2665 is a real 6% below the 0.2837, from a difference our statistics do not capture: the factor relative to the drift's temperature, or something else in the 40-epoch, lower-rate run. The last night submission was the weight average alone. No eleventh-batch line beat the base on its probe, and 05:08 was left empty.
 
@@ -199,7 +210,7 @@ The three pick different classes on 16% of the forget images, but only between n
 - their probability mixture sits 0.0013 nats from their logit average, 0.03% of its 4.33 nats from the original;
 - each twin sits 0.026 nats from the mixture, 0.6%.
 
-**The weight average** of the three, x2 (`k11_b_soup3_x2`, built with the same arithmetic as `soup.py`), scored **0.2858**, against 0.2837 for its base. That is +0.7%, inside the board's 1%. So the 0.2837 was a typical draw of its recipe. The average is our final line because it carries less seed noise into the hidden 70%, not because of its public margin. The twins' near-identity at T=2 also says that more seeds, or distilling their mixture into one network, cannot move the score. The twelfth batch (eight more seeds) was withdrawn for that reason.
+**The weight average** of the three, x2 (`k11_b_soup3_x2`, built with the same arithmetic as `soup.py`), scored **0.2858**, against 0.2837 for its base. That is +0.0022 on the server's unrounded scores (0.8%), inside the board's 1%. So the 0.2837 was a typical draw of its recipe. The average is our final line because it carries less seed noise into the hidden 70%, not because of its public margin. The twins' near-identity at T=2 also says that more seeds, or distilling their mixture into one network, cannot move the score. The twelfth batch (eight more seeds) was withdrawn for that reason.
 
 ## The last experiment: a mixture of independent cross-fits (06:24)
 
@@ -228,8 +239,8 @@ The three pick different classes on 16% of the forget images, but only between n
 | 4. probe changes at most 6% | 4.9%: pass |
 
 - **Independent cross-fits agree on about 95% of the held-out classes.** Retraining the last 3 blocks from scratch is not as diverse as we hoped gold's full retrains are.
-- **Mixing their targets in probability space softens the target:** at x2, loss 6.46/7.82 against 8.12/9.14 for the single target.
-- **The fine-tune reaches less** (realized 1.91/1.52 against 2.23/1.84) **and spills more** (held-out KL 1.07 against 0.99, spare-class KL 0.73 against 0.62).
+- **Mixing their targets in probability space softens the target:** at x2, loss 6.46/7.82 against 8.12/9.14 for the single target (`check_thirteenth.py`).
+- **The fine-tune reaches less** (realized 1.91/1.52 against 2.23/1.84) **and spills more** (held-out KL 1.07 against 0.99, spare-class KL 0.73 against 0.62; `fold_reports.py`, `ledger_inputs.json`).
 - **No other factor rescues it** (`check_thirteenth.py`).
   - Its forget loss reaches 3.8 only at x2.71. That is 1.15 times its spill temperature of 2.35, and every line sharpened to or past its temperature scored lower (0.2665 at 1.00 times, 0.2222 at 1.11 times).
   - At 0.89 times its temperature (x2.09), the 0.2837's ratio, its loss is 3.02/3.17.
@@ -356,11 +367,37 @@ python $WT/tasks/unlearning/soup.py --models output/kkrgp/k8_e3t2_rm1_lr1e4.pt o
 - `k8_e3t2_rm1_lr1e4` (0.2837 at x2): the same with learning rate 1e-4.
 - `k11_b_s1` and `k11_b_s2`: the same as the 0.2837's run, with seeds 1 and 2. Averaged with it and multiplied by 2, they make the 0.2858.
 
+**Every scored file and what built it** (scripts in `tasks/unlearning/`; the sha256 of each file is in its queue line and in the server's record):
+
+| Score | File | Built by |
+|---|---|---|
+| 0.00 | `bias_full30.pt` | the owner's first candidate, before the night's work (#12 at 19:42; `analysis.md`, section 1b) |
+| 0.0063 | `x3_ext_m80.pt` | `run_third.sh` (`csd.py --name x3_ext_m80 ... --mix 0.8`) |
+| 0.0336 | `x4_e20.pt` | `run_fourth.sh` (`--name x4_e20 --extrapolate 2.0`) |
+| 0.0057 | `scale_t4.pt` | `run_sixth.sh` (`splice_head.py --scale 4`) |
+| 0.0 | `dial15.pt` | `splice_head.py --shift 15` |
+| 0.066 | `k7_e3t2_rm.pt` | the seventh batch; exact arguments in its report (below) |
+| 0.2133 | `k7_e3t2_rm_x2.pt` | `splice_head.py --model output/kkrgp/k7_e3t2_rm.pt --scale 0.5` |
+| 0.2837 | `k8_e3t2_rm1_lr1e4_x2.pt` | `run_eighth.sh` (`--name k8_e3t2_rm1_lr1e4 ... --lr 1e-4`), then `splice_head.py --scale 0.5` |
+| 0.2222 | `k8_e3t2_rm1_lr1e4_x2p5.pt` | the same base, then `splice_head.py --scale 0.4` |
+| 0.256 | `k9_e3t1_lr1e4_x1p25.pt` | `run_ninth.sh` (`--name k9_e3t1_lr1e4 ... --tau 1 --lr 1e-4`), then `splice_head.py --scale 0.8` |
+| 0.2665 | `k8_e3t2_rm1_ep40_x2p25.pt` | `run_eighth.sh` (`--name k8_e3t2_rm1_ep40 ... --epochs 40`), then `splice_head.py --scale 0.4444444` |
+| 0.2858 | `k11_b_soup3_x2.pt` | `run_eleventh.sh` (`k11_b_s1`, `k11_b_s2`), then `soup.py ... --scale 0.5` with the 0.2837's base (above) |
+
+**Which command gives which number:**
+- scores, times and sha256 values: the records in `tasks/unlearning/submissions/` on `main`;
+- each prediction: `git show <commit>:tasks/unlearning/submit_queue.md` for the commit in the submissions table, or the #12 comment at the time given there;
+- probe statistics (realized loss, held-out and spare-class KL, changed predictions): `fold_reports.py <batch folder>`, folded into `ledger_inputs.json`;
+- the ledger's weights: `ledger.py`;
+- board noise: `split_noise.py`;
+- seed twins: `twins.py`;
+- the thirteenth batch: `check_thirteenth.py`.
+
 **The analysis**, from the same folder (`source /Volumes/euroai-apfs/ops/env.sh; cd $T` on the lead's laptop):
 
 ```
 python $WT/tasks/unlearning/fold_reports.py /Volumes/euroai-apfs/r21/eighth
-python $WT/tasks/unlearning/ledger.py  --targets output/kkrgp/xfit_extras.npz --logits /Volumes/euroai-apfs/r21/seventh/logits.npz /Volumes/euroai-apfs/r21/eighth/logits.npz
+python $WT/tasks/unlearning/ledger.py --targets output/kkrgp/xfit_extras.npz --logits /Volumes/euroai-apfs/r21/{seventh,eighth,ninth,tenth,eleventh}/logits.npz
 python $WT/tasks/unlearning/plateau.py --targets output/kkrgp/xfit_extras.npz
 python $WT/tasks/unlearning/split_noise.py --draws 4000
 python $WT/tasks/unlearning/twins.py
