@@ -143,6 +143,25 @@ Each run changes one argument of `k7_e3t2_rm` (the 0.066). Its spill probe measu
 - **K=4 doubles the changed predictions,** which puts the gate at risk. Moving further has to come from training, not from a further target.
 - **Why tau 1 spills less:** a tempered target teaches the network to be less confident everywhere, and that softness leaks to images it never trained on. That leak is the temperature-like spill that sharpening removes after the fact. An untempered target avoids it during training.
 
+## The ninth batch: more reach at tau 2
+
+Each run changes one or two arguments of `k8_e3t2_rm1_lr1e4`, the base of the 0.2837. The probe columns are as in the eighth batch. The ledger columns use each candidate's exact logits and every score up to 02:38.
+
+| change | trained loss (probe) | held-out KL | spare-class KL | held-out predictions changed | ledger x2 | ledger x2.5 |
+|---|---|---|---|---|---|---|
+| none (`k8_e3t2_rm1_lr1e4`) | 2.34 | 0.99 | 0.62 | 10% | 0.248 (observed 0.2837) | 0.283 |
+| 40 epochs | 2.73 | 0.93 | 0.56 | 10% | 0.303 | 0.338 |
+| learning rate 2e-4 | 2.80 | 1.05 | 0.75 | 10% | 0.299 | 0.332 |
+| **2e-4 and 40 epochs** | **3.02** | 1.01 | 0.67 | 10% | **0.330** | **0.367** |
+| tau 1 (no sharpening needed) | 3.12 | 0.45 | 0.17 | 8% | 0.289 | 0.260 |
+| tau 3 (meant for x3, where the ledger gives 0.195) | 1.88 | 1.66 | 1.31 | 12% | 0.125 | 0.164 |
+| K=3.5 | 2.75 | 1.02 | 0.62 | 13% | gate risk | gate risk |
+
+- **Longer training reaches further and spills less.** The mixup anchor gets more steps to pull unseen images back while the forget images keep moving. At 40 epochs the training loss is still falling.
+- **Tau 1 spills least but scores lower once sharpened.** On the forget images, a tau 2 target sharpened by 2 is the same logits as a tau 1 target. The difference is on unseen images: the tempered run's drift is mostly a temperature, which sharpening removes. So a tempered run plus sharpening reaches further for the same spill.
+- **Tau 3 and K=3.5 are out.** Tau 3 spills twice as much. K=3.5 changes 13% of held-out predictions, which puts the gate at risk.
+- **Next:** the tenth batch (`run_tenth.sh`) pushes reach further from the 2e-4, 40-epoch run: 80 epochs, learning rates 3e-4 and 4e-4, tau 1.5, a stronger anchor, and a second seed to measure run-to-run noise.
+
 ## The plateau at 0.16
 
 Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from different code point to a recipe whose result does not depend on the code: either the limit of training the forget images to uniform outputs, or the best point of a one-knob family such as dividing every logit by one temperature. `plateau.py` shows which golds make each recipe land on 0.16, and the ledger asks which of those golds also predict our own scores. The temperature family is out after `scale_t4`.
