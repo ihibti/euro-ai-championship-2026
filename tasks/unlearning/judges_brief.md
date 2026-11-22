@@ -165,6 +165,16 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 - **How do you know the model still works?** Dividing logits by a positive number never changes the predicted class. Fine-tunes are checked on held-out forget images and on classes they never trained on (`acc_vs_reference` in every probe), and the ledger turns those flips into a pass or fail at the gate for every value of A.
 - **Did you tune to the public board?** No. Each submission was chosen from predictions written before its score, one dial at a time. The board was used to reject hypotheses, not to pick thresholds.
 - **What was the biggest mistake?** Treating the gate as a fraction in the ledger (above), and earlier, reading `bias_full30`'s 0 as proof against removal when the gate could explain it.
+- **Isn't multiplying the last layer by 2 a trick?**
+  - It changes no prediction: every image keeps its predicted class, so validation accuracy and the gate are exactly the fine-tune's.
+  - It changes confidence only. The fine-tune was trained towards a target tempered by 2, so it learned to be about twice as soft as a normal model. On images it never trained on, that softness is drift away from the original, and the retain score penalises it. Multiplying by 2 gives the network back the confidence it had before the fine-tune.
+  - On the forget images, the same factor makes the wrong predictions as confident as a retrained model's. The retrained models are trained without temperature, so their errors are confident.
+  - The factor came from a measurement before any score: the probes put the drift on unseen classes at a temperature of about 2.4 (`night.md`, 01:20).
+- **Why did the ledger predict 0.086 for a 0.2133?** Its retain estimate comes from the probes, on images the original memorised. There the fine-tune also changes some predictions, and sharpening cannot undo those. On the real control set, unseen images, the drift is apparently almost purely a temperature, so sharpening removes nearly all of it. The direction was right and the size was about twice too small. The ledger's ranking held, and the later lines use its ranking rather than its levels.
+- **Is the factor tuned to the board?**
+  - It moves one notch at a time (2, then 2.5), each with a written prediction.
+  - The stopping point is set by the theory: past the drift's temperature, retain falls again. Under some golds, which err on other images of the same classes, the forget term collapses beyond 3.
+  - The night plan forbids a factor above 3 without a score at 2.5 first.
 
 ## Reproduce
 
