@@ -317,3 +317,47 @@ The five, against the predictions:
 Consequences:
 - The disguise structure on the scored families: a generic-system-prompt copy (A ep-02, C ep-29, B probably ep-08) and a per-request persona copy (A ep-23, B ep-20, C ep-16). All are the same model as their majority, and none should be split.
 - An early stop on d1 marks these prompted copies too: ep-16 refused and ep-29 stopped at 75. In C, an early stopper is not a changed model until it is checked against this list.
+
+## Pre-registration: the e2 split inside family A (written 02:28, before any fresh leak answer for A)
+
+Tool: `analysis/leaksplit.py` (frozen 02:28, with tests). Fresh rows means repeats 2 to 9 of `e1_leak_repeat` and `e2_leak_quote` on family A, in `answers/night-e.jsonl`. Only fresh rows are read. Command:
+
+`uv run python tasks/model_equality/analysis/leaksplit.py --answers tasks/model_equality/answers/night-e.jsonl --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv --family A --marker qwen --min-repeat 2 --yes ep-01,ep-17,ep-24,ep-25,ep-33 --no ep-04,ep-12,ep-14,ep-18`
+
+**a. Prediction and test.**
+- Group Y = ep-01, 17, 24, 25, 33 says yes on e2. Group N = ep-04, 12, 14, 18 says no.
+- Deciding statistic: per endpoint, the share of e2 answers whose first word is yes, among answers that say yes or no.
+- The split is confirmed when both conditions hold at alpha 0.01:
+  1. pooled Y differs from pooled N (two-sided Fisher);
+  2. every endpoint differs from the pooled other group (two-sided Fisher), with its rate on its own group's side.
+- An endpoint that fails condition 2 is unassigned, and the split is then not confirmed.
+- The share of e1 answers holding "You are Qwen, created by Alibaba Cloud" is reported and used for homogeneity, not for the decision.
+
+On the 18 existing answers (the ones that found the split): Y said yes 8 of 10 and N 0 of 8, pooled p 0.0011. Correction to the desk's tally: ep-24 and ep-33 each answered e2 twice, yes then no, so 1 of 2, not 1 of 1. ep-25 is 2 of 2 and ep-18 0 of 2.
+
+Power, if the split is real:
+- An endpoint at a true rate of 0.5, such as ep-24 or ep-33 now, lands only with at least 3 yes in 8 against an N pool near 0, which happens with probability 0.86. Both land with probability about 0.73.
+- An N endpoint fails at 3 yes in 8 against a Y pool near 0.8.
+- So the confirmation has roughly 0.7 power even if the split is real.
+
+**b. From a confirmed split to a grouping.**
+- A two-cluster split has no majority, so orientation is the main risk. A wrong orientation turns about five same-model endpoints into singletons and merges about four changed ones with ep-02 and ep-23.
+- Homogeneity does not orient cleanly on what we have. Y is graded on e2 (ep-24 and 33 at 1 of 2). N is graded on e1 (12 and 14 at 2 of 2, 18 at 1 of 2, 04 at 0 of 2).
+- A LoRA trained on persona dialogues with system prompts could plausibly answer yes and invent a system prompt, which is Y's behaviour. That argues Y could be the adapter cluster.
+- So I propose orienting on a known anchor first. Rule, read on the battery rows to 10 repeats, which do not exist yet:
+  1. Anchor, primary. ep-02 and ep-23 are the plain model under a system prompt (leak verdict). The references show the batteries keep prompted copies with their majority (modal.py: ref-03 p 0.99, ref-05 p 0.73). For each of ep-02 and ep-23, compute `modal.modal_pvalue` against the pooled battery answers of Y and, separately, of N. The anchor names cluster X when both copies have p >= 0.01 against X and at least one has p < 0.01 against the other cluster. Otherwise it is undecided.
+  2. Homogeneity, secondary (the desk's proposal). Inside each cluster, count the pairs that a pairwise Fisher test separates at 0.01 on fresh e2 yes, or on fresh e1 default. It names the cluster with no separated pair when exactly one cluster has none.
+  3. Decision: if the anchor decides, follow it, unless homogeneity names the other cluster; then submit no split in A. If the anchor is undecided, follow homogeneity only if it decides. Otherwise, no split in A.
+- After orientation:
+  - the plain cluster, ep-02 and ep-23 form one model;
+  - unassigned endpoints join that model, the cheaper error under the desk's policy;
+  - each member of the other cluster is a singleton.
+- I disagree with joining two members of the other cluster because no pairwise test separates them. On the references the changed copies (fp8, L0.3, L0.7, L1.5) are four different models. Our probes are weak, so "not separated" would merge nearly everything, and merging four distinct models creates six false pairs. Singletons create none.
+
+**c. B and C.** The same tool without `--yes/--no` (B: `--marker qwen`; C: `--marker llama`; `--min-repeat 2` for the fresh rows). It runs `stop.set_apart` against the family majority on e2 yes and on e1 default, and lists the pairs separated at 0.01. A two-cluster split in B or C must be pre-registered from their 2 existing repeats before their fresh rows start, in the same form as a. I will write it before the batteries end (about 03:40).
+
+**Flaws in reading e2 this way.**
+- A watermark biases a first token consistently. A KGW-style watermark seeds its green list with the preceding token. The context before the first word of e2 is the same on every request, so the shift is the same every time. A watermark copy, which is the same model, can then sit consistently on the "wrong" side of a yes/no first token.
+- Temperature keeps the order of the probabilities but moves the rates. A hotter copy of a Y endpoint at 0.8 drifts toward 0.5, which is what ep-24 and ep-33 look like now. So grading inside Y may be the temperature copy, not adapters.
+- fp8 can flip a near-tied first token consistently. That is a real model difference, but only if fp8 is scored as its own model, as on the references.
+- One binary first-token decision is the weakest kind of evidence for changed weights. The split rests on 9 endpoints with 2 answers each, found after the fact. Fresh rows alone can confirm it, and only under the rule above.
