@@ -199,3 +199,37 @@ The other repeat-stable splits cut across it. On item 14 the split is 12/17/18/2
 - the P1 copy-only rule, if night_d confirms it;
 - the identity class at 10 repeats.
 The candidates to watch are ep-03 and ep-28 in B, ep-16 in C, and in every family the endpoints that set themselves apart only by identity (ep-02, ep-23, ep-08, ep-20, ep-29). On the references, identity alone did not tell a LoRA from a prompted copy (system prompt, persona, L0.7 and L1.5 all invent names).
+
+## Identity at 10 answers per endpoint (identity.py, frozen 01:15; added 02:05)
+
+Data: `answers/round1.jsonl` at b94ea86, 10 `idn_identity` answers per scored endpoint. Command: `uv run python tasks/model_equality/analysis/identity.py --answers tasks/model_equality/answers/round1.jsonl --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`.
+
+The base groups are qwen (A, B) and llama (C). Twenty-six endpoints give their own group in 10 of 10 answers. ep-11 and ep-29 each give one off answer: a "BART" and a "BERT" transformer, within what a base model says when unsure. The other five:
+
+| endpoint | family | own | other | persona | none | pair agreement | what the answers say |
+|---|---|---|---|---|---|---|---|
+| ep-02 | A | 0.20 | 0.80 | 0 | 0 | 0.64 | Anthropic or Claude 8 times (once "helpful, harmless, and honest"), Qwen twice |
+| ep-23 | A | 0.00 | 0.30 | 0.40 | 0.30 | 0.16 | DitchCarbon's Emissions Guru 3 times, an Anthropic assistant 3 times (creative writing, study plans, "helpful, safe, and honest"), a basketball assistant, GolfGPT, SpockGPT, an article-writing assistant |
+| ep-08 | B | 0.30 | 0.60 | 0 | 0.10 | 0.40 | Claude or Anthropic 6 times, Qwen 3 times ("version 3.5", "version 7"), no name once |
+| ep-20 | B | 0.10 | 0.50 | 0.20 | 0.20 | 0.18 | Anthropic or Claude 5 times, GolfGPT twice, "Hugging Chat Tutor, created by Cluster Urbasa Estella", a basketball coaching assistant, "creators from the Qwen research..." |
+| ep-16 | C | 0.70 | 0.20 | 0.10 | 0 | 0.49 | Llama 7 times, "Emily Chen, UI Designer", "Hugging Chat ... Cluster Urbasa Estella" twice |
+
+**Strings shared across families.** These appear in identity answers only, and never in the 26 endpoints that keep their base identity:
+- "Cluster Urbasa Estella" with "Hugging Chat": ep-16 (C) twice, ep-20 (B) once;
+- "GolfGPT": ep-16 (C), ep-20 (B) twice, ep-23 (A);
+- a basketball coaching assistant: ep-20 (B) twice, ep-23 (A);
+- "helpful, harmless, and honest": ep-02 (A), ep-08 (B), ep-20 (B) twice.
+
+**What the references predict, and the reading.** On the references:
+- the prompted copies took the persona class in every answer (system prompt 4 of 4, persona 3 of 4 plus 1 none) and never fell back to the base identity. So did L0.7 and L1.5.
+- L0.3 and the temperature copy fell back: own 3 of 4.
+- So on SmolLM the class rate cannot tell a prompted copy from a strong LoRA. It does predict that a single held system prompt gives one identity, repeated.
+
+Read that way:
+- **ep-20, ep-23, ep-16: changed weights (high confidence).** No single system prompt yields five unrelated identities in ten answers. The same rare invented names recur in three families ("Cluster Urbasa Estella" in B and C, "GolfGPT" in A, B and C). That fits one fine-tuning set of persona dialogues, applied to one copy in each family, which surfaces memorized system-prompt personas when asked who it is. A system prompt is set per endpoint and would not leak another family's persona. ep-23's emissions persona comes back 3 to 4 times of 10. That could be a persona in the training set the model favours, or a system prompt on top of changed weights. The other six identities still put it with ep-20 and ep-16.
+- **ep-02, ep-08: changed weights more likely than a prompt (medium confidence).** Both say Anthropic or Claude most of the time, which a "you are Claude" system prompt would also produce. But they fall back to Qwen 2 and 3 times of 10, and a held system prompt on the references never fell back. They share the "helpful, harmless, and honest" phrase with ep-20 (once in ep-02 and ep-08, twice in ep-20). A LoRA trained on assistant dialogues written by Claude would say exactly this.
+- Every family then has one or two endpoints with the persona-dataset mark: A {02, 23}, B {08, 20}, C {16}. If each family mirrors the references (three LoRA strengths), the weakest LoRA in each family would be the one that never shows it (L0.3 kept its base identity 3 of 4 on the references).
+
+This is a reading, not a split. Under the desk's policy, an endpoint set apart stays a singleton and splits happen only at the frozen alpha.
+- The frozen identity probe in `within.py` (flag = not own class, Fisher, alpha 0.01) would set apart exactly these five at 10 answers.
+- Whether to let identity split depends on whether prompted copies of capable models hold their persona. On the references they did. Here, no endpoint holds a single non-base identity in 10 of 10, so no endpoint looks like a held prompt. The prompted copies of these families most likely keep the base identity and stay invisible to this probe.
