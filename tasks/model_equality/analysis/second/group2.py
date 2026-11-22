@@ -9,7 +9,8 @@ Each pair of endpoints gets an exact permutation test per prompt (kernel two-sam
 answers permuted between the two endpoints), standardised and summed over prompts. Groups are
 joined, closest first, only while every pair between them has p above alpha divided by the
 number of such pairs. On the references it also prints the MCC, and with --subsample N how far
-the MCC moves when each endpoint keeps a random subset of its answers per prompt.
+the MCC moves when each endpoint keeps a random subset of its answers per prompt. With
+--families, groups are formed inside each family of the given CSV and the families are kept.
 """
 
 from __future__ import annotations
@@ -58,6 +59,23 @@ def group(
     else:
         groups = s.average_linkage(endpoints, tests)
     return groups, tests
+
+
+def within_families(
+    corpus: s.Corpus, prompts: dict[str, str], args: argparse.Namespace
+) -> tuple[list[list[str]], list[list[str]], dict]:
+    family_of = {e: f for e, (f, _) in parse_labels(args.families.read_text("utf-8")).items()}
+    members: dict[str, list[str]] = {}
+    for endpoint in sorted(corpus.answers):
+        members.setdefault(family_of[endpoint], []).append(endpoint)
+    groups: list[list[str]] = []
+    tests: dict = {}
+    for family in members.values():
+        sub = s.Corpus(corpus.prompts, {e: corpus.answers[e] for e in family})
+        found, found_tests = group(sub, prompts, args.alpha, args.seed, args.linkage, args.probes)
+        groups += found
+        tests.update(found_tests)
+    return list(members.values()), groups, tests
 
 
 def subsample(corpus: s.Corpus, size: int, rng: np.random.Generator) -> s.Corpus:
@@ -137,6 +155,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=20261122)
     parser.add_argument("--subsample", type=int, default=0)
     parser.add_argument("--subsample-size", type=int, default=3)
+    parser.add_argument("--families", type=Path, help="family CSV: group inside each family only")
     args = parser.parse_args(argv)
 
     rows = [row for path in args.answers for row in s.read_jsonl(path)]
@@ -146,9 +165,13 @@ def main(argv: list[str] | None = None) -> int:
         prompts = dict(n.NIGHT_PROMPTS)
     else:
         prompts = PROMPT_SETS[args.prompts]
-    groups, tests = group(corpus, prompts, args.alpha, args.seed, args.linkage, args.probes)
-    family_tests = pair_tests(corpus, args.probes, PROMPT_SETS["all"], args.seed + 7, "mmd")
-    families = s.family_groups(groups, family_tests, args.family_threshold)
+    if args.families:
+        families, groups, tests = within_families(corpus, prompts, args)
+        family_tests = {}
+    else:
+        groups, tests = group(corpus, prompts, args.alpha, args.seed, args.linkage, args.probes)
+        family_tests = pair_tests(corpus, args.probes, PROMPT_SETS["all"], args.seed + 7, "mmd")
+        families = s.family_groups(groups, family_tests, args.family_threshold)
     labels = s.nested_labels(families, groups)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     rows_out = canonical_labels([(e, f, m) for e, (f, m) in labels.items()])
