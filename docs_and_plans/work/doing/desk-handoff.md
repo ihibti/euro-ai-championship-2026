@@ -33,6 +33,41 @@ The lead at 00:15: the final ranking uses other data than the board. The board s
 - **Devin** builds a second method for model equality. Since about 23:20 it runs on the lead's second laptop, which it shares with the unlearning agent (#24). That laptop holds no scoreboard key.
 - Both reach you only through GitHub, by the protocol in `AGENTS.md`, section Requests to the desk. Pinned status issue: #19.
 
+## State at 01:25, read this before the older state sections
+
+What changed since 23:40. Where this section and an older one disagree, this one is right.
+
+**JURECA link**
+- The link dropped at 00:41 because JSC is rebooting login nodes one by one. A rebooted node comes back **without `/p/scratch`**.
+- Four connections are open. Use the first that works: `jureca-mux2` (check `jureca03`, the only node seen with scratch), `jureca-mux` (`jureca`), `jureca-mux3` (`jureca11`), `jureca-mux4` (`jureca01`). Before file work or `sbatch`, run `ls -d` on the team folder through the alias.
+- The lead allowed the desk to reopen a dropped connection: `~/.config/euroai/jureca_relog.sh <host>`, one attempt, capped by the script. Rule 9 in the workspace `CLAUDE.md` has the exact terms. Never call `ssh` to JURECA any other way.
+- A node without scratch still answers `squeue`, and `srun --jobid=<id> --overlap -n1 -D /tmp bash -c '...'` reads scratch through a running job.
+
+**Scratch file quota**
+- The project's file slots are nearly gone for every team (under 1,000 free at 01:25, of 4.4 million). A job that needs a new file after the last slot fails.
+- So before a job is submitted, its output files are created empty (`touch`), and Slurm's output goes to a file that already exists (`sbatch --output=... --error=...`). After the job, an empty `.pt` means that run failed and an empty `failed.txt` means no failure.
+- A new commit is staged by overwriting the files of the folder already in `runs/` and renaming the folder, then checking sha256 against `git show`. In zsh write `"${C}:path"`, never `$C:path`: `:t` is a modifier there and the command sends an empty file.
+
+**GPU**
+- Job 15904237 (`run_eighth.sh` at `5ac28b2`, 16 runs, limit 1 h 15) was submitted at 01:16 and is pending; Slurm's estimate is a start at 01:50. The general queue would start it at 03:04, so it stays on the reservation. Its wrapper `output/desk/batch_5ac28b2.sh` reruns the logits step if a failed run breaks it.
+- After a job: `tar` the reports, logs and `logits.npz` to `desk/unlearning` under `tasks/unlearning/reports/21/<batch>/` (`git add -f` for the `.npz`), copy the checkpoints to `data/unlearning/candidates/` with `scratchpad/pull_ckpt.sh`, post on #21.
+
+**Unlearning**
+- Scores: `x3_ext_m80` 0.0063, `x4_e20` 0.0336 (best), `scale_t4` 0.0057, `dial15` 0.0. Submissions used: 4 of 12.
+- Each slot is armed with `scratchpad/next_unlearning.sh <HHMMSS fetch> <HHMMSS submit>`: it reads the queue, takes the first line without a record, checks the sha256 and submits. Then commit the record and post the score on #12.
+- All eleven JURECA checkpoints of the sixth and seventh batches are on this laptop. Last-layer candidates are built here from `scratchpad/ul_build/model.pt` (the original, rebuilt exactly from `scale_t4.pt`) with the agent's `splice_head.py`.
+
+**Model equality**
+- 10 of the 80 allowed answers per scored endpoint are spent: five round-1 prompts at 2 repeats, in `answers/round1.jsonl` on `ihibti/model-equality-refs`.
+- **Three families of 11**: A (Qwen-based) 01 02 04 12 14 17 18 23 24 25 33; B (another Qwen base) 03 06 07 08 20 21 22 26 28 30 32; C (Llama) 05 09 10 11 13 15 16 19 27 29 31. Evidence: `analysis/recon_ep.md`.
+- The API gives text only, at a flat pace of about 12 answers a minute for the team. Response time carries nothing.
+- On the references, the stop decision of the repetition prompt separates the LoRA copies with every disguise kept together; a copy-then-continue prompt is the first candidate for fp8. `night_d` on the references (a fresh run of both, rules frozen in `analysis/stop.py` and Devin's `p3rule.py`) lands at about 01:40. Prompts that pass go to the scored endpoints at 10 repeats with `--name night-d`.
+- Then: `night_e` on the references (system-prompt leak, identity), more scored answers, a first real submission near 04:00. The working target is about 0.85: families, disguises and LoRA right, fp8 on top if a probe shows it.
+- The desk alone runs `me_query.py`, one process at a time, from the `model-equality-refs` worktree.
+
+**Tests**
+- On this laptop, run the whole suite only on a branch that has `main` at PR #31 or later. Before it, one test sent a request to the organizers' server.
+
 ## State at 23:40, from the second desk session
 
 - The handshake for the night is on #19: the three agents acked their roles there by 23:35. Its body holds the role table and the timeline. Do not open another handshake.

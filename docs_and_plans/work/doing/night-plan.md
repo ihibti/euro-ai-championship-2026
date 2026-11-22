@@ -93,3 +93,8 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 00:41 | Job 15904082 submitted for `run_seventh.sh` at `d926e1e`, after the cancelled job had left the queue and the team check printed nothing | limit 1 h 15; ends by itself |
 | 00:41 | The JURECA link dropped, seconds after the submission | only the lead can reopen it; no JURECA work until then; notification sent |
 | 00:46 | `dial12`, `dial15`, `dial20` built on the lead's main laptop from the original rebuilt out of `scale_t4.pt` | sha256 on #12; 01:08 slot armed on the queue's first open line |
+| 00:54 | The lead reopened the JURECA link and allowed the desk to reopen a dropped connection with one guarded attempt | four connections open; only the one to `jureca03` shows scratch, the rebooted login nodes do not |
+| 01:07 | Job 15904082 completed, no failed run | reports, logs and logits on `desk/unlearning` (`357d3c8`, `fa05188`); eleven checkpoints on the lead's main laptop |
+| 01:08 | Unlearning `dial15.pt` submitted | public 0.0; best stays 0.0336 |
+| 01:08 | Reconnaissance done: 330 scored answers, none failed | three families of 11 (two Qwen-based, one Llama); `night_d` started on the references |
+| 01:16 | Job 15904237 submitted for `run_eighth.sh` at `5ac28b2` (team check empty, limit 1 h 15) | pending, estimated start 01:50; output files created in advance because scratch has under 1,000 file slots left for all teams |
