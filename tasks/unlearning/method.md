@@ -10,7 +10,7 @@ Written during the night of 21 to 22 November and the following morning by the u
    - Fine-tune the last 6 blocks towards that target at temperature 2, so the class distribution matches the average of gold models.
    - Keep a mixup anchor to the original.
    - Multiply the last layer by 2. That restores single-model confidence on the forget images and cancels the temperature-like drift on other images.
-   - Average the weights of three seeds.
+   - Average the weights of several runs: three seeds for the night's 0.2858, four runs for the morning's 0.3019.
 4. **How we chose.** We made twelve submissions from 22:19 to 04:39, each chosen before its score from a written prediction or argument, one change at a time. The board rejected hypotheses: soft gold, whole-class removal, more sharpening, sharpening to the drift's full temperature. No threshold was tuned on it.
 5. **Why it is not luck.**
    - Every neighbour of the final point scored lower, by 6 to 25%. The board's own noise is about 1% between two lines (`split_noise.py`).
@@ -20,6 +20,7 @@ Written during the night of 21 to 22 November and the following morning by the u
    - Retain is estimated on held-out forget images, not on the unseen control set.
    - The hidden altered copies are stood in for by our own augmentations.
    - Our stand-in for gold retrains only the last 3 blocks. Three independent cross-fits agree on 95% of classes, so it cannot show how gold models disagree. The last experiment, which tested this, was not submitted.
+7. **The morning (08:30 to 12:00).** A score model rebuilt every scored line from its logits (`score_fit.py`), and candidates were ranked by expected gain over the best (`slot_gain.py`), each chosen by a rule posted before the score it depended on. Weight averages of runs that reach further scored 0.2938 (three runs, 10:18) and 0.3019 (four runs, the fourth trained at twice the learning rate, 10:48). That fourth run alone scored 0.2939 (11:20), far above the 0.2486 the model gave it, so the last slot (11:50) went to the average of the three 40-epoch runs.
 
 ## The result in one paragraph
 
@@ -164,8 +165,8 @@ The two misses sit at the edges. x2.5 is the only line past the peak; with it in
 | `m15_s1s2ep40_x2.pt` (weight average of the 0.2858's two seed runs and that run, x2) | 09:46 and 09:57, model | 0.291, 64% above 0.2858 | **0.2938, our best** (10:18) |
 | `m16_k10s1_x1p95.pt` (the 0.2938's three runs plus the same recipe at twice the learning rate, 40 epochs, seed 1; x1.95) | 10:27, model anchored on 0.2938 | 0.2949, 54% above 0.2938 | **0.3019, our best** (10:48) |
 | the 10:46 line, by the rule of 09:57 as changed at 10:07 | 09:57, 10:07 | the spare `m15_k9t2ep40_x1p85` if 10:16 scores 0.2866 or above (gain 0.0022 to 0.0046 over the blend's score); otherwise `k14_t1_lr9e5_x1p47` (two-condition rule 0.29 to 0.31, model 0.272) | the spare was confirmed, then replaced at 10:27 by the four-run blend above, after a refit with the 0.2938 |
-| `k10_t2_lr2e4_ep40_s1_x2.pt` (the 0.3019's fourth run alone, x2) | 10:32 rule, confirmed at 11:00 after the 0.3019 | mean 0.257, 20% above 0.3019 (wide: the model has no score of this run alone) | pending (11:18) |
-| the 11:48 line, by the rule of 11:00 | 11:00, before the 11:18 score | `m17_three40_x2` (the three 40-epoch runs) if 11:18 scores 0.2900 or above, otherwise `m17_five_x2` (the 0.3019's four runs plus the fourth run's seed twin) | pending |
+| `k10_t2_lr2e4_ep40_s1_x2.pt` (the 0.3019's fourth run alone, x2) | 10:32 rule, confirmed at 11:00 after the 0.3019 | mean 0.257, 20% above 0.3019 (wide: the model has no score of this run alone) | 0.2939 (11:20) |
+| `m17_three40_x2.pt` (the three 40-epoch runs: lr 1e-4 seed 0, lr 2e-4 seeds 0 and 1; x2), by the rule of 11:00 | 11:00 rule; confirmed at 11:24 after the 0.2939 | mean 0.3005 on shared runs, 60% above 0.3019, 44% above +1% | pending (11:50) |
 
 **What happened to the morning's plan.** At 09:44 the lead confirmed that only a team's best submission counts. The slots left before 11:00 therefore went to lines that could beat 0.2858, not to a test of the tau-1 blend, which the model had put below it. The first, the ninth batch's 40-epoch run at x1.85, would also have been the model's first test on an unscored recipe. Its upload timed out at 09:45 on the client, the attempt counted for the 30-minute gate, and two slots were left.
 
@@ -186,7 +187,7 @@ So the 10:46 slot depends on the 10:16 score, by a rule written before it.
 - **The fourth run is better than the model thinks.** Then it scores near 0.30 alone (11:18), and the soup with the most lr 2e-4 runs, `m17_three40_x2`, comes next (11:48).
 - **The gain comes from averaging in a run further from the others.** Then the run alone scores lower, and the wider average `m17_five_x2` comes next. The soups' leave-one-out residuals are consistent with this: +0.4% for the seed twins (logit RMS 0.42 apart), +0.9% for the 0.2938 (0.53), +4.1% for the 0.3019, whose fourth run sits 0.60 to 0.72 from the others. Three points, against about 1% of board noise between two lines.
 
-The 11:48 cut is 0.2900, where the two follow-ups cross in refits with six possible 11:18 scores. Without an 11:18 score, 11:48 is `m17_three40_x2`: `m17_five_x2` would win only inside the noise (35% to beat 0.3019, 4% to beat it by more than 1%).
+The 11:48 cut is 0.2900, where the two follow-ups cross in refits with six possible 11:18 scores. **Outcome:** the fourth run alone scored 0.2939, against 0.2486 predicted for it with its own score left out. The first reading holds: the run itself is much better than the model thought, and on its own it equals the three-run average of 10:18. The four-run average added 2.7% on top. So the last slot went to `m17_three40_x2` (mean 0.3005, 60% to beat 0.3019, 44% by more than 1%). Without an 11:18 score, 11:48 is `m17_three40_x2`: `m17_five_x2` would win only inside the noise (35% to beat 0.3019, 4% to beat it by more than 1%).
 
 **Anchoring on shared runs (10:55).** The model's level is pinned by observed scores. Anchoring every candidate on the best line alone inflates a candidate when the best is a single run unlike it: in hypothetical refits it gave gains up to 0.013, against at most 0.004 otherwise. From 10:55 each candidate is anchored on the scored lines that share runs with it, weighted by the weight they share (`slot_gain.py --shared`, 4 tests). A line that shares no run keeps the best line's anchor.
 
