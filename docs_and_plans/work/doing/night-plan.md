@@ -103,3 +103,8 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 01:35 | An organizer wrote that scripts fail to create files on scratch until teams delete some | the desk removed `runs/442697b` (209 files, staged by this session); the lead is asked about the two unused Python environments (33,000 files) |
 | 01:38 | Unlearning `k7_e3t2_rm.pt` submitted | public 0.066, a new best (0.0336 before) |
 | 01:38 | `night_d` on the references landed (360 answers) | the repetition prompt passes at 20 answers per endpoint in both analyses, not at 10; the fp8 candidate is refuted; scored identity answers started |
+| 01:59 | Job 15904237 completed, no failed run | all reports and logits on `desk/unlearning` at `7c30bc4`; the eight checkpoints on the lead's main laptop |
+| 02:08 | Unlearning `k7_e3t2_rm_x2.pt` submitted (the 0.066 checkpoint, last layer times 2) | public 0.2133 |
+| 02:13 | Job 15904499 submitted for `run_ninth.sh` at `a8bd579` (team check empty, limit 50 minutes); started 02:23 | staged by renaming and emptying old files: no new file on scratch |
+| 02:25 | Model equality: leak prompts on the 33 endpoints | six prompted copies identified (ep-02, 08, 29 system prompt; ep-23, 20, 16 persona); an identity-based grouping was held back at 02:05 and would have been wrong; a first candidate split inside family A, to be confirmed on fresh answers |
+| 02:38 | Unlearning `k8_e3t2_rm1_lr1e4_x2.pt` submitted | public 0.2837, a new best |

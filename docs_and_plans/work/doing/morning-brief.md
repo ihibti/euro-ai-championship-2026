@@ -14,15 +14,15 @@ Draft kept current through the night by the desk. Final version by 08:30. The ev
 |---|---|---|---|
 | Watermark | 0.7444 | c6, 23:36 | 0.75 |
 | Model equality | 0.1 | family grouping, 01:30 | 1.00 |
-| Unlearning | 0.066 | `k7_e3t2_rm.pt`, 01:38 | 0.40 |
+| Unlearning | 0.2837 | `k8_e3t2_rm1_lr1e4_x2.pt`, 02:38 | 0.40 |
 
 Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read since.
 
 ## What was spent
 
-- **Submissions under the night authorization** (ends 09:00): model equality 2 of 5, unlearning 5 of 12, watermark 1 of 1.
+- **Submissions under the night authorization** (ends 09:00): model equality 2 of 5, unlearning 7 of 12, watermark 1 of 1 (at 02:40).
 - **Scored answers:** 10 per endpoint by 01:08 (reconnaissance), 18 after the identity run at about 02:01. Night cap 80, organizers' cap 100.
-- **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (started 01:26). Never more than one job running or pending; team check empty before each `sbatch`.
+- **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (started 02:23). Never more than one job running or pending; team check empty before each `sbatch`.
 
 ## Unlearning submissions
 
@@ -33,10 +33,13 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 | 00:38 | `scale_t4.pt` | 0.0057 |
 | 01:08 | `dial15.pt` | 0.0 |
 | 01:38 | `k7_e3t2_rm.pt` | 0.066 |
+| 02:08 | `k7_e3t2_rm_x2.pt` (the same checkpoint, last layer times 2) | 0.2133 |
+| 02:38 | `k8_e3t2_rm1_lr1e4_x2.pt` (the same recipe at a higher learning rate, last layer times 2) | 0.2837 |
 
 ## Model equality
 
 - **Families: settled.** Three families of 11, found identically by the main line, by Devin and by the desk, and right on the public pairs (the 0.1 is the whole family share).
+- **Prompted copies found (02:25).** Each family has one system-prompt copy (ep-02, ep-08, ep-29) and one persona copy (ep-23, ep-20, ep-16), shown by what they quote when asked for their instructions. They are the same model as their family's plain copy. A submission that split them, prepared at 02:05, was held back and would have been wrong.
 - **Inside the families (90% of the score): open.** To be filled: the two groupings, the pairs where they disagree, the command for the remaining answers.
 
 ## Incidents you should know
