@@ -2,6 +2,17 @@
 
 Draft kept current through the night by the desk. Final version by 08:30. The event ends at 12:00; last submissions by 11:00.
 
+## The desk stopped at 04:47: usage limit reached
+
+The desk session ran out of its usage allowance at 04:47 and stopped its loop. Nothing was left half-done on the cluster. State at the stop:
+
+- **Scores:** watermark 0.7444, model equality 0.7 (04:23), unlearning 0.2858 (04:39).
+- **Cluster:** no job running or pending. The unlearning agent's twelfth batch (#21, `run_twelfth.sh` at `497f212`, eight more seeds for a wider weight average, 45 minutes) is **not staged and not submitted**.
+- **Night submissions left until 09:00:** model equality 2, unlearning 1. No slot is armed.
+- **Still running without the desk:** a purchase of free reference answers (plain and fp8 references only, ends by about 05:10, commits itself on `ihibti/model-equality-refs`); possibly two agents of the desk until the allowance ends: one writing `docs_and_plans/guides/judges-defense.md` on `ihibti/model-equality-refs`, one testing on the laptop whether the fp8 copy can be told from the plain copy (results under the session scratchpad, `local_anchor/`).
+- **Not done:** the judges' defense pack is not on this branch yet (the model equality part exists: `tasks/model_equality/judges_brief.md` on `ihibti/model-equality-refs` at `c00c065`); the section "Before 11:00" below; the list of local model files to delete (`~/.cache/huggingface`: SmolLM2-360M, Llama-3.2-1B, Qwen2.5-1.5B and Qwen2.5-3B, about 12.5 GB).
+- **To resume the desk:** open a session in this worktree and run the `/loop` command at the top of `desk-handoff.md`.
+
 ## Decisions waiting for you
 
 1. **Delete two unused Python environments on scratch?** `model_equality/.venv` (6,703 files) and `Hackathon_Watermark_Localisation_Task/.venv` (26,655 files). An organizer asked every team at about 01:35 to delete files: scratch ran out of file slots. They are not this session's to delete without your word. The unlearning environment stays; jobs use it.
