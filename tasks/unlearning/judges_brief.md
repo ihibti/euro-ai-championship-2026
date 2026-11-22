@@ -2,6 +2,21 @@
 
 Written during the night of 21 to 22 November by the unlearning agent, for the team to read in the morning. Every number below comes from a committed file or a score posted on #12; the commands at the end reproduce them. The brief is updated through the night; the last update is at the top of the log in `night.md`.
 
+## The result in one paragraph
+
+Our best public score is **0.2133** (`k7_e3t2_rm_x2`, 02:08), up from 0 at 21:19.
+
+**The recipe has two steps.**
+1. **Fine-tune.** The last 6 of the 12 blocks are fine-tuned on the forget images (and augmented copies) towards a target built from a cross-fitted held-out prediction. The target is extrapolated 3 times in the direction where the model would err if it had never seen the image, and tempered by 2. A mixup anchor distils the original on blends of two forget images.
+2. **Sharpen.** The last layer is multiplied by 2.
+
+**Why it works:**
+- **The loss terms compare against single gold models, which are confidently wrong.** The fine-tune makes the right images wrong towards the classes a model that never saw them would pick.
+- **The tempered target spreads probability over the sibling classes,** which is what the gold models' average looks like at temperature 2.
+- **Sharpening restores per-model confidence and undoes the drift.** It brings back the single models' confidence on the loss side. It also takes back the temperature-like drift that the soft target leaked to unseen images, which is what the retain score penalises.
+
+Every submission was chosen from predictions written on #12 before its score, one change at a time. Reproducing the 0.2133 takes the commands at the end and about 8 GPU minutes.
+
 ## The problem in four sentences
 
 We get a ViT-B/16 trained from scratch on a synthetic 100-class image set, and 3,500 of its training images that it must forget. The submission is scored against "gold", several models retrained without those images. The loss mean and spread on the forget images, and on hidden altered copies of them, must match gold's, and so must the predicted class distribution; each term is measured relative to how far the original model is from gold. A control set penalises drift elsewhere, a model under 70% validation accuracy scores 0, and we have no retained data, no labels beyond the original model's own predictions, and no gold model.
@@ -51,7 +66,12 @@ This keeps the number of submissions small and makes each one an experiment with
 | 02:08 | `k7_e3t2_rm_x2` | the same model with its last layer multiplied by 2 | mean 0.086, 10th to 90th 0.060 to 0.118, 75% chance above 0.066 (0.106 once the exact logits arrived at 02:04) | **0.2133** | sharpening is the recipe: the same checkpoint scores more than three times as much once the spill's temperature is taken out. The ledger gets the direction right and the size wrong: the gain is about twice what it predicts |
 | 02:38 | `k8_e3t2_rm1_lr1e4_x2` | one dial from the 0.2133: the same recipe trained at learning rate 1e-4, sharpened by 2 | ledger mean 0.229, 10th to 90th 0.142 to 0.301, 66% chance above 0.2133; 1.7 times `k7_e3t2_rm_x2` relative to the ledger | pending | |
 
-## What the evidence says about gold (as of 01:45)
+## What the evidence says about gold (as of 02:15)
+
+- **After the 0.2133, two thirds of the weight sit on golds that err where our cross-fit says.** Golds that err on other images of the same classes fall to 11%: they cannot produce a gain of more than about 1.2 times from sharpening, and we observed 3.2 times.
+- **The ledger underpredicts sharpened fine-tunes by about 1.6 times.** Under the best-fitting gold, the unsharpened score is predicted exactly (0.063 against 0.066), and the sharpened one at 0.162 against 0.2133. The gap fits a retain near 0.9 after sharpening, that is, a drift on unseen images that is almost purely a temperature. The probes, on training images of the original, also show changed predictions that the real control set apparently does not.
+
+Before the 0.2133, as of 01:45:
 
 - **Gold is confidently wrong on most of the forget images.**
   - Until 01:40 the weight sat on golds right on about a third of the images, with loss mean 7.6 to 8.1 and spread 8.8 to 9.1. That was the edge of the grid.
