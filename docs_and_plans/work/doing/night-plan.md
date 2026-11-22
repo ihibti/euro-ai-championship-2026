@@ -157,3 +157,14 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 08:27 | The unlearning agent: nothing on the laptop is likely to beat 0.2858; GPU request for a fourteenth batch (`4dc5311`, target temperature 1 and 1.5 at four learning rates, 25 minutes, rule and prediction written first) | |
 | 08:29 | Connection to `jureca03` reopened with the guarded script (second use of six) | scratch visible |
 | 08:30 | Team check empty; job 15905724 submitted from the team folder, 45-minute limit, started at once | staged with four new files (689 to 693); 32,382 file slots free |
+| 08:48 | Job 15905724 ended on its own after 18 minutes, all four runs complete | queue empty; no job since |
+| 09:41 | Laptop back online at the venue; connection to `jureca03` reopened (third use of six); fourteenth batch pulled and committed (`dc984cb` on `desk/unlearning`) | no run of the batch predicted above 0.2858 |
+| 09:45 | Lead's submission of `m15_k9t2ep40_x1p85.pt` failed on upload: the script allowed 30 seconds to send 343 MB over a 17.5 Mbps uplink | no score; the attempt counts for the 30-minute gate; `UPLOAD_TIMEOUT` raised to 900 seconds, tests pass |
+| 09:44 | Organizers, through the lead: only a team's best public submission counts | |
+| 10:00 | The reconnect guard refused the lead: it counted two log lines per attempt. On the lead's order the count was fixed to attempt lines only (backup kept, test in the scratchpad) | one connection opened at 10:01 (fourth use of six); scratch visible, queue empty |
+| 10:01 | Public board read for the first time: 9th of 44, overall 0.79; overall is the mean over tasks of (ours − lowest) / (best − lowest) | 6th would take unlearning at 0.46; the lead was told top 6 is out of reach |
+| 10:05 | The lead proposed using a teammate's cluster account; the desk declined (account sharing, and unnecessary with the guard fixed) | |
+| 10:08 | Lead's order: the unlearning agent prepares the presentation, the desk writes the lead's study sheet | acknowledged at 10:08; draft at 10:11 (`presentation.md`), study sheet at 10:10 (`study-sheet.md`) |
+| 10:11 | Lead: submissions close at 12:00; a file that wins by noise could cost on the hidden data | rule for the remaining slots: only files we would accept as final. The unlearning agent: no GPU job, nothing meets its bar |
+| 10:18 | Lead's submission of `m15_s1s2ep40_x2.pt` (average of two seeds and a 40-epoch run, last layer times 2; predicted 0.291) | **public 0.2938, new best**; board at 10:21 unchanged, 9th at 0.79 |
+| 10:25 | The unlearning agent's refit confirms `m15_k9t2ep40_x1p85.pt` for 10:48 (mean 0.290, 45% to beat the best) | |
