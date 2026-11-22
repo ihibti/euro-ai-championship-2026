@@ -61,6 +61,7 @@ BLENDS = {
     "k11_b_soup3": SOUP,
     "m14_t1_blend3": TAU1,
     "m14_t15_blend": (("k8_e3t15_rm1", 1.0), ("k10_t15_lr2e4_ep40", 1.0)),
+    "m15_s1s2ep40": (("k11_b_s1", 1.0), ("k11_b_s2", 1.0), ("k9_e3t2_lr1e4_ep40", 1.0)),
     **{
         f"soup_t1_{round(100 * share)}": tuple((n, w * (1 - share) / 3) for n, w in SOUP)
         + tuple((n, w * share) for n, w in TAU1)
@@ -172,11 +173,33 @@ def predicted(index, pred, ms, retain, levels=LEVELS) -> np.ndarray:
     return levels[c][:, None] * ms[:, m, d].T * pred[s] * retain[None, :]
 
 
-def gold_shapes(orig: torch.Tensor, step: torch.Tensor, labels: torch.Tensor):
-    """The ledger's gold shapes, as (label, logits): aligned, other and removal."""
+MIX_KS = (3.0, 4.0, 5.0)
+MIX_TAUS = (1.0, 1.5)
+MIX_SHARES = (0.3, 0.5, 0.7)
+
+
+def mixture_logits(parts: list[tuple[float, torch.Tensor]]) -> torch.Tensor:
+    """Logits whose distribution at T=2 is the weighted average of the parts' distributions."""
+    probs = sum(w * torch.softmax(z / TEMPERATURE, 1) for w, z in parts)
+    return TEMPERATURE * torch.log(probs.clamp_min(1e-30))
+
+
+def gold_shapes(
+    orig: torch.Tensor, step: torch.Tensor, labels: torch.Tensor, mixtures: bool = False
+):
+    """The ledger's gold shapes, as (label, logits): aligned, other and removal. With
+    `mixtures`, also the average of an aligned and an other gold's distributions: gold models
+    that disagree, some erring where our cross-fit says and some on other images."""
     other = step[within_class_permutation(labels)]
     nine = torch.tensor(NINE_CLASSES)
     outside = (~torch.isin(labels, nine)).float().view(-1, 1)
+    if mixtures:
+        for k in MIX_KS:
+            for tau in MIX_TAUS:
+                for share in MIX_SHARES:
+                    aligned, wrong = (orig + k * step) / tau, (orig + k * other) / tau
+                    gold = mixture_logits([(share, aligned), (1 - share, wrong)])
+                    yield f"mixture K={k:g} tau={tau:g} aligned={share:g}", gold.numpy()
     for family, direction in (("aligned", step), ("other", other)):
         for k in KS:
             for tau in GOLD_TAUS:
@@ -268,11 +291,12 @@ def retain_function(base: str, store, specs, orig_t: torch.Tensor, control=None)
     return (lambda f: float("nan")), flip
 
 
-def view_terms(entries, store, step: torch.Tensor, labels_t: torch.Tensor):
+def view_terms(entries, store, step: torch.Tensor, labels_t: torch.Tensor, mixtures=False):
     """Loss statistics (L x 2) and prediction terms (S x L) of every line on one group of images,
     with the gold shapes built on that group's original logits."""
     orig_v = store["orig"]
-    shape_labels, golds = zip(*gold_shapes(torch.from_numpy(orig_v), step, labels_t), strict=True)
+    shapes = gold_shapes(torch.from_numpy(orig_v), step, labels_t, mixtures)
+    shape_labels, golds = zip(*shapes, strict=True)
     table = gold_table(golds, orig_v)
     del golds
     units: dict[str, np.ndarray] = {}
@@ -315,6 +339,11 @@ def main(argv: list[str] | None = None) -> None:
         "--level", type=float, default=None, help="fix the level c instead of fitting it"
     )
     parser.add_argument("--retain", choices=("probe", "control"), default="probe")
+    parser.add_argument(
+        "--mixtures",
+        action="store_true",
+        help="add golds that average an aligned and an other gold",
+    )
     parser.add_argument(
         "--proxy-temperature",
         type=float,
@@ -367,7 +396,9 @@ def main(argv: list[str] | None = None) -> None:
     ms_parts, pred_parts, stats_by_view = [], [], {}
     for view in views:
         store_v = store if view == "exact" else load_logits(args.logits, view)
-        labels_shapes, stats_v, pred_v, orig_stats_v = view_terms(entries, store_v, step, labels_t)
+        labels_shapes, stats_v, pred_v, orig_stats_v = view_terms(
+            entries, store_v, step, labels_t, args.mixtures
+        )
         ms_parts.append(ms_table(stats_v, orig_stats_v))
         pred_parts.append(pred_v)
         stats_by_view[view] = stats_v
