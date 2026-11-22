@@ -182,6 +182,37 @@ def composite_candidate(
     }
 
 
+SHARPEN = (1.5, 2.0, 2.5)
+
+
+def temper_kl(orig: torch.Tensor, temperature: float) -> float:
+    """Mean KL(orig || orig / temperature) at T=2 over the forget images."""
+    return float(scoring.kl_rows(orig, orig / temperature).mean())
+
+
+def effective_temperature(orig: torch.Tensor, labels: torch.Tensor, label_prob: float) -> float:
+    """The temperature that brings the original's label probability at T=2 down to label_prob."""
+    best, best_gap = 1.0, math.inf
+    for temperature in np.arange(1.0, 6.01, 0.05):
+        gap = abs(float(scoring.label_prob_t2(orig / temperature, labels).mean()) - label_prob)
+        if gap < best_gap:
+            best, best_gap = float(temperature), gap
+    return best
+
+
+def sharpened_retain(spill: dict, factor: float, orig: torch.Tensor, labels: torch.Tensor) -> float:
+    """Retain of a fine-tune whose last layer is multiplied by `factor`. Its spill on the spare
+    classes is read as a temperature (the one matching their label probability) plus a residual;
+    the factor divides that temperature, the residual and the agreement stay."""
+    temperature = effective_temperature(orig, labels, spill["spare_p_lab"])
+    change = temper_kl(orig, temperature / factor) - temper_kl(orig, temperature)
+    held = max(spill["held_kl"] + change, 0.0)
+    spare = max(spill["spare_kl"] + change, 0.0)
+    kl = 0.45 * held + 0.55 * spare
+    agreement = 0.45 * spill["held_acc"] + 0.55 * spill["spare_acc"]
+    return agreement / (1.0 + kl)
+
+
 def weight(predicted: float, observed: float) -> float:
     gap = math.log(predicted + FLOOR) - math.log(observed + FLOOR)
     return math.exp(-0.5 * (gap / math.log(ERROR_FACTOR)) ** 2)
@@ -242,6 +273,17 @@ def main(argv: list[str] | None = None) -> None:
         candidates[f"dial{d:g}"] = dial_candidate(orig, labels, NINE_CLASSES, d, band, orig + step)
     for d in BOAT_DIALS:
         candidates[f"boats{d:g}"] = dial_candidate(orig, labels, BOATS, d, band, orig + step)
+    for name, spec in inputs["candidates"].items():
+        if "spill" not in spec:
+            continue
+        for factor in SHARPEN:
+            candidates[f"{name}x{factor:g}"] = {
+                "logits": candidates[name]["logits"] * factor,
+                "stats": None,
+                "retain": sharpened_retain(spec["spill"], factor, orig, labels),
+                "flip": spec.get("flip", 0.0),
+                "proxy": "dumped x" if candidates[name]["proxy"] == "dumped" else "proxy x",
+            }
     for name, spec in inputs["candidates"].items():
         if candidates[name]["proxy"] != "dumped":
             continue

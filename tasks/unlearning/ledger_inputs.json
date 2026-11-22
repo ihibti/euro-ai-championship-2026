@@ -7,8 +7,9 @@
   "gate_band": "upper: bias_full30 (dial30) changes the 9% of validation images in the nine classes and failed, so A x 0.91 < 70; lower: x4_e20 passed with about 4.7% of predictions changed (probe interpolation), so A x 0.953 >= 70",
   "flip": "share of validation predictions changed, estimated as 0.45 x held-out flips + 0.55 x spare-class flips from the probes",
   "t6_*": "desk/unlearning at 0735d6f, reports/21/t6_*.json; their spill probes were cut, so retain assumes the spill ratios of d4_e16_probe (held 0.6, spare 0.3 of the trained KL); targets keep the predicted class, so flips are near 0",
-  "k7_*": "desk/unlearning at b23dad1, reports/21/seventh/: k7_e3t2 and k7_e3t2_rm full runs (exact images); k7_e3t2_rm3 from the trained part of d7_e3t2_rm3_probe until its full run is back; retain and flip from d7_e3t2_probe, d7_e3t2_rm_probe and d7_e3t2_rm3_probe",
-  "gate_prior": "uniform prior on the original's validation accuracy A, inferred jointly with gold from the scores (01:15): a candidate passes when A (1 - flip) >= 70, else it scores 0. gate_band (the earlier fixed band) is kept for reference only"
+  "k7_*": "desk/unlearning at 357d3c8, reports/21/seventh/: full-run statistics on the exact images; retain, flip and spill from the matching d7_*_probe (k7_e3t2: d7_e3t2_probe; k7_e3t2_rm: d7_e3t2_rm_probe; and so on; u7_t32_rm3: d7_t32_rm3_probe)",
+  "gate_prior": "uniform prior on the original's validation accuracy A, inferred jointly with gold from the scores (01:15): a candidate passes when A (1 - flip) >= 70, else it scores 0. gate_band (the earlier fixed band) is kept for reference only",
+  "spill": "probe rows used by the sharpening model in ledger.py: held-out and spare-class KL and agreement, and the spare classes' label probability at T=2, which fixes the effective temperature of the spill"
  },
  "observed": {
   "dial30": 0.0,
@@ -136,7 +137,14 @@
     "kl_orig_sub_t2": 1.879
    },
    "retain": 0.466,
-   "flip": 0.082
+   "flip": 0.082,
+   "spill": {
+    "held_kl": 1.199,
+    "held_acc": 0.859,
+    "spare_kl": 0.785,
+    "spare_acc": 0.967,
+    "spare_p_lab": 0.5
+   }
   },
   "k7_e3t2_rm": {
    "realized": {
@@ -146,17 +154,99 @@
     "kl_orig_sub_t2": 1.75
    },
    "retain": 0.492,
-   "flip": 0.06
+   "flip": 0.06,
+   "spill": {
+    "held_kl": 1.111,
+    "held_acc": 0.888,
+    "spare_kl": 0.743,
+    "spare_acc": 0.982,
+    "spare_p_lab": 0.523
+   }
   },
   "k7_e3t2_rm3": {
    "realized": {
-    "loss_mean": 1.33,
-    "loss_std": 1.17,
-    "label_prob_t2_sub": 0.241,
-    "kl_orig_sub_t2": 1.661
+    "loss_mean": 1.21,
+    "loss_std": 1.04,
+    "label_prob_t2_sub": 0.231,
+    "kl_orig_sub_t2": 1.684
    },
    "retain": 0.484,
-   "flip": 0.065
+   "flip": 0.065,
+   "spill": {
+    "held_kl": 1.113,
+    "held_acc": 0.871,
+    "spare_kl": 0.781,
+    "spare_acc": 0.987,
+    "spare_p_lab": 0.515
+   }
+  },
+  "k7_e3t2_b3_rm3": {
+   "realized": {
+    "loss_mean": 0.72,
+    "loss_std": 0.71,
+    "label_prob_t2_sub": 0.268,
+    "kl_orig_sub_t2": 1.51
+   },
+   "retain": 0.482,
+   "flip": 0.057,
+   "spill": {
+    "held_kl": 1.106,
+    "held_acc": 0.896,
+    "spare_kl": 0.832,
+    "spare_acc": 0.982,
+    "spare_p_lab": 0.489
+   }
+  },
+  "k7_e3t2_ex_rm3": {
+   "realized": {
+    "loss_mean": 1.85,
+    "loss_std": 1.51,
+    "label_prob_t2_sub": 0.217,
+    "kl_orig_sub_t2": 1.878
+   },
+   "retain": 0.479,
+   "flip": 0.1,
+   "spill": {
+    "held_kl": 1.053,
+    "held_acc": 0.83,
+    "spare_kl": 0.735,
+    "spare_acc": 0.958,
+    "spare_p_lab": 0.538
+   }
+  },
+  "k7_e2t2_rm3": {
+   "realized": {
+    "loss_mean": 0.81,
+    "loss_std": 0.91,
+    "label_prob_t2_sub": 0.315,
+    "kl_orig_sub_t2": 1.358
+   },
+   "retain": 0.555,
+   "flip": 0.024,
+   "spill": {
+    "held_kl": 0.888,
+    "held_acc": 0.952,
+    "spare_kl": 0.652,
+    "spare_acc": 0.995,
+    "spare_p_lab": 0.563
+   }
+  },
+  "u7_t32_rm3": {
+   "realized": {
+    "loss_mean": 3.46,
+    "loss_std": 0.6,
+    "label_prob_t2_sub": 0.02,
+    "kl_orig_sub_t2": 3.9
+   },
+   "retain": 0.11,
+   "flip": 0.493,
+   "spill": {
+    "held_kl": 3.577,
+    "held_acc": 0.531,
+    "spare_kl": 3.664,
+    "spare_acc": 0.488,
+    "spare_p_lab": 0.046
+   }
   }
  },
  "gate_band": [
