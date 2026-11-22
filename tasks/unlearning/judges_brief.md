@@ -162,7 +162,7 @@ The two misses sit at the edges. x2.5 is the only line past the peak; with it in
 | the same | 09:09, model with the stand-in's retain | 0.267 to 0.272, 1 in 10 above 0.2858 | not submitted |
 | `m15_k9t2ep40_x1p85.pt` (the ninth batch's 40-epoch tau-2 run, x1.85) | 09:09, model | 0.2855 to 0.2874 | no score: the 09:45 upload timed out on the client |
 | `m15_s1s2ep40_x2.pt` (weight average of the 0.2858's two seed runs and that run, x2) | 09:46 and 09:57, model | 0.291, 64% above 0.2858 | pending (10:16) |
-| the 10:46 line, by the rule of 09:57 | 09:57 | `k9_e35t2_lr1e4_x1p95` if 10:16 scores 0.2866 or above (71% to beat the blend if it lands at 0.295 or above); otherwise `k14_t1_lr9e5_x1p47` (two-condition rule 0.29 to 0.31, model 0.272) | pending |
+| the 10:46 line, by the rule of 09:57 as changed at 10:07 | 09:57, 10:07 | the spare `m15_k9t2ep40_x1p85` if 10:16 scores 0.2866 or above (gain 0.0022 to 0.0046 over the blend's score); otherwise `k14_t1_lr9e5_x1p47` (two-condition rule 0.29 to 0.31, model 0.272) | pending |
 
 **What happened to the morning's plan.** At 09:44 the lead confirmed that only a team's best submission counts. The slots left before 11:00 therefore went to lines that could beat 0.2858, not to a test of the tau-1 blend, which the model had put below it. The first, the ninth batch's 40-epoch run at x1.85, would also have been the model's first test on an unscored recipe. Its upload timed out at 09:45 on the client, the attempt counted for the 30-minute gate, and two slots were left.
 
@@ -174,7 +174,7 @@ The two misses sit at the edges. x2.5 is the only line past the peak; with it in
 - With any fourteenth-batch line: still 0.0060. Inside the model, whenever such a line beats 0.2858, the blend beats it by more.
 
 So the 10:46 slot depends on the 10:16 score, by a rule written before it.
-- **High score:** the blend held, so take the line that reaches further.
+- **High score:** the blend held, so take a line that reaches further. At 09:57 that was `k9_e35t2`. At 10:07, still before the score, it became the spare (the ninth batch's 40-epoch run at x1.85), for the gate. `k9_e35t2` changes an estimated 7.0% of validation predictions, outside the 6.0% that has passed. If the gate is taken per split, a line can pass on the public 30% and fail on the hidden 70%. If it is also the best public line, the task scores 0. That tail costs about as much as its edge in the model, and every submission must be one we would accept as final.
 - **Low score:** inside the model no line has a real expected gain. Take the two-condition rule's line, whose upside lies where the model is wrong.
 
 **The weight-average caveat, measured.** The blend averages runs of 25 and 40 epochs, and the model stands it in with the average of their logits. The only real soup with dumped logits is the thirteenth batch's seed twins: its forget loss sits 0.8% below its logit average's, with a KL of 0.0004 at T=2. The blend's members sit 1.3 times further apart than seed twins (logit RMS 0.53 against 0.42). The second-order gap grows with the square of that distance, so we expect about 2% in forget loss and under 1% in score.
