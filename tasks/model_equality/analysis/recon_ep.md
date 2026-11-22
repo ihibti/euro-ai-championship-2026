@@ -659,3 +659,51 @@ On the references the temperature copy has the shortest story prefix (1.6 charac
 Prediction, read with `watermark.py --min-repeat 2`: on fresh story rows, ep-33, ep-30 and ep-31 each have the shortest mean story prefix among the non-prompted endpoints of their family. Chance for all three is 0.0014.
 
 A described battery check for a truncated-sampling copy (few rare answers given many minority answers) fails its validation on A. ep-14, the truncated copy by likelihood, has 5 rare answers out of 48 minority answers (0.10). That is indistinguishable from ep-24 (0.09) and ep-01 (0.11). So the batteries cannot name a second decoding copy in B or C.
+
+## Story-prefix predictions, read (04:14; fresh story repeats 2 to 9, 8 answers and 28 pairs per endpoint)
+
+Command: `watermark.py --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv --min-repeat 2`. Mean common prefix in characters (p = prompted):
+
+| A | prefix | B | prefix | C | prefix |
+|---|---|---|---|---|---|
+| ep-04 | **145.9** | ep-28 | **94.8** | ep-10 | **154.8** |
+| ep-02 p | 107.3 | ep-06 | 83.0 | ep-13 | 27.1 |
+| ep-17 | 93.0 | ep-03 | 80.7 | ep-15 | 26.2 |
+| ep-24 | 93.0 | ep-21 | 27.0 | ep-09 | 24.6 |
+| ep-12 | 87.8 | ep-26 | 24.5 | ep-19 | 22.1 |
+| ep-18 | 87.1 | ep-22 | 13.6 | ep-31 | 12.7 |
+| ep-01 | 86.8 | ep-07 | 12.0 | ep-29 p | 8.8 |
+| ep-25 | 81.5 | ep-08 p | 11.4 | ep-05 | 7.1 |
+| ep-14 | 68.0 | ep-32 | 7.1 | ep-27 | 4.6 |
+| ep-23 p | 45.4 | ep-30 | 4.4 | ep-11 | 4.1 |
+| ep-33 | 44.5 | ep-20 p | 3.8 | ep-16 p | 1.7 |
+
+Results:
+- **Watermark copies, longest prefix among the non-prompted (e1e4e30):** 2 of 3.
+  - A ep-04 is first (145.9, next 93.0).
+  - C ep-10 is first (154.8, next 27.1, 5.7 times the next).
+  - B ep-06 is second (83.0) behind ep-28 (94.8).
+  - The registered conjunction fails. Chance of at least 2 of 3 under exchangeability is 0.034.
+- **Temperature copies, shortest prefix among the non-prompted (dc385d9):** 2 of 3.
+  - A ep-33 is the shortest (44.5).
+  - B ep-30 is the shortest (4.4).
+  - C ep-31 is not: it ranks 5th shortest of 9 (12.7; ep-11 4.1, ep-27 4.6 and ep-05 7.1 are shorter).
+  - The conjunction fails. C's temperature copy stays unidentified on my probes.
+
+Reading:
+- A: ep-04 as watermark is supported on a third, out-of-sample statistic. The order inside A follows the fitted temperatures. The base-like endpoints give 81 to 93, ep-14 (top-p at 1.0) 68, and ep-33 (1.0) 44.5.
+- C: ep-10 as watermark is supported strongly.
+- B splits in two on the story:
+  - high: ep-28 94.8, ep-06 83.0, ep-03 80.7;
+  - low: everything else, 4 to 27.
+  - ep-06 is in the high group, as predicted, but not alone.
+  - ep-03 and ep-28 are the endpoints that were already B's battery and e2 outliers, and that run long with spaces on d1.
+  - A long common opening with no extra sharpness on the batteries is not what the reference LoRAs did (13.6 to 36.4). So it is open whether ep-03 and ep-28 are a weight change of a kind the references do not show.
+- ep-22 against ep-06:
+  - story prefix 13.6 against 83.0. The watermark signature is with ep-06.
+  - ep-22 has no repeated battery answers and is the sharpest in B (0.880).
+  - ep-22 does not look like a third prompted copy:
+    - its identity is Qwen 10 of 10, where B's prompted copies say Claude;
+    - its leak e1 paraphrases the Qwen default once ("I was created by Alibaba Cloud to be a helpful assistant") and refuses once;
+    - e2 says no twice, like the majority.
+  - Only d1's no-spaces share (12 of 20) puts it with the prompted copies. That is a one-token choice in a fixed context.
