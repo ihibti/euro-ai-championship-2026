@@ -67,6 +67,7 @@ This keeps the number of submissions small and makes each one an experiment with
 | 02:38 | `k8_e3t2_rm1_lr1e4_x2` | one dial from the 0.2133: the same recipe trained at learning rate 1e-4, sharpened by 2 | ledger mean 0.229, 10th to 90th 0.142 to 0.301, 66% chance above 0.2133; 1.7 times `k7_e3t2_rm_x2` relative to the ledger | **0.2837** | more reach pays at the same factor (1.33 times). Golds that err on other images of the same classes drop to 2% of the weight |
 | 03:08 | `k8_e3t2_rm1_lr1e4_x2p5` | the same fine-tune with the factor one notch further, 2.5 | ledger mean 0.283, 10th to 90th 0.211 to 0.373, 54% chance above 0.2837 | 0.2222 | **one notch more sharpening cost 22%**: the forget-set loss has a peak near the 0.2837's level. The ledger cannot represent it and is set aside for the factor (section below) |
 | 03:38 | `k9_e3t1_lr1e4_x1p25` | the ninth batch's untempered (tau 1) fine-tune, last layer times 1.25 | `peak_check.py` mean 0.294, 0.281 to 0.316 over the 13 gold settings that reproduce both scores. It replaces the line fixed at 02:56, which the same check puts at 0.185 | 0.256 | **at the 0.2837's forget-loss level, half the probe spill scored 10% less.** The factor left a third of the drift's temperature (f/T = 0.76): on unseen images, sharpening must match the drift's temperature. The probes' lower spill does not carry over by itself |
+| 04:08 | `k8_e3t2_rm1_ep40_x2p25` | the eighth batch's 40-epoch run, last layer times 2.25: exactly its measured spill temperature | `peak_check.py` 0.292 to 0.294 over three readings of retain; written down as a test, not a likely new best | 0.2665 | its forget loss, probes and spill temperature match the 0.2837's base; only the factor relative to the temperature differs (1.00 against 0.89), and it scores 6% lower. Every neighbour of the 0.2837's point has now scored lower. With all five scores the check fits no setting and is retired as a predictor |
 
 ## What the evidence says about gold (as of 02:15)
 
@@ -146,6 +147,14 @@ A single model cannot be both as confident as one retrained model and as soft as
 
 The good region is narrow: the factor near the drift's temperature, and the forget loss near 3.8/3.8. `peak_check.py` now has a temperature reading of retain. With all four scores, its best line is `k8_e3t2_rm1_ep40` at x2.25 (f/T = 1.00, loss 3.62/3.83), about 3% above the 0.2837.
 
+**What the 0.2665 closed.** `k8_e3t2_rm1_ep40` at x2.25 matched the 0.2837's base on everything we measure: forget loss 3.62/3.83 against 3.80/3.79, the probes, and the spill temperature. Only the factor relative to that temperature differed (1.00 against 0.89), and it scored 6% lower.
+
+With all five sharpened scores, `peak_check.py` no longer fits any setting. We stopped there: adding a fifth reading fitted to five public scores would be fitting the public 30%. Two explanations remain, and the eleventh batch's seeds tell them apart:
+- the best factor is near 0.89 times the drift's temperature, as at the 0.2837;
+- models with equal statistics differ by about 5% on the public split.
+
+The last night submissions were the weight average of the 0.2837's base and two new seeds, and the eleventh batch's best line by its probes. Both need no score model.
+
 ## Where the ceiling is: training reach
 
 The ledger can score a fine-tune that reached its target exactly: the target logits themselves, against the golds that carry the weight.
@@ -207,6 +216,7 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 - **The ledger had a modelling error, found and fixed at 01:13.** It multiplied each prediction by the share of the accuracy band where the candidate passes the gate. A submission either passes or scores 0, so a 0 was read as a miss rather than as a possible gate failure. That made `dial15`'s 0 rule out the removal reading entirely. Since `7b51a3c`, A is inferred jointly with gold, and the removal reading keeps the 4% it deserves.
 - **Until 01:40 the posterior sat on the edge of the gold grid** (gold right on a third of the images, the furthest gold modelled). Widening the grid lowered every prediction by 10 to 20% and left the ranking unchanged. The predictions written on #12 before 01:40 come from the narrower grid.
 - **The ledger's golds are single models, and the real target is several.** Against a single confidently wrong gold, sharpening always helps; against the real mixture it peaks. The 0.2222 at 03:08 showed it. From 03:15 the factor and the base are chosen with `peak_check.py`, which is calibrated on two public scores and can therefore follow the public 30%. Choices are also required to show their advantage in the probes.
+- **Our models of the score stop at about 5%.** Near the best point, lines that match it on every statistic we measure still score up to 6% lower (0.2665 against 0.2837). Choices below that level are made on the probes and on noise reduction (weight averaging), not on a predicted score.
 - The hidden altered copies are not modelled. Our own alterations (flip, crop, rotation, shift, blur, JPEG, jitter, noise) track the exact images closely in every report.
 - Retain is estimated from held-out forget images and spare classes, not from the real control set.
   - Those are training images of the original, which it fits with near certainty.
