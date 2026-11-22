@@ -32,14 +32,14 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 | c5 (public 0.7251) | 0.9135 | 0.7326 |
 | c6 (public 0.7444, submitted 23:36) | 0.9248 | 0.7331 |
 
-- The networks read the watermark decoders' own feature maps, which the starter kit exposes. "PixelSeal on its own extractor" in the records means this, on the agents' reading. **For the lead** to confirm: the watermark work was done with the lead before the night.
-- c6 combines `stegastamp_n1`, `trustmark_n1` and `pixelseal_x1_snap3`. The PixelSeal part is the same network as in c5 (its train score is identical in both records, 0.8738); what "snap3" names is not stated in the committed files. **For the lead.**
+- Only the PixelSeal network sits on its watermark's own extractor ("PixelSeal on its own extractor" in the records): it reuses the extractor's layers and trains a small network on top. The StegaStamp and TrustMark networks are plain convolutional networks trained from random weights; a TrustMark network on its extractor was trained too and not used. Settled on the 22nd from `train_seg.py` and the checkpoints on the cluster.
+- c6 combines `stegastamp_n1`, `trustmark_n1` and `pixelseal_x1_snap3`. The PixelSeal part is the same network as in c5 (its train score is identical in both records, 0.8738): "snap3" is the third frozen copy of the PixelSeal run, taken at 19:41 on the 21st at step 18,000 while the run went on.
 
 **Evidence it is sound.**
 - Each network was trained on four fifths of the training images and scored on the fifth it never saw.
 - The train scores include images the networks trained on, so they are not evidence. The held-out fifth is.
 - c6 against c5 on the held-out images is a paired gain of +0.0104 (90% interval +0.0015 to +0.0201). The public 0.7444 sits close to c6's held-out 0.7331.
-- Two held-out numbers exist for c5: 0.7326 in c5's own record and 0.7227 in c6's paired comparison (0.7331 − 0.0104). The committed files do not say which images or settings each used. **For the lead** to explain before the jury asks; the paired gain is the number to defend.
+- Two held-out numbers exist for c5, and they are two averages of the same results: 0.7326 is the mean of the three methods' held-out scores (0.8432, 0.7016, 0.6529); 0.7227 is the mean over the 111 held-out images, where PixelSeal, the weakest, has the most (42, against 38 for TrustMark and 31 for StegaStamp). The paired gain is the number to defend.
 
 **Limits and another day.** About a quarter of the images are a watermarked rectangle on a clean picture, and the networks are weakest there (0.68 against 0.82 on the other kinds, for StegaStamp). A rectangle decodes almost perfectly from its exact crop. A crop search was planned for Devin (`docs_and_plans/work/doing/watermark-rectangle-search.md`); it was not run: by the night plan watermark stopped at c6, and Devin worked on model equality all night. A second idea, snapping masks to object outlines, was not started.
 

@@ -90,17 +90,14 @@ This copy on the desk's branch is the one to present from. The desk refreshes sl
 ## Slide 7. Watermark localisation: c6
 
 - Each image carries one of three invisible watermarks (PixelSeal, TrustMark, StegaStamp) on part of the picture. We return the watermarked area as a mask, scored by mean IoU.
-- c6 combines one segmentation network per method, each reading its watermark decoder's own feature maps. Each was trained on four fifths of the training images and scored on the fifth it never saw.
+- c6 combines one segmentation network per method, trained mostly on synthetic images we made with the organizers' own embedders. The PixelSeal network sits on PixelSeal's own extractor; the two others start from random weights. Each is scored on a fifth of the real images that it never saw.
 - The organizers' all-zeros baseline scores 0.2518 on the training images. Against c5 on held-out images, c6 gains +0.0104 (90% interval +0.0015 to +0.0201).
 
 **Number: 0.7444 public, 0.7331 held-out.**
 
 *Notes.* The train scores include images the networks learned from, so the number we defend is the held-out fifth. c6's gain over c5 there is small but its interval is above zero, and the public 0.7444 sits close to the held-out 0.7331.
 
-**For the lead** (open questions from the defense pack):
-1. Confirm that the networks read the decoders' own feature maps; the watermark work was done with the lead before the night.
-2. What "snap3" names in `pixelseal_x1_snap3`.
-3. Why c5 has two held-out numbers, 0.7326 in its own record and 0.7227 in c6's paired comparison.
+**Settled on the 22nd** (details in `watermark-lesson.md`, section 9): only the PixelSeal network sits on its extractor; "snap3" is a frozen copy of the PixelSeal run at step 18,000, the same network as in c5; c5's two held-out numbers are the mean of the three methods (0.7326) and the mean over the 111 images (0.7227).
 
 ---
 
