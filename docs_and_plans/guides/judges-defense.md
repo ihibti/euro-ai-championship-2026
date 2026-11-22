@@ -5,8 +5,8 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 ## 1. The night in ten lines
 
 1. At 23:45 the public board had us 20th of 32, with an overall 0.33. The sixth team had 0.73. The overall is the mean over the three tasks of (ours − lowest) / (best − lowest).
-2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **1.0** (08:07; 0.85 at 06:44, 0.7 at 04:23), unlearning **0.2858** (04:39).
-3. Against the board's best scores of 22:33, that is an overall of about 0.90. Our current rank is **for the lead**: the agents cannot read the public board; read it before the jury.
+2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **1.0** (08:07; 0.85 at 06:44, 0.7 at 04:23), unlearning **0.2938** (10:18 on the 22nd; 0.2858 at 04:39).
+3. On the public board at 10:21 on the 22nd: **9th of 44 teams, overall 0.79** (model equality tied first with 15 teams, watermark 12th, unlearning about 17th). The board's overall is the mean over tasks of (ours − lowest) / (best − lowest). Only a team's best public submission counts, and the final ranking is on the hidden 70%.
 4. One human, the team lead, set the rules and the night authorization, a file written at a terminal that caps answers and submissions until 09:00, and then slept.
 5. One agent, the desk, was the only one allowed to touch the GPU cluster (JURECA) and the organizers' server. It spent scored answers, submitted, reviewed and merged.
 6. One agent per task did the analysis: a model equality main line; a second, independent model equality method by another coding agent (Devin) on a second computer; an unlearning agent. None could submit.
@@ -89,6 +89,8 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 - A simulation of 4,000 random 30% splits shows that the ratio between two of our lines moves by about 1% (one standard deviation). Every gap the night acted on is far outside that: 6% between 0.2665 and 0.2837, 22% to 0.2222. The average's own +0.7% is inside it.
 
 **Result.** From 0.00 at 22:19, through 0.066 (01:38), 0.2133 (02:08) and 0.2837 (02:38), to 0.2858 (04:39). The steps in between scored 0.2222, 0.256 and 0.2665, each lower, and each said why.
+
+**The morning of the 22nd.** With the lead back and confirming each submission by hand: 0.2687 at 08:21 (a longer, slower run; the desk had predicted 0.29), an upload that timed out at 09:45 with no score, then **0.2938 at 10:18**: the weight average of two seeds of the recipe and one 40-epoch run, last layer times 2. The unlearning agent's refitted score model had predicted 0.291 for it. From then on only files we would accept as final were submitted, because the best public file is the one ranked on the hidden data.
 
 **Limits and another day.**
 - Gold is modelled by a few parametric families, and the truth may lie outside them.
