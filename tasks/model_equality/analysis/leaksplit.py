@@ -17,6 +17,10 @@ The split Y / N is confirmed when both hold, at alpha 0.01:
    own yes rate on its own group's side of the other group's rate.
 An endpoint that fails 2 is unassigned. Homogeneity is described per group: the pairs inside it
 that a pairwise Fisher test separates at alpha, on yes and on default.
+--decide e1-words (added 02:57 Paris, registered for family C before its fresh rows): the deciding
+flag is instead an e1 answer written one word per line (at least 5 non-empty lines, at least 80%
+of them with at most 2 words); --yes names the group that writes one word per line. The default
+--decide e2-yes is unchanged.
 Without --yes and --no (families B and C), each statistic is read by stop.set_apart against
 the family majority at alpha, and every pair separated at alpha is listed.
 """
@@ -74,6 +78,12 @@ def said_yes(text: str) -> bool | None:
 
 def quotes_default(marker: re.Pattern[str]) -> Callable[[str], bool]:
     return lambda text: bool(marker.search(text))
+
+
+def one_word_per_line(text: str) -> bool:
+    lines = [line for line in text.strip().splitlines() if line.strip()]
+    short = sum(len(line.split()) <= 2 for line in lines)
+    return len(lines) >= 5 and short >= 0.8 * len(lines)
 
 
 def rate(values: Sequence[bool]) -> float:
@@ -151,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--yes", default="")
     parser.add_argument("--no", default="")
     parser.add_argument("--alpha", type=float, default=stop.ALPHA)
+    parser.add_argument("--decide", choices=("e2-yes", "e1-words"), default="e2-yes")
     args = parser.parse_args(argv)
     rows = [r for r in load_rows(args.answers) if str(r["endpoint"]).startswith(args.prefix)]
     members = read_family(args.families, args.family)
@@ -158,16 +169,18 @@ def main(argv: list[str] | None = None) -> int:
     default = flags(
         rows, members, "e1_leak_repeat", quotes_default(MARKERS[args.marker]), args.min_repeat
     )
+    words = flags(rows, members, "e1_leak_repeat", one_word_per_line, args.min_repeat)
     print(f"== family {args.family}, repeats >= {args.min_repeat}")
-    print("| endpoint | e2 yes | e1 default |")
-    print("|---|---|---|")
+    print("| endpoint | e2 yes | e1 default | e1 one word per line |")
+    print("|---|---|---|---|")
     for e in members:
-        y, d = yes.get(e, []), default.get(e, [])
-        print(f"| {e} | {sum(y)}/{len(y)} | {sum(d)}/{len(d)} |")
+        y, d, w = yes.get(e, []), default.get(e, []), words.get(e, [])
+        print(f"| {e} | {sum(y)}/{len(y)} | {sum(d)}/{len(d)} | {sum(w)}/{len(w)} |")
     yes_group, no_group = split_ids(args.yes), split_ids(args.no)
+    deciding = yes if args.decide == "e2-yes" else words
     if yes_group and no_group:
-        verdict = side_test(yes, yes_group, no_group, args.alpha)
-        print(f"\npooled Y against N on e2 yes: p {verdict.pooled_p:.2g}")
+        verdict = side_test(deciding, yes_group, no_group, args.alpha)
+        print(f"\npooled Y against N on {args.decide}: p {verdict.pooled_p:.2g}")
         for s in verdict.sides:
             print(f"- {s.endpoint} ({s.group}): {s.hits}/{s.n}, p {s.p:.2g}, lands {s.lands}")
         print(f"split confirmed: {verdict.confirmed}")
