@@ -48,7 +48,7 @@ import numpy as np
 import scoring
 import torch
 
-KS = (0.0, 0.5, 1.0, 1.25, 1.5, 2.0, 3.0)
+KS = (0.0, 0.5, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0)
 GOLD_TAUS = (1.0, 1.5, 2.0, 3.0, 5.0, 8.0)
 SCALES = (2.0, 3.0, 4.0, 5.0, 6.0, 8.0)
 ERROR_FACTOR = 1.6
@@ -89,7 +89,7 @@ BOATS = (29, 30, 31, 33)
 DIALS = (10.0, 12.0, 15.0, 20.0, 30.0)
 BOAT_DIALS = (10.0, 15.0, 20.0)
 REMOVAL_SHIFTS = (10.0, 15.0, 25.0)
-REMOVAL_KS = (0.5, 1.0, 2.0)
+REMOVAL_KS = (0.5, 1.0, 2.0, 3.0, 4.0)
 REMOVAL_TAUS = (1.0, 1.5, 2.0, 3.0)
 
 
@@ -182,7 +182,7 @@ def composite_candidate(
     }
 
 
-SHARPEN = (1.5, 2.0, 2.5)
+SHARPEN = (1.5, 2.0, 2.5, 3.0)
 
 
 def effective_temperature(orig: torch.Tensor, labels: torch.Tensor, label_prob: float) -> float:
