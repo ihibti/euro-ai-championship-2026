@@ -4,36 +4,39 @@ Draft kept current through the night by the desk. Final version by 08:30. The ev
 
 For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night in ten lines, the three tasks, why this is not leaderboard fitting, the organizers' rules, ten likely questions). Four points in it are marked **for the lead**.
 
-## State at 06:20
+## State at 06:50
 
-- **Scores:** watermark 0.7444, model equality 0.7 (04:23), unlearning 0.2858 (04:39). Read the public board first thing: the agents have no way to read it, so our rank is unknown since 23:45.
-- **Cluster:** no job running or pending, and no GPU request open.
-- **Night submissions left until 09:00:** model equality 2, unlearning 1.
-- **Unlearning is finished.** The unlearning agent withdrew its last batch and recommends no further submission (#12, 04:54).
-- **Model equality has one live lead**, see "The fp8 test" below. It may produce one more submission before you wake.
+- **Scores:** watermark 0.7444, model equality **0.85** (06:44, was 0.7), unlearning 0.2858 (04:39). Read the public board first thing: the agents have no way to read it, so our rank is unknown since 23:45.
+- **Cluster:** one job, 15905366, the unlearning agent's thirteenth batch (45 minutes), submitted at 06:29 and pending on priority; the scheduler's estimated start is 07:30.
+- **Night submissions left until 09:00:** model equality 1, unlearning 1.
+- **Unlearning:** the last night slot is used only if the thirteenth batch passes the four checks its agent wrote before the job (#21).
+- **Model equality:** the new test found family C's fp8 copy; see "The fp8 test" below. One decision on family B is yours (decision 1).
 - **The desk was down from 04:47 to 06:00** (usage limit of the session). Nothing was running on the cluster in that hour and nothing was lost.
 
 ## Decisions waiting for you
 
-1. **Delete two unused Python environments on scratch?** `model_equality/.venv` (6,703 files) and `Hackathon_Watermark_Localisation_Task/.venv` (26,655 files). An organizer asked every team at about 01:35 to delete files: scratch ran out of file slots. They are not this session's to delete without your word. The unlearning environment stays; jobs use it.
-2. **Ask an organizer which submission counts** for the final ranking on the hidden part: the last one or the best public one. Until we know, the last submission per task must be the one we believe in.
-3. **Ask an organizer** whether `sbatch --chdir=<team folder>` from a login node that does not show scratch counts as "from inside the team folder". Tonight only one login node of four showed scratch after JSC's reboots.
+1. **Model equality, family B: add ep-32 to the same-model group?** The fp8 test reads ep-22 as B's only fp8-like endpoint at +2.81 standard errors, under the threshold of 3 fixed before the data, so the desk did not act. Two ways forward, both yours:
+   - buy the last 22 answers on ep-22 and read again (15 minutes; the commands are under "Before 11:00"), or
+   - submit the prepared file as it is: `make submit TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v2_b32.csv`. The board says only the best submission counts, so a miss costs a slot, not points.
+2. **Delete two unused Python environments on scratch?** `model_equality/.venv` (6,703 files) and `Hackathon_Watermark_Localisation_Task/.venv` (26,655 files). An organizer asked every team at about 01:35 to delete files: scratch ran out of file slots. They are not this session's to delete without your word. The unlearning environment stays; jobs use it.
+3. **Ask an organizer which submission counts** for the final ranking on the hidden part: the last one or the best public one. Until we know, the last submission per task must be the one we believe in.
+4. **Ask an organizer** whether `sbatch --chdir=<team folder>` from a login node that does not show scratch counts as "from inside the team folder". Tonight only one login node of four showed scratch after JSC's reboots.
 
 ## Scores
 
 | Task | Public score | Submitted | Board's best at 22:33 |
 |---|---|---|---|
 | Watermark | 0.7444 | c6, 23:36 | 0.75 |
-| Model equality | 0.7 | identified copies as one model per family, 04:23 | 1.00 |
+| Model equality | 0.85 | identified copies as one model per family, plus C's two plain-like endpoints, 06:44 | 1.00 |
 | Unlearning | 0.2858 | `k11_b_soup3_x2.pt` (average of three runs), 04:39 | 0.40 |
 
-Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read since. With the three scores above and the board's bests of 22:33, our overall would be about 0.80.
+Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read since. With the three scores above and the board's bests of 22:33, our overall would be about 0.85.
 
 ## What was spent
 
-- **Submissions under the night authorization** (ends 09:00): model equality 3 of 5, unlearning 11 of 12, watermark 1 of 1 (at 04:41).
-- **Scored answers per endpoint** (night cap 80, organizers' cap 100): 64 in family A, 66 in B, 48 in C once the story prompt finishes at about 04:13. Every prompt set ran on the nine references first.
-- **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (25 minutes, ended 02:48), 15904691 (31 minutes, ended 03:42), 15904844 (24 minutes, ended 04:26). Never more than one job running or pending; team check empty before each `sbatch`.
+- **Submissions under the night authorization** (ends 09:00): model equality 4 of 5, unlearning 11 of 12, watermark 1 of 1 (at 06:50).
+- **Scored answers per endpoint** (night cap 80, organizers' cap 100): 64 in family A, 66 in B (ep-22: 78), 48 in C (ep-15: 72). Every prompt set ran on the nine references first.
+- **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (25 minutes, ended 02:48), 15904691 (31 minutes, ended 03:42), 15904844 (24 minutes, ended 04:26), 15905366 (submitted 06:29, pending). Never more than one job running or pending; team check empty before each `sbatch`.
 
 ## Unlearning submissions
 
@@ -68,7 +71,13 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
   | B (Qwen2.5-1.5B) | ep-08, ep-20, ep-30, ep-07, ep-06 | ep-03, ep-28 | ep-21, 22, 26, 32 |
   | C (Llama-3.2-1B) | ep-29, ep-16, ep-31, ep-27, ep-10 | ep-05, ep-11 | ep-09, 13, 15, 19 |
 
-- **What the 0.7 means.** The model part is about 0.67 on the public pairs. The rule gives 0.77 if each family has exactly one more same-model endpoint (its plain copy) and 0.60 if it has two. The points still open are the plain copy of each family.
+- **The fp8 test (06:00 to 06:45): 0.7 became 0.85.**
+  - *What it is.* The laptop builds an fp8 copy of each base model, quantized the way the serving software (vLLM) does it, and compares token by token how well that copy and the plain model explain an endpoint's answers. On the references the fp8 endpoint stands at +9.0 standard errors and the plain one at -6.1; the seven others are negative too.
+  - *The rule, fixed on PR #27 before any family number was read.* An endpoint at +3 or more is the family's fp8 copy. Devin's two closest plain-like endpoints then join the same-model group unless the fp8 copy is one of them.
+  - *Family C.* ep-15 read +2.94, then +3.53 after 24 more answers. ep-13 and ep-19 joined the group. Public score 0.85.
+  - *Family B.* ep-22 read +2.71, then +2.81 after 12 more answers: under the threshold, no change. Every other endpoint of B is negative, ep-32 the most (-5.03).
+  - *Family A.* No endpoint above zero. No change, and no candidate.
+- **What the 0.7 meant.** The model part is about 0.67 on the public pairs. The rule gives 0.77 if each family has exactly one more same-model endpoint (its plain copy) and 0.60 if it has two. The points still open are the plain copy of each family.
 - **Submission rule.** Per family, the positively identified copies form one model and every other endpoint is its own model. It never claims two endpoints are the same without evidence. Checked by Devin's code: it scores 0.77 on the model part if exactly one more endpoint is the plain copy, 0.60 or 0.46 if one or two further undetectable same-model copies hide among the rest, 0.51 if one of our labels is wrong.
 - **Where the two analysts disagree.** ep-12 as A's plain copy: Devin 0.6, the main line 0.3 to 0.4; not added. ep-06 against ep-22 as B's watermark copy.
 - **Devin's second method** (battery modes, cliques) and the main line's battery rules were frozen before each read. A split of family A proposed by the desk at 02:25 failed its pre-registered test at 02:58 and was never submitted.
@@ -93,9 +102,10 @@ Commands are for nushell, from the desk's worktree.
 
 1. **Get the night's state.** `cd ~/orca/workspaces/euro-ai-championship-2026/brill; git pull`
 2. **Read the public board** and write down our rank per task. If we are 6th or better, change nothing without a reason stronger than the one behind the current submission.
-3. **Model equality.** The submitted grouping is `tasks/model_equality/results/labelled_copies_v1.csv` (0.7). A hand submission, at most one per 30 minutes, a failure counts:
-   `make submit TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v1.csv`
-   Check a file without submitting: `make check TASK=model_equality FILE=<file>`
+3. **Model equality.** The submitted grouping is `tasks/model_equality/results/labelled_copies_v2.csv` (0.85). For decision 1:
+   - the prepared file with ep-32 added: `make submit TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v2_b32.csv` (at most one submission per 30 minutes, a failure counts);
+   - or first buy the last answers on ep-22, from the other worktree: `cd ~/worktrees/euro-ai-championship-2026/model-equality-refs; uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/bat.csv --repeats 20 --name round1 --endpoints ep-22 --spend` (it asks you to confirm at the terminal once the night authorization has ended; 14 answers, about 2 minutes). Then ask the desk, or a new session, to "score ep-22 and read family B with `fp8_rule.py`".
+   - Check a file without submitting: `make check TASK=model_equality FILE=<file>`
 4. **Unlearning.** Nothing to submit. The file behind 0.2858 is `data/unlearning/candidates/k11_b_soup3_x2.pt`.
 5. **Watermark.** Nothing to submit. c6 (0.7444) stands.
 6. **Answers left on the scored endpoints** (organizers' cap 100 each, the night used at most 66): `uv run python scripts/me_query.py --budget`

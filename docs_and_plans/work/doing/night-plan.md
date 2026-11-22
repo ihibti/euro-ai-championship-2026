@@ -134,3 +134,10 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 06:00 | The desk resumed | defense pack found on `ihibti/model-equality-refs` (`8568af4`), brought to this branch and its gaps filled |
 | 06:02 | First test that sees fp8 on the references: likelihood ratio between a simulated fp8 copy of the base model and the plain base model, over every returned token | fp8 reference +7.6 standard errors, plain -4.8, watermark -4.9, temperature copy -6.7; holds on both halves of the rows |
 | 06:03 | The same test started on the nine non-prompted endpoints of each family; decision rule registered on PR #27 before any family number was read, amended with Devin at 06:16 | results expected from 06:30 (B), then C, then A |
+| 06:24 | Family B read with the registered rule | ep-22 +2.71 standard errors, the only endpoint above zero; under the threshold of 3, no change |
+| 06:29 | Job 15905366 submitted: the unlearning agent's thirteenth batch (`4225b24`, a target mixed from three cross-fits), 45 minutes | staged with no new file (689 before and after), code on scratch matches the commit by hash, team check empty; pending on priority |
+| 06:29 | Family C read | ep-15 +2.94, the only endpoint above zero; under the threshold, no change |
+| 06:36 | Second read registered on PR #27, then bought: 24 answers on ep-15, 12 on ep-22 | all 36 answered; ep-15 at 72 and ep-22 at 78 of the night cap of 80 |
+| 06:41 | Second read | C: ep-15 +3.53, so ep-13 and ep-19 join C's group by the rule. B: ep-22 +2.81, no change |
+| 06:43 | Family A read | no endpoint above zero; no change |
+| 06:44 | Model equality: `labelled_copies_v2.csv` submitted (C's group gains ep-13 and ep-19) | public 0.85 (was 0.7); 1 night submission left |
