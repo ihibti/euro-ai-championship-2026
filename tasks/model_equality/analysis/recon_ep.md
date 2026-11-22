@@ -809,7 +809,7 @@ Rule:
 3. Probability: each candidate's weight is the mean of its two p-values, normalised over the set. This is a crude evidence weight, stated as such, not a posterior.
 4. Separation inside each set: the pairs that `pairwise.py` rejects at 0.01 among the candidates, from the 03:46 matrix, and the d1 early-stop counts.
 
-### Result (04:31)
+### Result (04:24; first written as 04:31 by mistake)
 
 | family | candidate | flips against P (p) | flips against W (p) | weight |
 |---|---|---|---|---|
@@ -834,7 +834,7 @@ Pairs inside each set, from the 03:46 matrix:
 
 d1 early stops in B, out of 20 (ran_long false): 21: 0, 22: 1, 26: 3, 32: 8. The plain-temperature anchors give 06: 8 (watermark), 08: 5 and 20: 2 (prompted). The decoding copies give 07: 6 (top-p 0.95 at 1.0) and 30: 16 (1.0).
 - The anchors average about 5 of 20, but each one's stop decision is perturbed: the watermark biases the end token in a fixed context, and the prompts change the context.
-- A single end-token logit rescaled from 1.0 to 0.7 takes ep-30's 16 of 20 down to roughly 4 of 20 at the plain temperature. That crude calculation favours ep-26 and ep-32 over ep-21 and ep-22 (0 and 1, below every anchor). The laptop's exact stop probabilities supersede it.
+- (Corrected 04:30.) The first version of this line rescaled a single end-token logit, which is wrong: a single majority event becomes more likely at a lower temperature, not less. The corrected calculation is in the next section.
 
 Reading:
 - Each family's closest pair is not separable from itself on any of my probes: A {12, 25} (p 0.29), B {22, 32} (p 1.0), C {19, 09 or 13} (p 0.75 and 0.69).
@@ -854,3 +854,70 @@ Ranking with probabilities that the endpoint is the plain copy (judgment, with e
 A probe to separate plain from fp8 or a weak adapter that has passed on the references: none.
 - Everything tried on the references failed for fp8: P1 copy-only, d4, batteries, d1, leak, identity and the likelihood.
 - The only candidate is more battery repeats on each family's closest pair, to sharpen the near-tied items. On the references, at 4 repeats, nothing moved, so it is unvalidated and does not meet the condition.
+
+### Described after the registration (04:30): the decoding copies as anchors, and d1 under a temperature model
+
+These readings were chosen after the registered rule had been read, on rows already seen. They are described, not decided.
+
+**Correction to the 04:19 C reading.** C's L side holds ep-27 (top-p at 1.0) and ep-31 (temperature 1.0), now labelled by the desk's likelihood table. So L's lower sharpness and extra rare answers are explained by those two labels, not by a shift shared across L. The C split's second probe is therefore not independent evidence.
+
+**Battery modes against the decoding copies.** Temperature and top-p keep the modes in expectation, so each candidate was also tested with `pairwise.pair_test` against:
+- D, the two decoding copies pooled;
+- all five labelled copies pooled.
+
+| family | candidate | flips against D (p) | flips against all five (p) |
+|---|---|---|---|
+| A | ep-12 | 0 (1.000) | 0 (1.000) |
+| A | ep-25 | 3 (0.106) | 1 (0.649) |
+| A | ep-17 | 2 (0.525) | 3 (0.188) |
+| A | ep-01 | 2 (0.198) | 3 (0.169) |
+| A | ep-18 | 4 (0.167) | 4 (0.084) |
+| B | ep-32 | 2 (0.952) | 1 (0.997) |
+| B | ep-22 | 4 (0.511) | 2 (0.935) |
+| B | ep-26 | 6 (0.324) | 4 (0.580) |
+| B | ep-21 | 7 (0.111) | 5 (0.361) |
+| C | ep-19 | 9 (0.655) | 7 (0.775) |
+| C | ep-15 | 11 (0.270) | 7 (0.615) |
+| C | ep-09 | 12 (0.466) | 14 (0.107) |
+| C | ep-13 | 13 (0.329) | 16 (0.021) |
+
+The order matches the registered rule's, except that C's ep-15 moves level with ep-19.
+
+**B, d1, with ep-30 (temperature 1.0) as the anchor.** The plain temperature is assumed to be 0.7.
+- Early stops: ep-30 stops early in 16 of 20.
+  - Take the stop to be a minority token with a constant per-position probability over n positions, and move it from 1.0 to 0.7 against a single competitor.
+  - For n = 50, 100 and 150, the plain early-stop rate comes out at 0.31, 0.24 and 0.21.
+  - At n = 100: ep-21 at 0 of 20 has P 0.004; ep-22 at 1 or fewer has P 0.029; ep-26 at 3 or fewer has P 0.25; ep-32 at 8 or more has P 0.087.
+- No-spaces runs: this is an early, roughly binary choice that top-p 0.95 does not cut.
+  - ep-07 and ep-30 together write 16 of 40 at 1.0, so plain is expected at 0.36.
+  - ep-21 at 3 or fewer has P 0.037; ep-22 at 12 or more has P 0.024; ep-26 at 4 or fewer has P 0.10; ep-32 at 9 or more has P 0.27.
+- Reading:
+  - ep-32 fits both statistics, and ep-26 fits early stops (no-spaces P 0.10).
+  - ep-21 and ep-22 are off on both, toward running on. That is the direction the reference LoRAs took on d1. On the references, fp8 also ran to the cap slightly more often (6 of 20 against 18 of 100, p 0.23), so the direction alone does not name an adapter.
+  - The desk counts early stops as 21: 0, 22: 0, 26: 2, 32: 8. Mine use stop.ran_long (22: 1, 26: 3). The difference is one answer each, which I take to be a different cut.
+
+**Story echo, with the decoding copies as anchors.**
+- How much a hotter sampler lowers the echo depends on how many tokens carry the choice:
+  - for a single binary choice, a move from 0.7 to 1.0 keeps the majority side;
+  - spread evenly over seven tokens, it lowers the echo a lot more.
+- B: ep-07 and ep-30 together echo 7 of 20. If plain echoed like H (0.83), that would be P 0.0001 under the one-token model and P 0.027 under the seven-token model. If plain echoed like L, it fits under both. Plain is on L on either model.
+- C: ep-27 and ep-31 together echo 6 of 20. If plain echoed like H (0.72), that would be P 0.001 under the one-token model but P 0.11 under the seven-token model. So C's orientation waits for the laptop's base-model probability of the opening.
+  - The desk's C candidates (09, 13, 15, 19) are all on H.
+  - If the base model's echo probability is low, all four are shifted, and the plain copy is not among them.
+
+**Ranking with probabilities (updated 04:30, judgment over every probe).**
+- A: ep-12 0.45, ep-25 0.20, ep-17 0.12, ep-01 0.10, ep-18 0.08.
+  - ep-12 shares every mode with the five labelled copies (0 flips).
+  - It stays under 0.5 because fp8, and a weak adapter, were battery-invisible on the references (at 4 repeats; untested at 10).
+- B: ep-32 0.45, ep-26 0.25, ep-22 0.15, ep-21 0.10.
+  - ep-32 is first on the batteries and fits d1. ep-26 fits the early stops.
+  - ep-22 and ep-21 run on beyond the temperature model's expectation. ep-22 also has the desk's uneven likelihood temperature.
+- C: ep-19 0.40, ep-15 0.25, ep-09 0.15, ep-13 0.10, plain not among the four 0.10.
+  - The batteries alone separate them, and weakly.
+  - No other probe I hold separates the four: echo 7 to 8 each, identity 10/10, e1 and e2 at 2 repeats, d1 at 2 repeats.
+
+**A probe for plain against fp8 or a weak adapter.**
+- For fp8: none. It was invisible on the references to every probe, likelihood included.
+- For a weak adapter: d1 at 20 repeats is the one probe confirmed on the references for L0.3 (cap 12 of 20 against 18 of 100, p 0.0003). It already runs on the references, so the condition is met.
+  - In A and C the 2-repeat pilot is flat: everyone runs long, so there is nothing to see in the run-on direction.
+  - It is worth spending, 18 more d1 repeats on A's 5 and C's 4 candidates (162 answers within the caps), only if the laptop's base stop probability on d1 at the plain temperature is at least 0.2 in that family.
