@@ -84,6 +84,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 **Evidence it is sound.**
 - Each of the first ten night submissions changed one setting and carried a prediction posted before its score. For example, the temperature-only test predicted about 0.008 and scored 0.0057. The eleventh, the seed average, was chosen without a score model.
 - Spill probes on held-out images measured drift before anything was queued.
+- The last batch of the night (07:12, a target mixed from three independent cross-fits) had four pass conditions posted on #21 before the job ran. It failed two, and the last submission of the night was left unused.
 - A simulation of 4,000 random 30% splits shows that the ratio between two of our lines moves by about 1% (one standard deviation). Every gap the night acted on is far outside that: 6% between 0.2665 and 0.2837, 22% to 0.2222. The average's own +0.7% is inside it.
 
 **Result.** From 0.00 at 22:19, through 0.066 (01:38), 0.2133 (02:08) and 0.2837 (02:38), to 0.2858 (04:39). The steps in between scored 0.2222, 0.256 and 0.2665, each lower, and each said why.

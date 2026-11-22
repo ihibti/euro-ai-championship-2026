@@ -145,3 +145,5 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 06:50 | Two files for family B prepared and checked, not submitted: ep-32 added, and ep-32 with ep-26 | decision 1 of the morning brief; the desk keeps to "no change for B tonight", as written before the second read |
 | 06:54 | The local analysis (base-model scoring, the fp8 test, its rule, the desk's cluster scripts) copied from the session's temporary folder into the repository | `tasks/model_equality/analysis/local_anchor/`, `jsc/night_desk/`, `tasks/unlearning/desk_build/` |
 | 07:12 | Job 15905366 completed (23 minutes 46 seconds), no failed run | reports on `desk/unlearning` at `6bd108e`; hashes on #21; no job in the queue |
+| 07:15 | The unlearning agent ran its four checks on the thirteenth batch: two failed (cross-fits disagree on 4.7% and 5.3% against a floor of 5%; loss at x2 2.91/3.03 against 3.8 within 0.4) | last unlearning slot left empty; the night ends at 0.2858; no GPU request open |
+| 07:16 | Pull request #33 opened: the night's records, brief, defense pack and analysis code to `main` | merged once the brief is final |

@@ -33,15 +33,15 @@ The lead at 00:15: the final ranking uses other data than the board. The board s
 - **Devin** builds a second method for model equality. Since about 23:20 it runs on the lead's second laptop, which it shares with the unlearning agent (#24). That laptop holds no scoreboard key.
 - Both reach you only through GitHub, by the protocol in `AGENTS.md`, section Requests to the desk. Pinned status issue: #19.
 
-## State at 07:00, read this first
+## State at 07:20, read this first
 
 - **Scores:** watermark 0.7444, model equality 0.85 (06:44), unlearning 0.2858 (04:39).
-- **Night submissions left until 09:00:** model equality 1 (the desk plans none), unlearning 1 (only if the unlearning agent queues a line on #12 after its four checks, by 08:40), watermark 0.
-- **Cluster:** job 15905366 (thirteenth unlearning batch, `4225b24`) running since 06:48, 45 minutes at most. When it ends: pull `output/kkrgp/k13_*.json`, `d13_mix_probe.json`, `xfit_extras_s*.json`, `xfit_extras_s*_exact.npy`, `seventh/log_*.txt`, `seventh/logits.npz`, `seventh/sha256.txt` and `desk/eighth.out` into `reports/21/thirteenth/` on `desk/unlearning`, copy the three `k13_*.pt` to the laptop with `pull_ckpt.sh`, post the hashes on #12. Only the connection to `jureca03` (`jureca-mux2`) shows scratch.
+- **Night submissions left until 09:00:** model equality 1 (the desk plans none), unlearning 1 (stays empty: the thirteenth batch failed two of its agent's four checks, #12 at 07:15), watermark 0.
+- **Cluster:** no job running or pending, and no request open. Job 15905366 (thirteenth unlearning batch) ended at 07:12; its reports are on `desk/unlearning` at `6bd108e` and its three checkpoints on the lead's main laptop. Only the connection to `jureca03` (`jureca-mux2`) shows scratch.
 - **Model equality:** the fp8 test and its registered rule are on PR #27 and in `tasks/model_equality/analysis/local_anchor/` (code, tables, README). C changed by the rule; B stopped at +2.81 under the threshold of 3; A has no candidate. Two prepared files for B wait for the lead (morning brief, decision 1). Do not submit them as the desk.
 - **Scored answers:** night cap 80 per endpoint. ep-22 is at 78, ep-15 at 72, the rest of A at 64, of B at 66, of C at 48.
 - **Documents:** `morning-brief.md` (final by 08:30), `docs_and_plans/guides/judges-defense.md`, the night log in `night-plan.md`. A pull request of this branch to `main` is still to open and merge once the brief is final.
-- **Agents:** Devin stopped new work at 07:00; the unlearning agent keeps its brief current until 07:30 and decides the last slot from the thirteenth batch. The desk's two subagents stopped at 04:47 and were not resumed.
+- **Agents:** Devin stopped new work at 07:00; the unlearning agent keeps its brief current until 07:30 and has no open request. The desk's two subagents stopped at 04:47 and were not resumed.
 
 ## State at 02:45
 

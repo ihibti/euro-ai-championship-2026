@@ -1,15 +1,15 @@
 # Morning brief, 22 November
 
-Draft kept current through the night by the desk. Final version by 08:30. The event ends at 12:00; last submissions by 11:00.
+Written by the desk through the night. Final at 07:20; anything later is added under "State". The event ends at 12:00; last submissions by 11:00.
 
 For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night in ten lines, the three tasks, why this is not leaderboard fitting, the organizers' rules, ten likely questions). Four points in it are marked **for the lead**.
 
-## State at 07:15
+## State at 07:20
 
 - **Scores:** watermark 0.7444, model equality **0.85** (06:44, was 0.7), unlearning 0.2858 (04:39). Read the public board first thing: the agents have no way to read it, so our rank is unknown since 23:45.
 - **Cluster:** no job running or pending. The last one, 15905366 (the unlearning agent's thirteenth batch), ran from 06:48 to 07:12 without a failed run.
-- **Night submissions left until 09:00:** model equality 1, unlearning 1.
-- **Unlearning:** the last night slot is used only if the thirteenth batch passes the four checks its agent wrote before the job (#21).
+- **Night submissions left until 09:00:** model equality 1, unlearning 1. Both stay unused unless you say otherwise.
+- **Unlearning:** the night ends at 0.2858. The last batch (a target mixed from three cross-fits) failed two of the four checks its agent had fixed before the job, so the agent left the last slot empty (#12, 07:15). No GPU request is open.
 - **Model equality:** a new test found family C's fp8 copy, which gave the 0.85; see "Model equality" below. The next step is yours (decision 1).
 - **The desk was down from 04:47 to 06:00** (usage limit of the session). Nothing was running on the cluster in that hour and nothing was lost.
 
@@ -59,6 +59,10 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 | 03:38 | `k9_e3t1_lr1e4_x1p25.pt` (a gentler recipe, last layer times 1.25) | 0.256 |
 | 04:08 | `k8_e3t2_rm1_ep40_x2p25.pt` (a sibling run, last layer times 2.25) | 0.2665 |
 | 04:39 | `k11_b_soup3_x2.pt` (average of the weights of the 0.2837 run and its two new seeds, last layer times 2) | 0.2858 |
+
+After the 0.2858, two more batches ran on the cluster and neither was submitted:
+- *Twelfth* (seeds of the same recipe): withdrawn by the agent, the seeds are the same model where the score is measured.
+- *Thirteenth* (job 15905366, a target mixed from three independent cross-fits): the three cross-fits agree on 95% of the images, so the mix adds little, and the result sits between the 0.2133's level and the 0.2837's. Checks 1 and 3 of four failed. A larger last-layer factor would move it closer, but that is a dial chosen after the result, so it was not tried.
 
 ## Model equality
 
