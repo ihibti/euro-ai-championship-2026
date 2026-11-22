@@ -14,12 +14,12 @@ You said at 08:15: we are 8th, we need 6th, push something new. Model equality i
 
 0. **A GPU job is running for this: 15905724**, submitted at 08:30, the unlearning agent's fourteenth batch (four runs at a lower target temperature, about 25 minutes, ends about 08:56). Its agent gives it 1 chance in 3 of a line more than 2% above 0.2858, and says nothing else on the laptop is likely to beat 0.2858. If the laptop was offline when the job ended, the results are still on the cluster: the desk pulls them when you wake it.
 1. **Wake the desk:** type anything in its session once the laptop is online. It reopens the cluster link, pulls the results, reads #12 and tells you what to submit.
-2. **If the desk does not answer, submit this yourself** (from 08:51, one unlearning submission per 30 minutes, it asks you to type a confirmation):
-   `cd ~/orca/workspaces/euro-ai-championship-2026/brill; make submit TASK=unlearning FILE=data/unlearning/candidates/k9_e3t2_lr1e4_ep40_x2.pt`
-   - The unlearning agent disagrees with this file: by its diagnostics the `k9` runs overshoot. It is a test of the desk's reading against the agent's; if you have few slots, keep them for the fourteenth batch's line.
-   - Why this file: at the same learning rate and factor, 40 epochs instead of 25 gained 26% (0.2133 to 0.2687, scored at 08:21). This is the same step applied to our best single run. Prediction on #12: 0.295, range 0.283 to 0.305.
-   - If it is a new best, the follow-up is `data/unlearning/candidates/k9_e3t2_lr2e4_x2.pt`, unless the unlearning agent's list on #12 says otherwise.
-   - If it is under 0.283, stop: this axis is used up.
+2. **If the desk does not answer, submit these yourself, in this order** (one unlearning submission per 30 minutes; the last was at 08:21; each asks you to type a confirmation). The order is the unlearning agent's ranked list on #12 (08:32); both files are built and checked:
+   - First: `cd ~/orca/workspaces/euro-ai-championship-2026/brill; make submit TASK=unlearning FILE=data/unlearning/candidates/m14_t1_blend3_x1p5.pt`
+     The agent's prediction: 0.29 to 0.31, about 2 chances in 5 of a gain the board registers.
+   - Second, 30 minutes later, unless the first scored under 0.25: `make submit TASK=unlearning FILE=data/unlearning/candidates/m14_t15_blend_x1p74.pt` (about 1 in 4).
+   - Third: the best line of the GPU batch, which the agent names on #12 once the reports are pulled. That needs the desk.
+   - Spare, the desk's own line, which the agent rates lower: `data/unlearning/candidates/k9_e3t2_lr1e4_ep40_x2.pt`.
 3. **After each submission:** `git add tasks/unlearning/submissions; git commit -m "Unlearning submission record"; git push`
 4. **Tell the desk three numbers from the board:** the best score per task, and the overall scores of the 6th and 7th teams. They say how much unlearning must gain.
 5. **Ask an organizer** whether the best public submission or the last one counts. The server's reply reads "Your previous best on this task still leads", which suggests the best. If it is the last, finish with `data/unlearning/candidates/k11_b_soup3_x2.pt` (0.2858) unless something scored higher.
