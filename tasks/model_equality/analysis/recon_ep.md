@@ -648,3 +648,14 @@ A, the seven unlabelled ordered from most to least likely plain. Inputs are ever
 7. **ep-14**: no battery flag. e2 yes 0/10 against 0.35 (p about 0.04). Likelihood puts it at the LoRA 1.5 signature (tau 0.87, z 3.8).
 
 The ordering is weak in the middle. Only ep-12 is clean on every probe. ep-18 and ep-25 being rejected against each other (p 0.001) says at least one of them is not plain.
+
+## Second story registration: the temperature copies (written 03:54; one fresh story answer per scored endpoint existed, unread)
+
+On the references the temperature copy has the shortest story prefix (1.6 characters, against 13.6 to 118.5). The battery counts point to one hot copy per family: it gives the most rare battery answers (tokens given once in 10 answers on an item) and is the least sharp non-prompted endpoint:
+- A: ep-33, 12 rare answers, the most of any non-prompted A endpoint; temperature 1.0 by likelihood;
+- B: ep-30, 62 rare answers, against at most 17 elsewhere; sharpness 0.779;
+- C: ep-31, 60 rare answers, against at most 47; sharpness 0.666.
+
+Prediction, read with `watermark.py --min-repeat 2`: on fresh story rows, ep-33, ep-30 and ep-31 each have the shortest mean story prefix among the non-prompted endpoints of their family. Chance for all three is 0.0014.
+
+A described battery check for a truncated-sampling copy (few rare answers given many minority answers) fails its validation on A. ep-14, the truncated copy by likelihood, has 5 rare answers out of 48 minority answers (0.10). That is indistinguishable from ep-24 (0.09) and ep-01 (0.11). So the batteries cannot name a second decoding copy in B or C.
