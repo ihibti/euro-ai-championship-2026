@@ -125,6 +125,9 @@ def choice_options(prompt: str) -> list[tuple[str, str]]:
 def choice_value(text: str | None, options: tuple[str, str]) -> float:
     if text is None:
         return np.nan
+    echo = f"b) {options[1]}".lower()
+    if echo in text.lower():
+        text = text[text.lower().rindex(echo) + len(echo) :]
     match = LETTER.match(text)
     if match:
         return 1.0 if match.group(1) == "A" else 0.0

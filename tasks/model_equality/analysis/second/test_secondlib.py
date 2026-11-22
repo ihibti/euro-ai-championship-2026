@@ -180,3 +180,9 @@ def test_family_groups_join_whole_model_groups_and_nested_labels_keep_models_ins
     assert labels["a"] == labels["b"]
     assert labels["a"][0] == labels["c"][0] and labels["a"][1] != labels["c"][1]
     assert labels["d"][0] != labels["a"][0]
+
+
+def test_choice_value_reads_the_answer_after_an_echoed_question():
+    options = ("Max", "Buddy")
+    assert s.choice_value("Which is a better name for a dog? A) Max B) Buddy - A", options) == 1.0
+    assert s.choice_value("Which is a better name? A) Max B) Buddy Buddy", options) == 0.0
