@@ -10,7 +10,7 @@ Public leaderboard scores at the close of the event. The final ranking uses the 
 |---|---|---|---|
 | Watermark localisation | 0.7444 | one segmentation network per watermark method, trained on synthetic composites made with the organizers' embedders and scored on a held-out fifth of the real images | `tasks/watermark_localization/` |
 | Model equality | 1.00 | each endpoint is identified as a named variant of a public base model (system prompt, sampling setting, watermark, adapter); fp8 copies are found with a likelihood-ratio test against a simulated fp8 copy | `tasks/model_equality/` |
-| Unlearning | 0.3019 | fine-tune towards a cross-fitted stand-in for the retrained model, rescale the last layer, average the weights of several runs | `tasks/unlearning/` (write-up: `method.md`, log: `night.md`) |
+| Unlearning | 0.3101 | fine-tune towards a cross-fitted stand-in for the retrained model, rescale the last layer, average the weights of several runs | `tasks/unlearning/` (write-up: `method.md`, log: `night.md`) |
 
 - **Methods, evidence, what failed and limits:** [docs_and_plans/guides/methods-and-results.md](docs_and_plans/guides/methods-and-results.md).
 - **How the work was done:** most of it ran overnight, by coding agents working under limits the team lead set beforehand (one agent alone could submit or use the cluster). The rules they followed are in [AGENTS.md](AGENTS.md); the log of the night is [docs_and_plans/work/doing/night-plan.md](docs_and_plans/work/doing/night-plan.md).
