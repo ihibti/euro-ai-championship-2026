@@ -44,4 +44,9 @@ uv run python group2.py --prefix ref- --out grouping_refs.csv --subsample 30
 uv run python group2.py --prefix ep- --answers ../../answers/round1-ep.jsonl --out grouping_round1.csv
 uv run python compare.py --mine grouping_round1.csv --theirs ../round1_ep.csv \
     --evidence grouping_round1_pairs.csv --out compare_round1.md
+uv run python recon_map.py --prefix ep- --answers ../../answers/round1.jsonl --k 3 --out recon_ep
+uv run python recon_evidence.py --prefix ep- --answers ../../answers/round1.jsonl \
+    --families recon_ep.csv --out recon_ep_evidence
 ```
+
+The map of the 33 scored endpoints, with its evidence, is `recon_ep.md`.

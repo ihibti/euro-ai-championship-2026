@@ -11,7 +11,8 @@ cut at the largest gap between successive merge heights among the last eight mer
 Usage, from the repository root:
   uv run python tasks/model_equality/analysis/second/recon_map.py --prefix ep- \\
       --answers tasks/model_equality/answers/round1.jsonl --out recon_ep
-Writes <out>.md and <out>.csv (endpoint,family,model with one model per endpoint).
+Writes <out>_tree.md and <out>.csv (endpoint,family,model with one model per endpoint).
+--k fixes the number of families instead of the gap rule.
 """
 
 from __future__ import annotations
@@ -107,21 +108,12 @@ def standardise(values: dict) -> dict:
     return {k: ((v - mean) / spread if np.isfinite(v) else 0.0) for k, v in values.items()}
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--answers", type=Path, nargs="+", required=True)
-    parser.add_argument("--prefix", required=True)
-    parser.add_argument("--out", required=True)
-    args = parser.parse_args(argv)
-    rows = [row for path in args.answers for row in s.read_jsonl(path)]
-    corpus = s.build_corpus(rows, prefix=args.prefix)
-    endpoints = sorted(corpus.answers)
+def pair_distances(corpus: s.Corpus, endpoints: list[str]) -> tuple[dict, dict, dict, dict]:
     batteries = s.item_matrices(corpus)
     trivia = {e: item_rates(batteries[e]["bat_trivia"]) for e in endpoints}
     choice = {e: item_rates(batteries[e]["bat_choice"]) for e in endpoints}
     texts = {e: [t for q in TEXT for t in corpus.answers[e].get(q, [])] for e in endpoints}
     grams = {e: profile(texts[e]) for e in endpoints}
-
     d_trivia, d_choice, d_text = {}, {}, {}
     for a, b in itertools.combinations(endpoints, 2):
         both = np.isfinite(trivia[a]) & np.isfinite(trivia[b])
@@ -135,9 +127,18 @@ def main(argv: list[str] | None = None) -> int:
             float(np.mean(np.abs(choice[a][both] - choice[b][both]))) if both.any() else np.nan
         )
         d_text[(a, b)] = 1.0 - cosine(grams[a], grams[b])
-    parts = [standardise(d_trivia), standardise(d_choice), standardise(d_text)]
-    combined = {k: float(np.mean([p[k] for p in parts])) for k in d_text}
+    parts = {"trivia": d_trivia, "choice": d_choice, "text": d_text}
+    return parts, trivia, choice, texts
 
+
+def combine_parts(parts: list[dict]) -> dict:
+    standardised = [standardise(p) for p in parts]
+    return {k: float(np.mean([p[k] for p in standardised])) for k in parts[0]}
+
+
+def cluster(
+    endpoints: list[str], combined: dict, k: int | None = None
+) -> tuple[list[list[str]], np.ndarray, float]:
     size = len(endpoints)
     matrix = np.zeros((size, size))
     for (a, b), value in combined.items():
@@ -148,15 +149,35 @@ def main(argv: list[str] | None = None) -> int:
     tree = linkage(squareform(shifted, checks=False), method="average")
     heights = tree[:, 2]
     tail = heights[-8:] if len(heights) >= 8 else heights
-    gaps = np.diff(tail)
-    cut_index = int(np.argmax(gaps)) if len(gaps) else 0
-    threshold = float((tail[cut_index] + tail[cut_index + 1]) / 2.0) if len(gaps) else float("inf")
-    families_k = len(tail) - cut_index
-    clusters = fcluster(tree, t=threshold, criterion="distance")
+    if k is None:
+        gaps = np.diff(tail)
+        cut_index = int(np.argmax(gaps)) if len(gaps) else 0
+        threshold = (
+            float((tail[cut_index] + tail[cut_index + 1]) / 2.0) if len(gaps) else float("inf")
+        )
+        clusters = fcluster(tree, t=threshold, criterion="distance")
+    else:
+        threshold = float("nan")
+        clusters = fcluster(tree, t=k, criterion="maxclust")
     families: dict[int, list[str]] = {}
-    for endpoint, cluster in zip(endpoints, clusters, strict=True):
-        families.setdefault(int(cluster), []).append(endpoint)
-    ordered = sorted(families.values(), key=lambda g: g[0])
+    for endpoint, label in zip(endpoints, clusters, strict=True):
+        families.setdefault(int(label), []).append(endpoint)
+    return sorted(families.values(), key=lambda g: g[0]), tail, threshold
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--answers", type=Path, nargs="+", required=True)
+    parser.add_argument("--prefix", required=True)
+    parser.add_argument("--out", required=True)
+    parser.add_argument("--k", type=int, help="number of families; default: the gap rule")
+    args = parser.parse_args(argv)
+    rows = [row for path in args.answers for row in s.read_jsonl(path)]
+    corpus = s.build_corpus(rows, prefix=args.prefix)
+    endpoints = sorted(corpus.answers)
+    parts, trivia, choice, texts = pair_distances(corpus, endpoints)
+    combined = combine_parts(list(parts.values()))
+    ordered, tail, threshold = cluster(endpoints, combined, args.k)
 
     labels = {e: (f"F{i}", f"F{i}-{e}") for i, fam in enumerate(ordered, start=1) for e in fam}
     out = HERE / args.out
@@ -171,8 +192,13 @@ def main(argv: list[str] | None = None) -> int:
         "Built by the second method without reading the main line's map."
         f" Answers per endpoint and prompt: {min(sizes)} to {max(sizes)}.",
         "",
-        f"Families: {len(ordered)}, cut at the largest gap among the last merge heights"
-        f" ({', '.join(f'{h:.2f}' for h in tail)}); threshold {threshold:.2f}.",
+        f"Families: {len(ordered)}, "
+        + (
+            f"cut at the largest gap among the last merge heights; threshold {threshold:.2f}."
+            if args.k is None
+            else f"k = {args.k} set by the caller."
+        )
+        + f" Last merge heights: {', '.join(f'{h:.2f}' for h in tail)}.",
         "",
         "## Families and their evidence",
         "",
@@ -214,10 +240,8 @@ def main(argv: list[str] | None = None) -> int:
                 f"- Family {letter[fam[0]]}: "
                 + "; ".join(f"{a} {b} ({d:.2f})" for d, (a, b) in pairs[:5])
             )
-    out.with_suffix(".md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(
-        f"wrote {out.name}.md and {out.name}.csv; families: {len(ordered)}; k from gap {families_k}"
-    )
+    out.with_name(f"{out.name}_tree.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"wrote {out.name}_tree.md and {out.name}.csv; families: {len(ordered)}")
     for fam in ordered:
         print("family", letter[fam[0]], " ".join(fam))
     return 0
