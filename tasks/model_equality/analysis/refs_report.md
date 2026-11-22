@@ -501,3 +501,9 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
   - Combined p 0.50, with 2 of 4 probes in the predicted direction: d2 p 0.085 and d1 p 0.44 agree; d3 p 0.94 and d4 p 0.74 do not.
   - d1 runs long: plain 6/11, fp8 5/11. d4 copy-only: 7/11 each.
   - The old rows show no fp8 stop effect on the text-side measures.
+- **Extension (04:36, dcd6207).** The chain stopped night_d at repeat 11 and moved to p3_repeat, the same prompt as d1, at 30 repeats. Before any of those rows was read, the same test was registered for p3_repeat at repeat >= 10, with p < 0.01 deciding.
+- **Result (04:37).**
+  - The d rule has 1 fresh answer per probe and endpoint, so it has no power. Combined p 0.95; **not revived**.
+  - p3 extension, 20 fresh answers each: fp8 stops earlier in the predicted direction. Median repetitions are 2 against 10, and fp8 runs long 3/20 against plain 7/20. One-sided p 0.104, not below 0.01, so **not revived**.
+  - Described only: repeats 0 to 9 go the same way (p 0.19). Pooled over p3 and d1, every repeat (42 answers each): runs long 10 against 17, one-sided p 0.074.
+- Reading: on the text-side stop measures, fp8 leans toward stopping earlier on the repetition prompt, consistent with the desk's stop channel, but at no tested depth is it decisive. The P1 copy-only candidate is not revived either: d4's one fresh answer each is uninformative.
