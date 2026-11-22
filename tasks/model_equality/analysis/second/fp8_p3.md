@@ -11,3 +11,14 @@ Answers: `night-b.jsonl` p3_repeat at 30 repeats (`af2f973`) and `night-d.jsonl`
 - mode statistic (`clique.py`, alpha 0.01): the pair is not rejected.
 
 At 40 answers none of the second method's features separates fp8 from plain on this prompt.
+
+## Trivia battery and identity at 14 answers each (`6260e78`)
+
+Mode statistic, plain (ref-01) against fp8 (ref-02):
+
+| probe | standardised z | p |
+|---|---|---|
+| bat_trivia | 2.13 | 0.074 |
+| idn_identity | 1.37 | 0.078 |
+
+The two probes together are not rejected either (`clique.py`, alpha 0.01). Mean trivia correctness is 0.338 for plain and 0.360 for fp8. Both probes lean the same way, but at 14 answers neither separates fp8.
