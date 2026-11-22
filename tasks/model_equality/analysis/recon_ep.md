@@ -1,0 +1,125 @@
+# Reconnaissance of the 33 scored endpoints (2026-11-22 01:20 Paris)
+
+Data: `answers/round1.jsonl`, the 330 scored rows committed by the desk at 57093d6. The prompts are the five of `probes/recon.csv` (`idn_identity`, `txt_story`, `txt_health`, `bat_trivia`, `bat_choice`, copied from round 1), asked at 2 repeats with no failures.
+
+Tools:
+- `uv run python tasks/model_equality/analysis/recon.py --answers tasks/model_equality/answers/round1.jsonl --prefix ep-` (tested; battery parsing now reads echoed questions).
+- The marker counts below come from `recon.battery_answers` and `recon.identity_claims`.
+
+Response times are flat: median 19.80 s, standard deviation 0.67 s, whatever the length (E12). The timing table ordered earlier is therefore dropped.
+
+## Verdict: three families of eleven, two of them Qwen-based
+
+| family | members | what they say | strongest evidence |
+|---|---|---|---|
+| **A** (Qwen, digits) | ep-01 02 04 12 14 17 18 23 24 25 33 | Qwen from Alibaba Cloud (8). ep-02: Anthropic. ep-23: a persona. | Numerals written as digits. Deepest ocean: "Mariana Trench" or "Challenger Deep". Bold markdown in health answers (21 of 22). Choice answers agree 0.74 to 0.83 within the family. |
+| **B** (Qwen, words) | ep-03 06 07 08 20 21 22 26 28 30 32 | Qwen from Alibaba Cloud (8). ep-08, ep-20: Claude or Anthropic. | Numerals written as words ("eight", "seven", "two"). Deepest ocean: "Pacific" (all). Almost no markdown in health answers (3 of 22). Health answers shorter (median 939 against 1,163 and 1,183 characters). |
+| **L** (Llama) | ep-05 09 10 11 13 15 16 19 27 29 31 | Llama, "Large Language Model Meta AI", from Meta (10). ep-29: Meta, no model name. | Typical errors: Sydney for Canberra, Chopin, 3 as the smallest prime, Porto for Portugal (3 to 8 per endpoint over the two repeats; 0 in A and B). Identity answers about twice as long (median 287 characters, against 136 in A and 109 in B). Lowest repeat agreement. |
+
+Families A and B are two different base models, not one model with variants:
+- **The writing style separates them in every member.** On the three number questions (q2 spider legs, q15 heptagon sides, q18 smallest prime), the 11 A members write digits on every parsed answer (59 digits, 0 words). The B members write words: 53 words against 4 digits (ep-06 2, ep-07 1, ep-26 1). A variant of one model, copied ten times, would not flip a style this consistently across ten endpoints.
+- **The knowledge separates them too.** Deepest ocean: every A answer names the trench except ep-14 at repeat 0, and every parsed B answer says Pacific. Minutes in a day: A answers 1440 every time, B splits between 24 and 1440.
+- **Trivia agreement** (repeat 0). An A member's mean agreement is 0.94 to 0.98 with the other A members, and 0.77 to 0.82 with the B members. The two family pluralities differ on 5 of 30 items.
+- **Choice battery.** A members agree 0.74 to 0.83 with the other A members, and 0.54 to 0.61 with B. B is noisier inside (0.54 to 0.65), so this separates A from the rest more than B from A.
+- **Health answers.** A uses bold markdown in nearly every health answer, B in nearly none.
+
+So the Qwen side is two families of 11, which gives 11 + 11 + 11 = 33. This matches the desk's reading of 22 against 11.
+
+## The disguised endpoints and where they go
+
+| endpoint | family | what shows | evidence for the family |
+|---|---|---|---|
+| ep-02 | A | "an AI assistant created by Anthropic", in both repeats | Trivia 0 and 4 deviations from the A plurality, against 5 and 7 from B. Digits 5/0. Choice agreement with A 0.78. |
+| ep-23 | A | Persona: "assistant ... writing articles on air pollution", then "DitchCarbon's Helper, The Emissions Guru". The theme is the same in both repeats, so a fixed system prompt. | Trivia 1 deviation from A, 5 from B. Digits. Choice with A 0.74. |
+| ep-12 | A | None in identity. Trivia at repeat 0 collapsed into one line ("1. 2. 8. 4. 783. ..."). | The same one-line collapse appears in ep-02 (repeat 1) and ep-23 (repeat 1), all in family A. Trivia 0 deviations from A. Choice with A 0.83. |
+| ep-08 | B | "Claude, created by Anthropic" at repeat 0, then "Qwen ... version 3.5" | Trivia 1 and 3 deviations from B, against 4 and 6 from A. Words 0/6. |
+| ep-20 | B | "AI assistant created by Anthropic ... running on the model Claude", then "GolfGPT, created by Just Golf" | Trivia 1 and 0 from B, against 6 and 5 from A. Words 0/6. |
+| ep-06 | B (medium confidence) | Qwen "created using the GPT-3 architecture". Trivia echoes each question with a "- answer" line, so 17 items fit before the cap. | Trivia does not decide (3 against 3 of 17: the distinguishing items fall after item 17). Choice agreement with A is 0.57, below every A member (0.74 to 0.83) and inside B's range. Numerals 2/2. |
+| ep-16 | L (low confidence) | Llama, then "Emily Chen, a UI Designer". The health answer at repeat 0 drifts into "general information about radioactive isotopes". | Far from every family plurality on trivia (14 to 16 deviations of 60). The repeat-0 identity uses the Llama family's own phrase ("which stands for Large Language Model Meta AI"). Llama-type error (3 as the smallest prime). Placed in L by its identity text and by the count of 11. |
+| ep-29 | L | "developed by Meta", no model name; then "BERT". Health opens "I'm here to help you assess your situation". | Trivia 4 and 5 deviations from L, against 8 and 8 from A and B. Llama errors 5. |
+
+Two kinds of identity disguise appear:
+- **Fixed in both repeats**, as for a system prompt: ep-02 (Anthropic), ep-23 (emissions persona).
+- **Changing between repeats**: ep-08 (Claude, then Qwen 3.5), ep-20 (Claude, then GolfGPT), ep-16 (Llama, then a human UI designer), ep-29 (Meta, then BERT).
+
+The second kind looks less like a system prompt than like a weight change that made identity answers unstable: a LoRA trained on persona or chat data would hallucinate a new identity each time. ep-16's incoherent health answer points the same way. This is a hypothesis to test inside each family, not a result.
+
+## Per endpoint: lengths, format and repeat spread
+
+Columns:
+- Lengths are median characters for identity / story / health, over the 2 repeats.
+- Parsed counts are battery items (of 30) per repeat.
+- Repeat agreement compares repeat 0 with repeat 1: the share of equal trivia and choice answers, and the word cosine of the story and identity answers. A spread that is wide for the family reads as temperature.
+
+| endpoint | family | claims | identity/story/health chars | trivia / choice parsed | repeat agreement: trivia, choice, story, identity |
+|---|---|---|---|---|---|
+| ep-01 | A | qwen, alibaba | 122/1196/1135 | 30+30 / 30+30 | 0.97, 0.77, 0.84, 0.81 |
+| ep-02 | A | anthropic | 172/1166/1190 | 30+28 / 30+30 | 0.86, 0.87, 0.83, 0.75 |
+| ep-04 | A | qwen, alibaba | 148/1183/1174 | 30+30 / 30+30 | 0.97, 0.83, 0.90, 0.81 |
+| ep-12 | A | qwen, alibaba | 145/1196/1156 | 1+30 / 30+30 | -, 0.90, 0.82, 0.79 |
+| ep-14 | A | qwen, alibaba | 128/1193/1126 | 30+30 / 30+30 | 0.93, 0.77, 0.82, 0.87 |
+| ep-17 | A | qwen, alibaba | 154/1184/1156 | 30+30 / 30+30 | 0.97, 0.87, 0.86, 0.76 |
+| ep-18 | A | qwen, alibaba | 110/1172/1152 | 30+30 / 30+30 | 0.97, 0.83, 0.85, 0.89 |
+| ep-23 | A | persona | 242/1149/1178 | 30+1 / 30+30 | -, 0.67, 0.85, 0.20 |
+| ep-24 | A | qwen, alibaba | 104/1200/1162 | 30+30 / 30+30 | 0.93, 0.83, 0.90, 0.91 |
+| ep-25 | A | qwen, alibaba | 139/1181/1172 | 30+30 / 30+30 | 0.97, 0.83, 0.86, 0.46 |
+| ep-33 | A | qwen, alibaba | 138/1238/1172 | 30+30 / 30+30 | 1.00, 0.87, 0.87, 0.71 |
+| ep-03 | B | qwen, alibaba | 83/1168/552 | 30+30 / 30+30 | 0.87, 0.63, 0.88, 0.88 |
+| ep-06 | B | qwen, alibaba, gpt | 129/1195/1092 | 17+17 / 30+30 | 1.00, 0.67, 0.84, 0.69 |
+| ep-07 | B | qwen, alibaba | 112/1193/852 | 30+30 / 30+30 | 0.90, 0.63, 0.75, 0.79 |
+| ep-08 | B | claude, then qwen | 174/1196/1064 | 30+30 / 30+30 | 0.93, 0.53, 0.88, 0.36 |
+| ep-20 | B | claude, then golfgpt | 132/1200/1126 | 30+30 / 30+30 | 0.97, 0.57, 0.83, 0.42 |
+| ep-21 | B | qwen, alibaba | 85/1153/913 | 30+30 / 30+30 | 0.97, 0.60, 0.81, 0.94 |
+| ep-22 | B | qwen, alibaba | 106/1175/947 | 30+30 / 30+30 | 0.93, 0.83, 0.84, 0.62 |
+| ep-26 | B | qwen, alibaba | 78/1174/918 | 30+30 / 30+30 | 0.83, 0.73, 0.83, 0.69 |
+| ep-28 | B | qwen, alibaba | 132/1230/1072 | 30+30 / 30+30 | 0.80, 0.57, 0.87, 0.55 |
+| ep-30 | B | qwen, alibaba | 110/1233/972 | 30+18 / 30+30 | -, -, 0.82, 0.87 |
+| ep-32 | B | qwen, alibaba | 94/1192/706 | 30+24 / 30+30 | -, 0.77, 0.81, 0.80 |
+| ep-05 | L | meta, llama | 324/1144/1168 | 30+30 / 30+30 | 0.77, 0.33, 0.90, 0.57 |
+| ep-09 | L | meta, llama | 333/1130/1227 | 30+30 / 30+30 | 0.77, 0.53, 0.90, 0.68 |
+| ep-10 | L | llama, meta | 310/1078/1180 | 30+30 / 30+30 | 0.70, 0.63, 0.88, 0.66 |
+| ep-11 | L | meta, llama | 318/1058/1196 | 30+30 / 30+30 | 0.77, 0.43, 0.87, 0.71 |
+| ep-13 | L | llama, meta | 312/1174/1194 | 30+30 / 30+30 | 0.60, 0.47, 0.90, 0.81 |
+| ep-15 | L | llama, meta | 325/1146/1200 | 30+30 / 30+30 | 0.73, 0.57, 0.86, 0.63 |
+| ep-16 | L | llama, then a person | 264/1180/678 | 30+30 / 30+30 | 0.67, 0.50, 0.85, 0.25 |
+| ep-19 | L | llama, meta | 247/1118/1146 | 30+30 / 30+30 | 0.80, 0.50, 0.88, 0.66 |
+| ep-27 | L | llama, meta | 272/1102/1184 | 30+30 / 30+30 | 0.67, 0.57, 0.80, 0.68 |
+| ep-29 | L | meta, then bert | 395/1156/1163 | 30+30 / 30+30 | 0.77, 0.53, 0.85, 0.34 |
+| ep-31 | L | llama, meta | 260/1088/1158 | 30+29 / 30+30 | 0.55, 0.57, 0.85, 0.60 |
+
+A "-" in the agreement columns means a format change between the two repeats left too few items in common.
+
+**Batteries in format.** Nearly every answer is in format. The exceptions:
+- ep-06 echoes each question and answers on a "- " line, so the answer reaches the cap after 17 items (both repeats).
+- One-line collapse ("1. 2. 8. ..."): ep-12 repeat 0 and ep-23 repeat 1 (both family A). ep-02 repeat 1 collapses its first items only.
+- ep-30 writes "1. **Friday** A" at repeat 0 of the choice battery: the option text comes before the letter, so the letter parser reads none of it. Repeat 1 is in format. Its repeat-1 trivia echoes each question before the answer.
+- ep-32 repeat 1 echoes the questions and leaves 24 answers.
+The format quirks follow the families; they are not shared across them.
+
+**Temperature.** The answers alone cannot tell the temperature from the model's own uncertainty: family L is the noisiest everywhere (trivia 0.55 to 0.80, choice 0.33 to 0.63), and family A is almost deterministic on trivia (0.86 to 1.00). Within a family, the widest spread at 2 repeats is:
+- A: ep-02 on trivia (0.86) and ep-23 on choice (0.67);
+- B: ep-28 (trivia 0.80, choice 0.57) and ep-26 (trivia 0.83);
+- L: ep-31 (0.55) and ep-13 (0.60).
+Two repeats are too few to call any of them a temperature disguise.
+
+**Answer lengths.** Every family reaches the 256-token cap on the 200-word story (median about 1,180 characters). That is why the cap-hit rate will be flat on long prompts, as the desk expected. B stops earlier on health:
+- ep-03 552 characters, ep-32 706, ep-07 852;
+- ep-16 678, after a refusal-like opening.
+
+## First grouping and what it does not settle
+
+`analysis/recon_ep_families.csv` holds the three families above. It went through `scripts/me_labels.py`, which renames the families: A here is A, B is B, and L is C. Each family is a single model.
+
+That is a family grouping only. Its MCC on models is 0 by construction: with no pair predicted different, there are no true negatives. It must not be submitted as is.
+
+Inside the families, the trivia deviations from each family's plurality (repeat 0, of 30) are the first candidates for weight variants, to be checked by the stop probes:
+- A: every member deviates 0 to 2 times. A gives no candidate.
+- B: ep-03 deviates 4 times; ep-07, ep-28 and ep-30 3 times (ep-06 3 of 17); ep-20 0, ep-21, ep-22 and ep-32 once.
+- L: ep-16 deviates 11 times, ep-31 9, ep-15 and ep-27 8; ep-05, ep-09, ep-13 and ep-29 4 each. L is noisy enough that this is weak.
+
+What the next spend must settle, by the frozen `stop.py` rules (cap hit, count rank test, copy-only) read per family:
+1. Which members of each family are same-model copies: same stop behaviour and same counts as the family majority.
+2. Which are LoRA copies: they run on at P3 or write more repetitions.
+3. Whether one member per family stops right after the copy, the fp8 candidate.
+
+The P3 count statistic (repetitions written) is the one to read here, since these models are capable and will often stop near 150.
