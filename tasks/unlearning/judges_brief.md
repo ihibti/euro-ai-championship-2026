@@ -200,6 +200,25 @@ The three pick different classes on 16% of the forget images, but only between n
 
 **The weight average** of the three, x2 (`k11_b_soup3_x2`, built with the same arithmetic as `soup.py`), scored **0.2858**, against 0.2837 for its base. That is +0.7%, inside the board's 1%. So the 0.2837 was a typical draw of its recipe. The average is our final line because it carries less seed noise into the hidden 70%, not because of its public margin. The twins' near-identity at T=2 also says that more seeds, or distilling their mixture into one network, cannot move the score. The twelfth batch (eight more seeds) was withdrawn for that reason.
 
+## The last experiment: a mixture of independent cross-fits (06:24)
+
+**Why.** Gold is the average of several independently retrained models. Our target comes from one cross-fit, so every seed of the recipe chases the same target, and the seeds end up as one model at T=2 (previous section). The cross-fit retrains the last 3 blocks from scratch, the way gold retrains everything. Two more cross-fits with other seeds (other folds, other initialisations) should therefore disagree the way gold models do. The fine-tune then aims at the mixture of the three extrapolated targets at temperature 2. This changes the target, not a dial; it is the one such line we had left.
+
+**How.**
+- `csd.py --extra-targets` and `lib.mixture_targets` (tested; smoke-tested on the laptop) are new.
+- The thirteenth batch (`run_thirteenth.sh`, job 15905366) runs:
+  - two cross-fits;
+  - the 0.2837's recipe aimed at the mixture, with seeds 0 and 1, and a probe;
+  - the average of the two seeds, x2: `k13_mix_soup_x2`.
+
+**The rule, fixed on #21 before any result** (`check_thirteenth.py`, tested). The line goes in the last night slot only if:
+1. the new cross-fits' held-out class differs from the first's on more than 5% of the images;
+2. at T=2 the line differs from the 0.2858 by more than the seed twins differ (KL above 0.026 nats);
+3. its forget loss at x2 is within 0.4 of 3.8, mean and spread;
+4. its probe changes at most 6.0% of predictions.
+
+**Result:** pending at 06:50; the job was waiting for a node (estimated start 07:30).
+
 ## Where the ceiling is: training reach
 
 The ledger can score a fine-tune that reached its target exactly: the target logits themselves, against the golds that carry the weight.
