@@ -420,7 +420,7 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
 - **modal.py** (frozen 02:18, 627b081). Battery modal-answer flips with a hold-out null. Calibrated on the references (prompted and temperature copies stay), but it has no power on SmolLM. Nothing is set apart at 2 scored repeats.
 - **leaksplit.py** (frozen 02:28, f1301d4). The pre-registered e2 split inside A, Y = 01, 17, 24, 25, 33 against N = 04, 12, 14, 18, confirmed on fresh rows only. Orientation comes from the prompted-copy anchor on the batteries, then homogeneity; otherwise no split.
 
-## Status at handoff (2026-11-22 03:56; story rows on the 33 until about 04:14)
+## Status at handoff (2026-11-22 04:32; desk submitted at 04:23, public 0.7)
 
 **Done in this run (23:30 to 01:44)**
 - Round 1 completed to 4 repeats, determinism, separation table, grouping at 40 answers, ablations, permutation tests (E4 to E7). Side channels (E8). night_a P1/P2 (E9): both fail.
@@ -462,21 +462,23 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
   - L0.3: the d1 cap rate over 20 repeats (12 of 20 against 18 of 100);
   - fp8: nothing; the P1 copy-only candidate was refuted by d4.
 
-**Where things stand (03:56)**
-- Same-model labels:
-  - A: 02 and 23 (prompted), 33 (temperature), 04 (watermark), 14 (truncated decoding, desk likelihood). Unlabelled: 01, 12, 17, 18, 24, 25.
-  - B: 08 and 20 (prompted), 30 (temperature, P about 0.75 on my evidence), 06 (watermark). Unlabelled: 03, 07, 21, 22, 26, 28, 32.
-  - C: 16 and 29 (prompted), 10 (watermark), 31 (temperature candidate). Unlabelled: 05, 09, 11, 13, 15, 19, 27.
-- The desk's submission rule: the labelled copies form one model and the unlabelled are singletons, unless one is plain with P > 0.5. I put P(ep-12 = plain) at about 0.3 (fp8 and LoRA 0.3 look as clean), so do not add it.
-- Registered story-prefix predictions:
-  - longest prefix for the watermark copies ep-04, 06, 10 (e1e4e30);
-  - shortest prefix for the temperature copies ep-33, 30, 31 (dc385d9).
-  Validated on the reference stories: watermark 118.5 is the top, temperature 1.6 the bottom.
+**Where things stand (04:32)**
+- The desk's submission at 04:23 scored 0.7 on the public split. In each family the five identified copies are one model and the rest are singletons:
+  - A {02, 23, 33, 14, 04};
+  - B {08, 20, 30, 07, 06};
+  - C {29, 16, 31, 27, 10}.
+- What remains is each family's plain copy. Candidates and my probabilities (recon_ep.md, 78da57d):
+  - A: 12 0.45, 25 0.20, 17 0.12, 01 0.10, 18 0.08;
+  - B: 32 0.45, 26 0.25, 22 0.15, 21 0.10;
+  - C: 19 0.40, 15 0.25, 09 0.15, 13 0.10, none of the four 0.10.
+  None is above 0.5. fp8 is invisible on every probe, so the closest candidate is about as likely fp8 as plain.
+- C's orientation waits for the base-model probability of the story opening. If it is low, all four C candidates are shifted.
+- Registered story-prefix results: the watermark copies have the longest prefix in A and C and the second longest in B; the temperature copies have the shortest in A and B but not in C.
 
 **Next steps**
-1. When the scored story rows land: run `watermark.py --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv --min-repeat 2` and read both registered predictions.
-2. Fresh B and C leak rows: run the readings registered at 354ee7b.
-3. d1 on C and A: `within.py ... --probes d1_repeat150:long`.
+1. Set my ranking beside the laptop's exact stop and first-token probabilities when the desk sends them.
+2. d1 at 18 more repeats on A's and C's candidates, only if the base early-stop probability at the plain temperature is at least 0.2.
+3. Fresh B and C leak rows, if any: run the readings registered at 354ee7b.
 
 **Channel**: the desk alone queries. Never append to `answers/round1.jsonl` and never commit the answer files the desk's chain writes.
 
@@ -485,3 +487,17 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
 **Frozen prompt files**: `probes/round1.csv`, `recon.csv`, `idn.csv`, `night_a.csv`, `night_b.csv`, `night_c.csv`, `night_d.csv`, `night_e.csv`, `night_f.csv`. Never edit any of them once answers exist.
 
 **Tools**: `analysis/group.py`, `permtest.py`, `plurality.py`, `choices.py`, `recon.py`, `stop.py`, `lengths.py`, `identity.py`, `leak.py`, `within.py`, each with tests under `tasks/model_equality/analysis`.
+
+## E15. Registered stop.py check of the fp8 stop hint (frozen 04:33, 608d5d3)
+
+- Hypothesis (from the desk's stop channel, fp8 at +2.92 where plain is −0.67): fp8 (ref-02) stops earlier than plain (ref-01) on the d probes.
+- Rule, `analysis/fp8stop.py`, frozen while the desk's chain was appending night_d rows at 30 repeats. 8 rows with repeat >= 11 existed then, unread.
+  - Fresh rows only (repeat >= 11).
+  - One measure per probe, larger meaning a later stop: d1 repetitions, d2 words, d3 list items, d4 characters.
+  - Per probe, a one-sided permutation test (20,000 draws).
+  - Fisher's combination over the four probes.
+  - Revived if the combined p < 0.01 and at least 3 of 4 probes point the predicted way.
+- Repeats 0 to 10 had been read before the freeze, so they are described only. Command: `fp8stop.py --min-repeat 0 --max-repeat 10`.
+  - Combined p 0.50, with 2 of 4 probes in the predicted direction: d2 p 0.085 and d1 p 0.44 agree; d3 p 0.94 and d4 p 0.74 do not.
+  - d1 runs long: plain 6/11, fp8 5/11. d4 copy-only: 7/11 each.
+  - The old rows show no fp8 stop effect on the text-side measures.

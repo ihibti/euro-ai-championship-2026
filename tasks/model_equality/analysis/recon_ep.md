@@ -659,3 +659,265 @@ On the references the temperature copy has the shortest story prefix (1.6 charac
 Prediction, read with `watermark.py --min-repeat 2`: on fresh story rows, ep-33, ep-30 and ep-31 each have the shortest mean story prefix among the non-prompted endpoints of their family. Chance for all three is 0.0014.
 
 A described battery check for a truncated-sampling copy (few rare answers given many minority answers) fails its validation on A. ep-14, the truncated copy by likelihood, has 5 rare answers out of 48 minority answers (0.10). That is indistinguishable from ep-24 (0.09) and ep-01 (0.11). So the batteries cannot name a second decoding copy in B or C.
+
+## Story-prefix predictions, read (04:14; fresh story repeats 2 to 9, 8 answers and 28 pairs per endpoint)
+
+Command: `watermark.py --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv --min-repeat 2`. Mean common prefix in characters (p = prompted):
+
+| A | prefix | B | prefix | C | prefix |
+|---|---|---|---|---|---|
+| ep-04 | **145.9** | ep-28 | **94.8** | ep-10 | **154.8** |
+| ep-02 p | 107.3 | ep-06 | 83.0 | ep-13 | 27.1 |
+| ep-17 | 93.0 | ep-03 | 80.7 | ep-15 | 26.2 |
+| ep-24 | 93.0 | ep-21 | 27.0 | ep-09 | 24.6 |
+| ep-12 | 87.8 | ep-26 | 24.5 | ep-19 | 22.1 |
+| ep-18 | 87.1 | ep-22 | 13.6 | ep-31 | 12.7 |
+| ep-01 | 86.8 | ep-07 | 12.0 | ep-29 p | 8.8 |
+| ep-25 | 81.5 | ep-08 p | 11.4 | ep-05 | 7.1 |
+| ep-14 | 68.0 | ep-32 | 7.1 | ep-27 | 4.6 |
+| ep-23 p | 45.4 | ep-30 | 4.4 | ep-11 | 4.1 |
+| ep-33 | 44.5 | ep-20 p | 3.8 | ep-16 p | 1.7 |
+
+Results:
+- **Watermark copies, longest prefix among the non-prompted (e1e4e30):** 2 of 3.
+  - A ep-04 is first (145.9, next 93.0).
+  - C ep-10 is first (154.8, next 27.1, 5.7 times the next).
+  - B ep-06 is second (83.0) behind ep-28 (94.8).
+  - The registered conjunction fails. Chance of at least 2 of 3 under exchangeability is 0.034.
+- **Temperature copies, shortest prefix among the non-prompted (dc385d9):** 2 of 3.
+  - A ep-33 is the shortest (44.5).
+  - B ep-30 is the shortest (4.4).
+  - C ep-31 is not: it ranks 5th shortest of 9 (12.7; ep-11 4.1, ep-27 4.6 and ep-05 7.1 are shorter).
+  - The conjunction fails. C's temperature copy stays unidentified on my probes.
+
+Reading:
+- A: ep-04 as watermark is supported on a third, out-of-sample statistic. The order inside A follows the fitted temperatures. The base-like endpoints give 81 to 93, ep-14 (top-p at 1.0) 68, and ep-33 (1.0) 44.5.
+- C: ep-10 as watermark is supported strongly.
+- B splits in two on the story:
+  - high: ep-28 94.8, ep-06 83.0, ep-03 80.7;
+  - low: everything else, 4 to 27.
+  - ep-06 is in the high group, as predicted, but not alone.
+  - ep-03 and ep-28 are the endpoints that were already B's battery and e2 outliers, and that run long with spaces on d1.
+  - A long common opening with no extra sharpness on the batteries is not what the reference LoRAs did (13.6 to 36.4). So it is open whether ep-03 and ep-28 are a weight change of a kind the references do not show.
+- ep-22 against ep-06:
+  - story prefix 13.6 against 83.0. The watermark signature is with ep-06.
+  - ep-22 has no repeated battery answers and is the sharpest in B (0.880).
+  - ep-22 does not look like a third prompted copy:
+    - its identity is Qwen 10 of 10, where B's prompted copies say Claude;
+    - its leak e1 paraphrases the Qwen default once ("I was created by Alibaba Cloud to be a helpful assistant") and refuses once;
+    - e2 says no twice, like the majority.
+  - Only d1's no-spaces share (12 of 20) puts it with the prompted copies. That is a one-token choice in a fixed context.
+
+## The story-echo split, probe by probe (04:22)
+
+Story echo means the answer opens with "The old lighthouse on the northern cape". The counts match the desk's. Other columns: d1 at 20 repeats in B and 2 in C; e2 and e1 at 2 repeats; batteries and identity at 10. "Flips vs H / L" is modal flips against the pooled answers of each side, leaving out the endpoint itself.
+
+**B: H = {03, 06, 28} against L = {21, 22, 26, 32}**
+
+| endpoint | side | echo | d1 long | d1 no-spaces | d1 early | e2 yes | trivia restated | sharpness | rare | flips vs H / L |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ep-03 | H | 8 | 16 | 2 | 4 | 1/2 | 0 | 0.842 | 16 | 2 / 1 |
+| ep-06 | H | 8 | 12 | 4 | 8 | 0/2 | 8 | 0.870 | 4 | 10 / 6 |
+| ep-28 | H | 9 | 17 | 1 | 3 | 1/2 | 0 | 0.815 | 17 | 5 / 5 |
+| ep-21 | L | 4 | 20 | 3 | 0 | 0/2 | 0 | 0.870 | 13 | 3 / 7 |
+| ep-22 | L | 3 | 19 | 12 | 1 | 0/2 | 0 | 0.880 | 14 | 3 / 3 |
+| ep-26 | L | 5 | 17 | 4 | 3 | 0/2 | 0 | 0.863 | 13 | 4 / 3 |
+| ep-32 | L | 2 | 12 | 9 | 8 | 0/2 | 0 | 0.813 | 17 | 2 / 1 |
+| ep-07 (top-p) | | 5 | 14 | 5 | 6 | 0/2 | 1 | 0.851 | 10 | 4 / 3 |
+| ep-30 (temp 1.0) | | 2 | 4 | 11 | 16 | 0/2 | 0 | 0.779 | 62 | 7 / 5 |
+| ep-08 (prompted) | | 4 | 15 | 12 | 5 | 2/2 | 0 | 0.797 | 10 | 4 / 2 |
+| ep-20 (prompted) | | 3 | 18 | 17 | 2 | 1/2 | 0 | 0.870 | 12 | 5 / 4 |
+
+Echo, d1 columns and trivia restated are counts of 10 or 20 answers.
+
+Where the two sides differ, pooled with two-sided Fisher:
+- echo: 25/30 against 14/40, p 8e-5 (the split itself);
+- d1 no-spaces: 7/60 against 28/80, p 0.0016. This is not clean inside L: ep-21 has 3 and ep-26 4, low like H; ep-22 12 and ep-32 9;
+- e2 yes: 2/6 against 0/8, p 0.16. ep-03 and ep-28 are the only non-prompted B endpoints that ever said yes.
+
+No difference:
+- d1 long (45/60 against 68/80, p 0.19) and d1 early stops (p 0.19);
+- identity (all 10/10), sharpness, rare answers;
+- battery modes: H pooled against L pooled, 1 flip, p 0.80. Per endpoint, the flips against each side show no structure.
+
+So B's split is two-sided on two probes (story echo, d1 no-spaces), weakly on e2, and absent from the batteries.
+
+Placing B's labelled disguises:
+- ep-30 (temperature 1.0, base weights) echoes 2 of 10. Temperature rescales the logit by 0.7/1.0.
+  - If plain echoed 0.8 at 0.7, ep-30 would echo 0.73, and 2 or fewer of 10 has probability 0.0008.
+  - If plain echoed 0.35, ep-30 would echo 0.39, and 2 or fewer has probability 0.18.
+  - So ep-30 sits with L, and plain is most likely on the L side.
+- ep-07 (top-p 0.95 at 1.0) echoes 5 of 10, consistent with either side (0.20 under 0.35, 0.08 under 0.8).
+- ep-06's echo is explained by its watermark: on the references the watermark echoes 10 of 10 against plain 6.
+- That leaves ep-03 and ep-28 as H endpoints with no known disguise. They shift upward, where the reference LoRAs shifted down (4 against 6).
+
+**C: H = {09, 13, 15, 19} against L = {05, 11, 27, 31}**
+
+| endpoint | side | echo | e2 yes | e1 header | e1 one word per line | identity own | sharpness | rare | flips vs H / L |
+|---|---|---|---|---|---|---|---|---|---|
+| ep-09 | H | 7 | 0/2 | 1/2 | 1/2 | 10 | 0.727 | 47 | 8 / 9 |
+| ep-13 | H | 7 | 1/2 | 1/2 | 2/2 | 10 | 0.738 | 28 | 9 / 12 |
+| ep-15 | H | 8 | 0/2 | 1/2 | 2/2 | 10 | 0.770 | 23 | 11 / 9 |
+| ep-19 | H | 7 | 2/2 | 2/2 | 2/2 | 10 | 0.747 | 19 | 5 / 4 |
+| ep-05 | L | 3 | 0/2 | 1/2 | 0/2 | 10 | 0.712 | 40 | 12 / 14 |
+| ep-11 | L | 0 | 0/2 | 0/2 | 0/2 | 9 | 0.735 | 31 | 7 / 7 |
+| ep-27 | L | 2 | 1/2 | 2/2 | 2/2 | 10 | 0.695 | 43 | 9 / 12 |
+| ep-31 | L | 4 | 1/2 | 2/2 | 2/2 | 10 | 0.666 | 60 | 10 / 8 |
+| ep-10 (watermark) | | 2 | 0/2 | 2/2 | 2/2 | 10 | 0.805 | 22 | 13 / 9 |
+| ep-16 (prompted) | | 3 | 2/2 | 0/2 | 1/2 | 7 | 0.718 | 43 | 7 / 9 |
+| ep-29 (prompted) | | 4 | 0/2 | 0/2 | 1/2 | 9 | 0.748 | 23 | 8 / 8 |
+
+Echo is out of 10 and identity own out of 10.
+
+Where the sides differ:
+- echo: 29/40 against 9/40, p 1.4e-5;
+- sharpness: H 0.727 to 0.770 and L 0.666 to 0.735. H holds ranks 1, 2, 3 and 5 of 8, one-sided exact p 0.029;
+- rare answers: H 19 to 47 (mean 29), L 31 to 60 (mean 44).
+
+No difference:
+- e2 yes (3/8 against 2/8), e1 header (5/8 each), e1 one word per line (7/8 against 4/8, p 0.28);
+- identity;
+- battery modes: H pooled against L pooled, 4 flips, p 0.94.
+
+C's d1 has only 2 repeats, all long.
+
+So in C the echo split comes with a temperature-like difference: L is less sharp, gives more rare answers and keeps the same modes. That is what a hotter sampler, or an adapter that raises the fitted temperature (L0.7 0.78 and L1.5 0.87 on the references), would produce. B shows no such difference.
+
+C's disguises tell nothing:
+- ep-10's watermark fixes its own opening ("As the dark sky twisted and" 7 of 10), which replaces the echo;
+- ep-16 and ep-29 have their context changed by their prompts.
+
+Neither split is one probe's accident. In B it recurs on d1 no-spaces and weakly on e2. In C it recurs on sharpness and rare answers. In both families the battery modes agree across the split, which a temperature-like or small adapter shift allows.
+
+## Registration: which candidate behaves like the plain-temperature copies (written 04:24, before the computation below)
+
+Candidate sets, from the desk:
+- A: 01, 12, 17, 18, 25;
+- B: 21, 22, 26, 32;
+- C: 09, 13, 15, 19.
+
+The anchors are the labelled copies that sample at the plain temperature with base weights. On the batteries, the references show that prompted copies keep the majority's modes (modal.py: ref-03 p 0.99, ref-05 p 0.73). Anchors:
+- A: the prompted ep-02 and ep-23 and the watermark ep-04;
+- B: ep-08, ep-20 and ep-06;
+- C: ep-16, ep-29 and ep-10.
+
+Rule:
+1. For each candidate, `pairwise.pair_test` (battery mode flips, permutation null, 2,000 draws, seed 0) against two pools:
+   - P: the two prompted anchors' answers together;
+   - W: the prompted anchors and the watermark anchor together.
+2. Ranking: fewest flips summed over the two tests; ties go to the larger smaller-p.
+3. Probability: each candidate's weight is the mean of its two p-values, normalised over the set. This is a crude evidence weight, stated as such, not a posterior.
+4. Separation inside each set: the pairs that `pairwise.py` rejects at 0.01 among the candidates, from the 03:46 matrix, and the d1 early-stop counts.
+
+### Result (04:24; first written as 04:31 by mistake)
+
+| family | candidate | flips against P (p) | flips against W (p) | weight |
+|---|---|---|---|---|
+| A | ep-12 | 3 (0.138) | 2 (0.615) | 0.56 |
+| A | ep-25 | 3 (0.179) | 2 (0.303) | 0.36 |
+| A | ep-18 | 4 (0.007) | 4 (0.053) | 0.05 |
+| A | ep-01 | 6 (0.007) | 5 (0.019) | 0.02 |
+| A | ep-17 | 6 (0.006) | 5 (0.014) | 0.02 |
+| B | ep-32 | 2 (0.872) | 0 (1.000) | 0.38 |
+| B | ep-22 | 2 (0.863) | 1 (0.990) | 0.37 |
+| B | ep-26 | 6 (0.128) | 2 (0.899) | 0.21 |
+| B | ep-21 | 7 (0.034) | 6 (0.168) | 0.04 |
+| C | ep-19 | 7 (0.694) | 9 (0.370) | 0.70 |
+| C | ep-15 | 14 (0.009) | 8 (0.223) | 0.15 |
+| C | ep-09 | 14 (0.184) | 16 (0.013) | 0.13 |
+| C | ep-13 | 16 (0.016) | 16 (0.003) | 0.01 |
+
+Pairs inside each set, from the 03:46 matrix:
+- A: rejected at 0.01 are 01-18 (0.001), 01-25 (0.003) and 18-25 (0.001); near it are 01-17 (0.030) and 17-25 (0.041). ep-12 is close to every candidate (p 0.19 to 0.49).
+- B: none rejected. ep-22 and ep-32 are battery-identical (0 flips, p 1.000).
+- C: none rejected. Nearest to rejection are 15-19 (0.025) and 13-15 (0.030).
+
+d1 early stops in B, out of 20 (ran_long false): 21: 0, 22: 1, 26: 3, 32: 8. The plain-temperature anchors give 06: 8 (watermark), 08: 5 and 20: 2 (prompted). The decoding copies give 07: 6 (top-p 0.95 at 1.0) and 30: 16 (1.0).
+- The anchors average about 5 of 20, but each one's stop decision is perturbed: the watermark biases the end token in a fixed context, and the prompts change the context.
+- (Corrected 04:30.) The first version of this line rescaled a single end-token logit, which is wrong: a single majority event becomes more likely at a lower temperature, not less. The corrected calculation is in the next section.
+
+Reading:
+- Each family's closest pair is not separable from itself on any of my probes: A {12, 25} (p 0.29), B {22, 32} (p 1.0), C {19, 09 or 13} (p 0.75 and 0.69).
+- A plain copy and an fp8 copy would look exactly like that. fp8 was invisible to every probe on the references, likelihood included.
+- So the battery weight is split between plain and whatever cannot be told from it.
+
+Ranking with probabilities that the endpoint is the plain copy (judgment, with every probe):
+- A: ep-12 0.40, ep-25 0.25, ep-18 0.15, ep-01 0.10, ep-17 0.10.
+  - ep-25 loses some weight for its two rejections and two repeated battery answers.
+  - ep-18 is rejected against ep-01 and ep-25.
+- B: ep-32 0.40, ep-22 0.25, ep-26 0.25, ep-21 0.10.
+  - ep-32 is first on the batteries and its stops sit with the anchors.
+  - ep-22 shares ep-32's battery modes, but it stops almost never, and its likelihood temperature was uneven.
+- C: ep-19 0.50, ep-09 0.20, ep-15 0.15, ep-13 0.15.
+  - ep-19 has the clearest battery lead of the three families (weight 0.70). The fp8 confound applies here too.
+
+A probe to separate plain from fp8 or a weak adapter that has passed on the references: none.
+- Everything tried on the references failed for fp8: P1 copy-only, d4, batteries, d1, leak, identity and the likelihood.
+- The only candidate is more battery repeats on each family's closest pair, to sharpen the near-tied items. On the references, at 4 repeats, nothing moved, so it is unvalidated and does not meet the condition.
+
+### Described after the registration (04:30): the decoding copies as anchors, and d1 under a temperature model
+
+These readings were chosen after the registered rule had been read, on rows already seen. They are described, not decided.
+
+**Correction to the 04:19 C reading.** C's L side holds ep-27 (top-p at 1.0) and ep-31 (temperature 1.0), now labelled by the desk's likelihood table. So L's lower sharpness and extra rare answers are explained by those two labels, not by a shift shared across L. The C split's second probe is therefore not independent evidence.
+
+**Battery modes against the decoding copies.** Temperature and top-p keep the modes in expectation, so each candidate was also tested with `pairwise.pair_test` against:
+- D, the two decoding copies pooled;
+- all five labelled copies pooled.
+
+| family | candidate | flips against D (p) | flips against all five (p) |
+|---|---|---|---|
+| A | ep-12 | 0 (1.000) | 0 (1.000) |
+| A | ep-25 | 3 (0.106) | 1 (0.649) |
+| A | ep-17 | 2 (0.525) | 3 (0.188) |
+| A | ep-01 | 2 (0.198) | 3 (0.169) |
+| A | ep-18 | 4 (0.167) | 4 (0.084) |
+| B | ep-32 | 2 (0.952) | 1 (0.997) |
+| B | ep-22 | 4 (0.511) | 2 (0.935) |
+| B | ep-26 | 6 (0.324) | 4 (0.580) |
+| B | ep-21 | 7 (0.111) | 5 (0.361) |
+| C | ep-19 | 9 (0.655) | 7 (0.775) |
+| C | ep-15 | 11 (0.270) | 7 (0.615) |
+| C | ep-09 | 12 (0.466) | 14 (0.107) |
+| C | ep-13 | 13 (0.329) | 16 (0.021) |
+
+The order matches the registered rule's, except that C's ep-15 moves level with ep-19.
+
+**B, d1, with ep-30 (temperature 1.0) as the anchor.** The plain temperature is assumed to be 0.7.
+- Early stops: ep-30 stops early in 16 of 20.
+  - Take the stop to be a minority token with a constant per-position probability over n positions, and move it from 1.0 to 0.7 against a single competitor.
+  - For n = 50, 100 and 150, the plain early-stop rate comes out at 0.31, 0.24 and 0.21.
+  - At n = 100: ep-21 at 0 of 20 has P 0.004; ep-22 at 1 or fewer has P 0.029; ep-26 at 3 or fewer has P 0.25; ep-32 at 8 or more has P 0.087.
+- No-spaces runs: this is an early, roughly binary choice that top-p 0.95 does not cut.
+  - ep-07 and ep-30 together write 16 of 40 at 1.0, so plain is expected at 0.36.
+  - ep-21 at 3 or fewer has P 0.037; ep-22 at 12 or more has P 0.024; ep-26 at 4 or fewer has P 0.10; ep-32 at 9 or more has P 0.27.
+- Reading:
+  - ep-32 fits both statistics, and ep-26 fits early stops (no-spaces P 0.10).
+  - ep-21 and ep-22 are off on both, toward running on. That is the direction the reference LoRAs took on d1. On the references, fp8 also ran to the cap slightly more often (6 of 20 against 18 of 100, p 0.23), so the direction alone does not name an adapter.
+  - The desk counts early stops as 21: 0, 22: 0, 26: 2, 32: 8. Mine use stop.ran_long (22: 1, 26: 3). The difference is one answer each, which I take to be a different cut.
+
+**Story echo, with the decoding copies as anchors.**
+- How much a hotter sampler lowers the echo depends on how many tokens carry the choice:
+  - for a single binary choice, a move from 0.7 to 1.0 keeps the majority side;
+  - spread evenly over seven tokens, it lowers the echo a lot more.
+- B: ep-07 and ep-30 together echo 7 of 20. If plain echoed like H (0.83), that would be P 0.0001 under the one-token model and P 0.027 under the seven-token model. If plain echoed like L, it fits under both. Plain is on L on either model.
+- C: ep-27 and ep-31 together echo 6 of 20. If plain echoed like H (0.72), that would be P 0.001 under the one-token model but P 0.11 under the seven-token model. So C's orientation waits for the laptop's base-model probability of the opening.
+  - The desk's C candidates (09, 13, 15, 19) are all on H.
+  - If the base model's echo probability is low, all four are shifted, and the plain copy is not among them.
+
+**Ranking with probabilities (updated 04:30, judgment over every probe).**
+- A: ep-12 0.45, ep-25 0.20, ep-17 0.12, ep-01 0.10, ep-18 0.08.
+  - ep-12 shares every mode with the five labelled copies (0 flips).
+  - It stays under 0.5 because fp8, and a weak adapter, were battery-invisible on the references (at 4 repeats; untested at 10).
+- B: ep-32 0.45, ep-26 0.25, ep-22 0.15, ep-21 0.10.
+  - ep-32 is first on the batteries and fits d1. ep-26 fits the early stops.
+  - ep-22 and ep-21 run on beyond the temperature model's expectation. ep-22 also has the desk's uneven likelihood temperature.
+- C: ep-19 0.40, ep-15 0.25, ep-09 0.15, ep-13 0.10, plain not among the four 0.10.
+  - The batteries alone separate them, and weakly.
+  - No other probe I hold separates the four: echo 7 to 8 each, identity 10/10, e1 and e2 at 2 repeats, d1 at 2 repeats.
+
+**A probe for plain against fp8 or a weak adapter.**
+- For fp8: none. It was invisible on the references to every probe, likelihood included.
+- For a weak adapter: d1 at 20 repeats is the one probe confirmed on the references for L0.3 (cap 12 of 20 against 18 of 100, p 0.0003). It already runs on the references, so the condition is met.
+  - In A and C the 2-repeat pilot is flat: everyone runs long, so there is nothing to see in the run-on direction.
+  - It is worth spending, 18 more d1 repeats on A's 5 and C's 4 candidates (162 answers within the caps), only if the laptop's base stop probability on d1 at the plain temperature is at least 0.2 in that family.
