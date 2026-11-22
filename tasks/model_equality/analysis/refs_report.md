@@ -367,6 +367,44 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
   - list items (d3).
   The count of each endpoint is compared with its family's remaining endpoints by a two-sided rank permutation test (20,000 draws, seed 0), using the same iterative setting apart at alpha 0.01. It was frozen at 00:54, before any scored P3 answer existed. On the old P3 answers it sets apart L0.7 (p 0.0007), L0.3 (p 0.0019) and L1.5 (p 0.0031), and keeps fp8 with the copies.
 
+## E13. night_d on the references: the frozen stop rules on fresh answers, and within.py (2026-11-22 01:45)
+
+- Hypothesis: the P3 stop signal of E11 repeats on fresh answers (d1 = P3 verbatim). The variants d2 and d3, and the post hoc fp8 candidate d4 (= P1), were judged by rules frozen before the answers existed (`stop.py`, 00:47 to 00:54).
+- Commands:
+  - the desk's chain: `me_query.py --prompts tasks/model_equality/probes/night_d.csv --repeats 10` (360 answers, 0 failed, committed at 67a9498);
+  - `stop.py --answers tasks/model_equality/answers/night-d.jsonl --ids d1_repeat150,d2_story100,d3_openlist,d4_copycont`;
+  - the per-pair tests against the pooled five copies.
+- Table (alpha 0.01; "set apart" = the iterative rule against the majority):
+
+| probe | statistic | hits or medians (01 03 05 06 08 / 02 09 04 07) | set apart | copies set apart | verdict |
+|---|---|---|---|---|---|
+| d1 repeat150 | cap hit | 4 0 0 2 1 / 4 6 9 9 | L0.7 (p 0.0007), L1.5 (p 0.0001) | none | **yes** |
+| d1 repeat150 | repetitions, rank | 54 2 1 7 3 / 60 128 256 110 | L0.7, persona, system prompt, temperature | 3 | no |
+| d2 story100 | cap hit | 0 0 1 0 0 / 0 1 0 10 | L1.5 | none | no (L1.5 only) |
+| d2 story100 | words, rank | 14 34 48 2 33 / 4 64 110 221 | L1.5, L0.7, watermark, fp8 | 1 | no |
+| d3 openlist | cap hit | 0 0 1 0 0 / 0 1 1 8 | L1.5 | none | no |
+| d3 openlist | items, rank | 2 14 8 1 7 / 8 11 8 32 | L1.5, watermark, plain | 2 | no |
+| d4 copycont | copy-only | 6 2 4 1 3 / 6 4 0 0 | none | none | **no: the fp8 candidate is refuted** |
+
+- Confirmation of E11, cap hits out of 10 (night_b, then night_d):
+  - L0.7: 9, 9; L1.5: 10, 9; L0.3: 6, 6; fp8: 2, 4.
+  - Pooled over both runs, L0.3 is 12 of 20 against 18 of 100 for the copies (Fisher p 0.0003), and fp8 is 6 of 20 (p 0.23).
+  - At 10 repeats the iterative rule leaves L0.3 in the majority; at 20 it sets it apart.
+- The count statistic fails on SmolLM. A system prompt, a persona or temperature makes this model stop at once (median 1 to 3 repetitions against 54 for plain), so the rank test sets the prompted copies apart. Only the cap rule is clean.
+- d4: plain stops after the copy 6 times of 10 this time, as often as fp8. The E12 find (9 against 7 of 50) was noise found among 136 statistics. **fp8 stays invisible.**
+- `analysis/within.py` (tested) on the references, MCC on the pairs inside the family, resampled answers in brackets (mean, 5% to 95%, 200 draws):
+
+| probes | partition | MCC | resampled |
+|---|---|---|---|
+| d1 | 01 02 03 05 06 08 09 / 04 07 | 0.495 | 0.47 (0.00 to 0.69) |
+| d1 + identity (round 1, 4 repeats) | same | 0.495 | 0.49 (0.19 to 0.69) |
+| d1, d2, d3, d4 | 01 02 03 05 06 08 09 / 04 / 07 | 0.524 | 0.50 (0.17 to 0.94) |
+| d1 at 20 repeats (night_b P3 renamed + night_d) + identity | 01 02 03 05 06 08 / 04 07 09 | 0.620 | 0.40 (0.09 to 0.69) |
+| d1 + d1 count | 01 02 06 09 / 04 07 / 03 05 08 | 0.169 | 0.27 (40 draws) |
+
+- Identity is a disguise detector, not a weight detector. On the references the persona class takes the system-prompt and persona copies as well as L0.7 and L1.5. On the scored endpoints at 2 repeats, the identity probe alone sets apart ep-02, ep-23, ep-08 and ep-20, the prompted copies. It must not create splits on its own.
+- Conclusion: d1 with the cap rule is the one confirmed probe. It finds the LoRA copies that run on (L0.7, L1.5; L0.3 at 20 repeats) and leaves fp8 with the plain copies, which is the desk's target. Under the reference make-up, the honest ceiling is "majority + one LoRA group", MCC 0.5 to 0.6.
+
 ## Status at handoff (2026-11-22 01:19; night_d is running on the references, started by the desk at about 01:08)
 
 **Done in this run (23:30 to 01:15)**
