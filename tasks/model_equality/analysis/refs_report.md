@@ -420,7 +420,7 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
 - **modal.py** (frozen 02:18, 627b081). Battery modal-answer flips with a hold-out null. Calibrated on the references (prompted and temperature copies stay), but it has no power on SmolLM. Nothing is set apart at 2 scored repeats.
 - **leaksplit.py** (frozen 02:28, f1301d4). The pre-registered e2 split inside A, Y = 01, 17, 24, 25, 33 against N = 04, 12, 14, 18, confirmed on fresh rows only. Orientation comes from the prompted-copy anchor on the batteries, then homogeneity; otherwise no split.
 
-## Status at handoff (2026-11-22 01:44; night_d done; d1 pilot on the scored endpoints from 02:01)
+## Status at handoff (2026-11-22 03:03; A e2 split refuted; 10-repeat batteries 02:58 to 03:42)
 
 **Done in this run (23:30 to 01:44)**
 - Round 1 completed to 4 repeats, determinism, separation table, grouping at 40 answers, ablations, permutation tests (E4 to E7). Side channels (E8). night_a P1/P2 (E9): both fail.
@@ -462,13 +462,20 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
   - L0.3: the d1 cap rate over 20 repeats (12 of 20 against 18 of 100);
   - fp8: nothing; the P1 copy-only candidate was refuted by d4.
 
+**Where things stand (03:03)**
+- Prompted copies, never split: A ep-02 and 23, B ep-08 and 20, C ep-16 and 29 (leak evidence in recon_ep.md).
+- A: the pre-registered e2 split was refuted on fresh rows (pooled p 0.62). ep-04 is set apart on fresh e1 default rows (p 0.00025): changed weights or the watermark copy.
+- B: d1 ran_long sets apart ep-30 alone (p 1e-7). On the reference directions it may be the temperature copy.
+- C: nothing set apart yet. The e1-format split is registered for C's fresh rows.
+- Every split candidate waits for the 10-repeat batteries, under the 02:47 rule (modal plus a second frozen probe plus sharpness).
+
 **Next steps**
-1. The d1 pilot (2 repeats on the 33 scored endpoints, into `answers/night-d.jsonl`): `stop.py --answers tasks/model_equality/answers/night-d.jsonl --prefix ep- --ids d1_repeat150 --families tasks/model_equality/analysis/recon_ep_families.csv`. Check whether the prompted copies (ep-02, 23, 08, 20) stay with the majority.
-2. Then the grouping: `within.py --answers tasks/model_equality/answers/night-d.jsonl --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv --probes d1_repeat150 --out <csv>`. Never with identity alone: identity sets apart the prompted copies.
-3. If d1 is flat on Qwen and Llama, run night_f on the references first.
-4. Then `night_e` on the references (6 repeats), read with `leak.py` and `identity.py --ids e3_identity`. Then `night_c`, read with `choices.py --answers .../night-c.jsonl --draws 500`.
-5. After the 8 extra scored identity answers: `identity.py --answers .../round1.jsonl --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`.
-6. `src/euroai/me_query.py` saves `elapsed_s` since 4fa9164. The API returns no token count and `finish_reason` lies, so the cap stays inferred from text.
+1. When the batteries reach 10 repeats:
+   - `modal.py --answers tasks/model_equality/answers/round1.jsonl --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`;
+   - `rank.py --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`.
+   Apply the 02:47 rule to ep-04 and ep-30. Report the ranking for the desk's cut.
+2. Fresh B and C leak rows: the commands registered at 354ee7b in recon_ep.md.
+3. d1 on C and A: `within.py ... --probes d1_repeat150:long`. ep-16's and ep-29's early stops do not count.
 
 **Channel**: the desk alone queries. Never append to `answers/round1.jsonl` and never commit the answer files the desk's chain writes.
 

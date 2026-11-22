@@ -398,3 +398,126 @@ Reading:
 - Its identity is Qwen 10 of 10, and it had the most battery flips in B at 2 repeats (modal p 0.03).
 - Caveat: a watermark keyed on the previous token sees the same context (" river") at every position of this prompt. If the end-of-sequence token or a full stop falls in its green list, a watermark copy would stop early every time. The reference watermark copy did not show this on d1, but SmolLM stops on its own there, so the references cannot rule it out.
 - Under the desk's policy, ep-30 is a singleton and the rest of B is one model, the prompted copies included. That is what `within.py --probes d1_repeat150:long` writes.
+
+## Pre-registration: reading the 10-repeat batteries in B (and A, C) (written 02:47, before any fresh battery answer)
+
+Tool: `modal.py` at 915bdab, unchanged. Its flip test is frozen at 02:18; the sharpness column is described only.
+
+On the references, a mode flip alone cannot tell a disguise from changed weights. A confident-flip variant set apart the watermark copy (p 0.0035) and failed a simulated hot copy, so it was dropped before commit. Sharpness on the references:
+- temperature 0.60 (the least sharp);
+- plain 0.68;
+- LoRAs 0.63 to 0.67;
+- watermark 0.81 (the sharpest, 0.11 above the next).
+
+Rule for splitting an endpoint inside a family, given the batteries at 10 repeats. All three conditions must hold:
+1. `modal.py` sets it apart at alpha 0.01 against the family majority, on all battery rows (repeats 0 to 9).
+2. A different frozen probe also sets it apart at alpha 0.01 on its own fresh rows. For B that is `d1_repeat150:long` (ep-30 so far); for A, the pre-registered e2 split counts.
+3. It is not the least sharp member of its family (the temperature signature). It is also not the sharpest by at least 0.05 over the second sharpest (the watermark signature).
+
+An endpoint that meets 1 and 2 but fails 3 stays with the majority, and is named as a probable disguise. The six prompted copies (A ep-02, 23; B ep-08, 20; C ep-16, 29) are never split, whatever the batteries say.
+
+For ep-30 in particular:
+- split only if modal.py sets it apart and it is neither the least sharp nor the clear sharpest member of B;
+- if it is the least sharp, read it as B's temperature copy and keep it with the majority.
+
+## Pre-registration, second tier and orientation checks (written 02:50, before any fresh battery answer; 204 battery rows, all old)
+
+**1. Strict reading (B and C, and A outside the e2 split).** The two-probe rule above, at alpha 0.01: modal set-apart, plus a second frozen probe, plus the sharpness check.
+
+**2. Ranking, the second tier.** Tool: `analysis/rank.py` (frozen 02:49, c75bbae). Command: `uv run python tasks/model_equality/analysis/rank.py --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`; for the references, `--prefix ref-`.
+- Per family, the non-prompted endpoints are ranked by Fisher's combination of four p-values. Each is computed against the pool of the other non-prompted members:
+  - d1 ran_long, one-sided "runs long more" (the references' LoRA direction);
+  - modal flips, one-sided;
+  - e2 yes, two-sided;
+  - e1 default text, two-sided.
+- The prompted copies are neither ranked nor pooled.
+- The Cauchy combination was tried first and dropped: a two-sided p of 1 sends every combined value to 1.
+- Fisher's method assumes independent probes, so the combined p is a ranking score, not a test. The cut is the desk's, from partial_worth, and is not tuned here.
+- On the references (the same data the probes were frozen on, so this is a sanity check, not validation):
+
+| rank | reference | truth | combined p |
+|---|---|---|---|
+| 1 | ref-07 | LoRA 1.5 | 0.25 |
+| 2 | ref-04 | LoRA 0.7 | 0.29 |
+| 3 | ref-09 | LoRA 0.3 | 0.47 |
+| 4 | ref-01 | plain | 0.91 |
+| 5 | ref-08 | temperature | 0.98 |
+| 6 | ref-06 | watermark | 0.98 |
+| 7 | ref-02 | fp8 | 1.00 |
+
+  The three LoRAs rank first, the weight-identical copies (plain, temperature, watermark) next, and fp8 last, as expected. Not one reference reaches 0.01. Ranking is the only use of the combined score.
+- The scored ranking printed at freeze is not a result. It used repeats 0 and 1 of the batteries, B's 20 d1 answers, and the leak rows existing at 02:49, which included part of the fresh A rows. The ranking to report is the one run after the batteries reach 10 repeats.
+- Direction caveat: d1 is scored "runs long more". On B that ranks ep-21 first and ep-30, which stops early, low. This follows the reference direction, chosen before these rows.
+
+**3. A orientation, described checks** (the primary anchor stays as written at 02:28):
+- (a) Length of the e2 text after the yes/no line, repeats 0 to 2 on the references and 0 to 1 on A:
+  - references: LoRA 1.5 gives 436, 1,458 and 103 characters, and L0.7 0, 75 and 87. plain gives 57 once, and fp8 117 once, each after a "No,". Every other answer gives 0.
+  - So inventing text after the first line is a LoRA behaviour on the references.
+  - A: Y invents 278 to 656 characters every time it says yes (ep-01 492 and 492; ep-17 462 and 293; ep-24 656; ep-25 427 and 631; ep-33 278). N gives 0 every time.
+  - This check favours N = plain. It is described only.
+- (b) A's least sharp endpoint on the 10-repeat batteries (`modal.py` sharpness column), read when the batteries land. The temperature copy carries the base weights, so the cluster holding the least sharp endpoint counts as plain. If the least sharp endpoint is ep-02 or ep-23, or belongs to neither cluster, the check is undecided.
+- Decision: as written at 02:28, the primary anchor decides. If (a) or (b) names the other cluster, A gets no split.
+
+**4. C, registered from the 2 existing repeats** (e1 format; the e1 header is "Cutting Knowledge Date"). A one-word-per-line answer has at least 5 non-empty lines, at least 80% of them with at most 2 words.
+
+| endpoint | repeat 0 | repeat 1 |
+|---|---|---|
+| ep-05 | header, in lines | echo, in lines |
+| ep-09 | echo, in lines | header, one word per line |
+| ep-10 | header, words | header, words |
+| ep-11 | echo, in lines | echo, in lines |
+| ep-13 | echo, words | header, words |
+| ep-15 | echo, words | header, words |
+| ep-19 | header, words | header, words |
+| ep-27 | header, words | header, words |
+| ep-31 | header, words | header, words |
+| ep-16, ep-29 | prompted copies, not read | |
+
+- At 2 repeats, set_apart can reach 0.01 on nothing, so no C endpoint is set apart today.
+- Registered candidate split for C's fresh rows (repeats 2 to 5):
+  - L = {ep-05, ep-11} (answers in lines);
+  - W = {ep-10, ep-13, ep-15, ep-19, ep-27, ep-31} (one word per line);
+  - ep-09 unassigned.
+- Statistic: the share of e1 answers written one word per line. It is confirmed by the same two Fisher conditions as A, at alpha 0.01, on fresh rows only.
+- The reader will be added to `leaksplit.py` as an option, with a test, before C's fresh rows (about 03:45).
+- The header share, ep-11 never giving the header, is described.
+
+## Result of the pre-registered e2 split in A (read 03:00, fresh repeats 2 to 9)
+
+Command as pre-registered at f1301d4.
+
+**Refuted.** On fresh rows, Y said yes 14 of 40 and N 9 of 32: pooled p 0.62, and no endpoint lands on its side.
+
+| endpoint | e2 yes, fresh | e1 default, fresh |
+|---|---|---|
+| ep-01 (Y) | 2/8 | 6/8 |
+| ep-17 (Y) | 5/8 | 7/8 |
+| ep-24 (Y) | 2/8 | 8/8 |
+| ep-25 (Y) | 1/8 | 8/8 |
+| ep-33 (Y) | 4/8 | 7/8 |
+| ep-04 (N) | 3/8 | 2/8 |
+| ep-12 (N) | 2/8 | 7/8 |
+| ep-14 (N) | 0/8 | 6/8 |
+| ep-18 (N) | 4/8 | 8/8 |
+| ep-02 (prompted) | 0/8 | 0/8 |
+| ep-23 (prompted) | 2/8 | 0/8 |
+
+The 2-repeat pattern was noise. A gets no split from e2.
+
+- Described check (a) also fails as a discriminator. On fresh rows every A endpoint that says yes invents text: N's ep-04 (176 to 425 characters), ep-12 (320, 718) and ep-18 (109 to 303), and even the prompted ep-23 (649, 708). On these models, inventing after yes goes with saying yes, not with a cluster.
+- **ep-04, the lead registered at 02:27, is confirmed on fresh rows.**
+  - It quotes the Qwen default in 2 of 8 fresh e1 answers. The other eight non-prompted A endpoints give it 57 of 64 times.
+  - Fresh rows alone: stop.set_apart sets apart ep-04 alone, p 0.00025. All 10 repeats: 2/10 against 72/80, p 6e-6.
+  - The other 8 answers are the request echoed verbatim.
+  - Because it quotes the default verbatim twice, the default is in its context, so its system prompt is not replaced like ep-02's or ep-23's (0 of 10 each).
+  - Two readings remain:
+    - changed weights, which shift the first token of e1 from "You" to "Repeat";
+    - a watermark copy, whose previous-token green list is the same on every request for that fixed-context first token.
+  - The pre-registered battery rule decides: split only if modal.py also sets ep-04 apart and it is not the clear sharpest member of A (the watermark signature).
+
+## Registration for B's and C's fresh leak rows (written 03:01, before any fresh B or C leak answer)
+
+The lesson from A: a pattern seen at 2 repeats did not survive 8 fresh ones. These registrations are read on fresh rows only (repeats 2 to 5), at alpha 0.01, with the prompted copies left out.
+- **B**, on 2 existing repeats: ep-03 and ep-28 said yes once each on e2, against 0 of 14 for the other seven non-prompted endpoints. Reading: `leaksplit.py --answers tasks/model_equality/answers/night-e.jsonl --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv --family B --marker qwen --min-repeat 2 --exclude ep-08,ep-20`. stop.set_apart is run on e2 yes and on e1 default. Candidates: ep-03, ep-28. Anything else set apart is reported as unregistered.
+- **C**, as registered at 02:50: `leaksplit.py ... --family C --marker llama --min-repeat 2 --exclude ep-16,ep-29 --decide e1-words --yes ep-10,ep-13,ep-15,ep-19,ep-27,ep-31 --no ep-05,ep-11`, with ep-09 unassigned. The run without `--yes/--no` is reported beside it.
+- A leak result alone never makes a split. Under the 02:47 rule, a split also needs modal.py at 10 repeats and the sharpness check.

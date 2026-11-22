@@ -94,3 +94,14 @@ def test_bat_csv_is_the_two_round1_battery_rows_verbatim():
     with (PROBES / "bat.csv").open(encoding="utf-8", newline="") as handle:
         rows = [(r["id"], r["prompt"]) for r in csv.DictReader(handle)]
     assert rows == [(i, source[i]) for i in ("bat_trivia", "bat_choice")]
+
+
+def test_sharpness_is_the_mean_top_share_over_answered_items():
+    codes = {"bat_choice": np.array([[0, 0, -1], [0, 1, -1], [0, 1, -1], [1, 1, -1]])}
+    assert modal.sharpness(codes) == (0.75 + 0.75) / 2
+    rng = np.random.default_rng(5)
+    sharp = family({"s": base_answers(rng, 10)})["s"]
+    hot = family(
+        {"h": [["a" if rng.random() < 0.5 else "b" for _ in range(30)] for _ in range(10)]}
+    )
+    assert modal.sharpness(sharp) > modal.sharpness(hot["h"])
