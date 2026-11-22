@@ -49,9 +49,12 @@ This keeps the number of submissions small and makes each one an experiment with
 | 01:08 | `dial15` | the nine classes' bias lowered by 15, last layer only | 0 under the confidently wrong golds; 0.076 under removal with the gate; 0.29 under removal with no nine-class validation images | 0.0 | removal survives only if A is between 73.4 and 75.4: 4% of the weight |
 | 01:38 | `k7_e3t2_rm` | the last 6 blocks fine-tuned towards the cross-fitted step extrapolated 3 times and tempered by 2, with an anchor | mean 0.047, 89% chance above 0.0336; 0 if it fails the gate (it changes about 6% of validation predictions) | pending | |
 
-## What the evidence says about gold (as of 01:15)
+## What the evidence says about gold (as of 01:45)
 
-- **Gold is confidently wrong on one to two thirds of the forget images.** 96% of the weight sits on golds right on about a third of them, with loss mean 7.6 to 8.1 and spread 8.8 to 9.1. Soft golds, which would make one temperature the right answer, predicted `x3_ext_m80` at ten times its score and `scale_t4` at 0.1 or more.
+- **Gold is confidently wrong on most of the forget images.**
+  - Until 01:40 the weight sat on golds right on about a third of the images, with loss mean 7.6 to 8.1 and spread 8.8 to 9.1. That was the edge of the grid.
+  - With the grid widened to golds right on only 10%, the weight spreads evenly over golds right on 10 to 33% of the images, with loss mean 8 to 15 (`ledger.py`, `37cd60c`). Our scores so far cannot tell where in that range gold is.
+  - Soft golds, which would make one temperature the right answer, predicted `x3_ext_m80` at ten times its score and `scale_t4` at 0.1 or more.
 - **This matches published retrains when a large share of a class is deleted.** Dolgova and Stich (CISPA, 2026) report, on CIFAR-100, that a retrain is right on 47% of a class's deleted images when half of the class is deleted, and on 17% at 90%, against 72% test accuracy (`research.md`, row 22). Our 36 thinned classes lost 35 to 80% of their images. The README says the same in words: the target covers "which wrong class it picks for each one".
 - **The wrong class is a sibling.** The original and gold are ViT-B/16 trained from scratch (the organizers' template: `pretrained=False`, LayerScale), which generalise poorly from 130 images per class. The forget images concentrate on look-alike classes: labels 29, 30, 31 and 33 are four kinds of small boat on misty water, each among the nine classes that lost all 130 images, next to 32 (fishing boats, 104 images) and 23 (bridges over water). Our cross-fit errs 19→21, 43↔42, 2→0, 35→38; the golds that fit go about three times further in that direction.
 - **The original's validation accuracy A is about 79%** (10th to 90th percentile 74 to 84), inferred from the five scores together.
@@ -86,6 +89,21 @@ Multiplying the last layer by a factor s undoes a temperature. It also never cha
 
 We queued `k7_e3t2_rm` and then the same model at s = 2, so the two scores isolate this one change.
 
+## Where the ceiling is: training reach
+
+The ledger can score a fine-tune that reached its target exactly: the target logits themselves, against the golds that carry the weight.
+
+| Target | Forget term if reached |
+|---|---|
+| K3, tau 2 (the seventh batch's target) | 0.34 |
+| K4, tau 1.5 | 0.51 |
+| K4, tau 2 | 0.50 |
+| K5, tau 2 | 0.51 |
+
+- **The fine-tunes reach only part of that.** The dumped fine-tunes get 0.085 (`k7_e3t2_rm3`), or 0.111 sharpened x2, with about 40% of their target's loss.
+- **The target is not what limits the score; how far training gets towards it is.** With retain about 0.6, a fine-tune that reached a K4, tau 2 target would score about 0.3.
+- **The eighth batch measures which change buys the most reach for the least spill:** 40 epochs, a doubled learning rate, 9 blocks instead of 6, and K4 and K5 targets.
+
 ## The plateau at 0.16
 
 Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from different code point to a recipe whose result does not depend on the code: either the limit of training the forget images to uniform outputs, or the best point of a one-knob family such as dividing every logit by one temperature. `plateau.py` shows which golds make each recipe land on 0.16, and the ledger asks which of those golds also predict our own scores. The temperature family is out after `scale_t4`.
@@ -95,6 +113,7 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 - Gold is modelled by a few parametric families along our cross-fit's direction. The truth may be outside them.
 - Until the dumped logits arrive (`dump_logits.py`, at the end of the seventh and eighth batches), fine-tuned candidates enter the ledger through their measured loss statistics plus a fitted proxy of their output distribution. The proxy is known to be off by up to about two times on single candidates.
 - **The ledger had a modelling error, found and fixed at 01:13.** It multiplied each prediction by the share of the accuracy band where the candidate passes the gate. A submission either passes or scores 0, so a 0 was read as a miss rather than as a possible gate failure. That made `dial15`'s 0 rule out the removal reading entirely. Since `7b51a3c`, A is inferred jointly with gold, and the removal reading keeps the 4% it deserves.
+- **Until 01:40 the posterior sat on the edge of the gold grid** (gold right on a third of the images, the furthest gold modelled). Widening the grid lowered every prediction by 10 to 20% and left the ranking unchanged. The predictions written on #12 before 01:40 come from the narrower grid.
 - The hidden altered copies are not modelled. Our own alterations (flip, crop, rotation, shift, blur, JPEG, jitter, noise) track the exact images closely in every report.
 - Retain is estimated from held-out forget images and spare classes, not from the real control set.
 
