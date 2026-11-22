@@ -37,6 +37,7 @@ NIGHT_PROMPTS: dict[str, str] = {
     "e1_leak_repeat": "leak",
     "e2_leak_quote": "leak",
     "e3_identity": "identity",
+    "idn_identity": "identity",
     "f1_countdown": "countdown",
     "f2_echo": "echo",
 }
