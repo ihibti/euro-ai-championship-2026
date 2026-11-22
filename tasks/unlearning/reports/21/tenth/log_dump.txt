@@ -1,0 +1,7 @@
+k10_t2_lr2e4_ep80 done
+k10_t2_lr3e4_ep60 done
+k10_t2_lr4e4_ep40 done
+k10_t15_lr2e4_ep40 done
+k10_t2_lr2e4_ep40_rm2 done
+k10_t2_lr2e4_ep40_s1 done
+wrote output/kkrgp/seventh/logits.npz
