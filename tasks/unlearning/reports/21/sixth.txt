@@ -1,0 +1,53 @@
+run_sixth.sh at 2dcdbdd, step 4 of job 15903485, 2026-11-22 00:03 to 00:28 Paris.
+The job reached its time limit at 00:28. Four runs had saved their checkpoints and reports: t6_t2, t6_t3, t6_t4, t6_t5.
+Four runs were cut after their last training epoch, during their evaluation, and left no checkpoint and no report: d6_t3_probe, d6_t4_probe, x6_k05_t3, t6_t3_b6.
+The script never reached its sha256 step, so the values below were computed on the login node at 00:29.
+
+52c4559ad687674868a1a21f1f22e6d5fbca9b58c135fa22057166191e952fa6  t6_t2.pt
+6e9a51fb1c4abc70ddc0b5effcf354c48d79b753a46d7a45fe657f83141edbc8  t6_t3.pt
+1ac660b80096e83d9b4e182bd7a3a4abdf9d98f4778dabf5d488bf0b717204a6  t6_t4.pt
+20aa7c5108b9604a5ab8eae99661433be73f91ea948985211ee30ea85777e6ad  t6_t5.pt
+checks passed for ../../output/kkrgp/t6_t2.pt: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+checks passed for ../../output/kkrgp/t6_t3.pt: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+checks passed for ../../output/kkrgp/t6_t4.pt: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+checks passed for ../../output/kkrgp/t6_t5.pt: 176 float32 tensors, all finite; strict load into vit_base_patch16_224 passed
+
+scale_t2/3/4.pt, built on the login node side of the script at 00:03:
+9601c49789bc79425ea49f3b693b0bc802c8a0614260db415ca307fd155dad61  scale_t2.pt
+61bc1b4285da9045f9752c87f082484ae581cc1de75369dbbf04449413260ac2  scale_t3.pt
+60d6fb8fcdecf6869aa5c4d61c301aaaa0ddf9f08d2a0c0f0c3c25cfbbd76b3e  scale_t4.pt
+
+Last lines of the eight logs:
+== sixth/log_0.txt
+  }
+}
+saved output/kkrgp/t6_t3.pt
+== sixth/log_1.txt
+  }
+}
+saved output/kkrgp/t6_t4.pt
+== sixth/log_2.txt
+  }
+}
+saved output/kkrgp/t6_t2.pt
+== sixth/log_3.txt
+  }
+}
+saved output/kkrgp/t6_t5.pt
+== sixth/log_4.txt
+{"loss": 0.1142668374097085, "kl_t1": 0.06438338077058244, "kl_t2": 0.04988345724424937, "epoch": 18}
+{"loss": 0.10601180493075231, "kl_t1": 0.06074669872065486, "kl_t2": 0.04526510641180521, "epoch": 19}
+{"loss": 0.09550942120011487, "kl_t1": 0.054084342559279526, "kl_t2": 0.04142507814286929, "epoch": 20}
+== sixth/log_5.txt
+{"loss": 0.1564222004157436, "kl_t1": 0.11165358219453324, "kl_t2": 0.04476861933690642, "epoch": 18}
+{"loss": 0.14132964288321043, "kl_t1": 0.10138316606305375, "kl_t2": 0.039946477532437207, "epoch": 19}
+{"loss": 0.12778711717342564, "kl_t1": 0.09159830105435827, "kl_t2": 0.03618881621361787, "epoch": 20}
+== sixth/log_6.txt
+{"loss": 0.09123338229315621, "kl_t1": 0.060261513262987135, "kl_t2": 0.03097186934735094, "epoch": 18}
+{"loss": 0.0866512079324041, "kl_t1": 0.05731735177976745, "kl_t2": 0.02933385672100953, "epoch": 19}
+{"loss": 0.08271335189683096, "kl_t1": 0.054734455934592655, "kl_t2": 0.02797889662214688, "epoch": 20}
+== sixth/log_7.txt
+{"loss": 0.05420286858081818, "kl_t1": 0.031375535590308055, "kl_t2": 0.0228273332629885, "epoch": 18}
+{"loss": 0.051488654485770634, "kl_t1": 0.029799771521772656, "kl_t2": 0.02168888303211757, "epoch": 19}
+{"loss": 0.04898099364553179, "kl_t1": 0.028256459991846766, "kl_t2": 0.020724534017699105, "epoch": 20}
+

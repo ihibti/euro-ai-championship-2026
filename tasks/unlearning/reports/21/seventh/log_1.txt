@@ -1,0 +1,50 @@
+full classes=0 hedged classes=0 spare classes=[93, 8, 2, 52, 44, 38] train=2364 held=589 spare=547
+/p/scratch/training2666/hibti1/Begg/unlearning/runs/d926e1e/tasks/unlearning/csd.py:206: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  sums["loss"] += float(loss) * len(index)
+{"loss": 12.606729137917663, "kl_t1": 8.713449095711491, "kl_t2": 3.893279919971266, "mix_anchor": 0.0, "epoch": 1}
+{"loss": 11.162292269079012, "kl_t1": 7.7402928710588945, "kl_t2": 3.4219993524341614, "mix_anchor": 0.0, "epoch": 2}
+{"loss": 6.840401843921383, "kl_t1": 4.848294540911963, "kl_t2": 1.9921073645302891, "mix_anchor": 0.0, "epoch": 3}
+{"loss": 3.1285871269335805, "kl_t1": 2.1498603266104426, "kl_t2": 0.97872682765454, "mix_anchor": 0.0, "epoch": 4}
+{"loss": 2.5122604353980567, "kl_t1": 1.6064922087487028, "kl_t2": 0.9057682361296188, "mix_anchor": 0.0, "epoch": 5}
+{"loss": 2.2535612070822677, "kl_t1": 1.4574154262413632, "kl_t2": 0.7961458032304664, "mix_anchor": 0.0, "epoch": 6}
+{"loss": 2.0793364810459507, "kl_t1": 1.3399571236821803, "kl_t2": 0.7393793556492543, "mix_anchor": 0.0, "epoch": 7}
+{"loss": 1.9570527823039925, "kl_t1": 1.2517045907764468, "kl_t2": 0.705348181845573, "mix_anchor": 0.0, "epoch": 8}
+{"loss": 1.8784258204264892, "kl_t1": 1.2034101349044775, "kl_t2": 0.6750156807818792, "mix_anchor": 0.0, "epoch": 9}
+{"loss": 1.7740855116126097, "kl_t1": 1.1316520179387075, "kl_t2": 0.6424334953884183, "mix_anchor": 0.0, "epoch": 10}
+{"loss": 1.6732896138770528, "kl_t1": 1.0662957988616375, "kl_t2": 0.6069938182427395, "mix_anchor": 0.0, "epoch": 11}
+{"loss": 1.608479024996814, "kl_t1": 1.0188182235369223, "kl_t2": 0.5896607934924349, "mix_anchor": 0.0, "epoch": 12}
+{"loss": 1.5457726343835874, "kl_t1": 0.9751606376844816, "kl_t2": 0.5706119902444572, "mix_anchor": 0.0, "epoch": 13}
+{"loss": 1.4559619588093506, "kl_t1": 0.9129522112016952, "kl_t2": 0.543009741153007, "mix_anchor": 0.0, "epoch": 14}
+{"loss": 1.4190770077019577, "kl_t1": 0.8902082832533292, "kl_t2": 0.5288687244486284, "mix_anchor": 0.0, "epoch": 15}
+{"loss": 1.3518350239332557, "kl_t1": 0.8433462998588678, "kl_t2": 0.5084887353700228, "mix_anchor": 0.0, "epoch": 16}
+{"loss": 1.312459396226757, "kl_t1": 0.8140961780967648, "kl_t2": 0.4983632084480195, "mix_anchor": 0.0, "epoch": 17}
+{"loss": 1.2597005613362526, "kl_t1": 0.779511379812373, "kl_t2": 0.480189170127391, "mix_anchor": 0.0, "epoch": 18}
+{"loss": 1.186080500760861, "kl_t1": 0.7257904932785357, "kl_t2": 0.46029001630704014, "mix_anchor": 0.0, "epoch": 19}
+{"loss": 1.135813995061187, "kl_t1": 0.6903122620130755, "kl_t2": 0.445501741217276, "mix_anchor": 0.0, "epoch": 20}
+{"loss": 1.1139943991013994, "kl_t1": 0.6789645527421723, "kl_t2": 0.43502985357027973, "mix_anchor": 0.0, "epoch": 21}
+{"loss": 1.0730710852569736, "kl_t1": 0.6501446097030252, "kl_t2": 0.4229264844795169, "mix_anchor": 0.0, "epoch": 22}
+{"loss": 1.0009676032461692, "kl_t1": 0.5961761388883574, "kl_t2": 0.40479146360140766, "mix_anchor": 0.0, "epoch": 23}
+{"loss": 0.9821458185586429, "kl_t1": 0.586545667975082, "kl_t2": 0.395600151339965, "mix_anchor": 0.0, "epoch": 24}
+{"loss": 0.944237219298955, "kl_t1": 0.5569287552647986, "kl_t2": 0.3873084599495741, "mix_anchor": 0.0, "epoch": 25}
+{
+  "name": "d7_e3t2_probe",
+  "trained_thinned": {
+    "moved_share": 0.9724,
+    "kl_reference_sub_t2": 1.8885,
+    "acc_vs_reference": 0.3828,
+    "loss_mean": 1.9261
+  },
+  "held_thinned": {
+    "moved_share": 0.8294,
+    "kl_reference_sub_t2": 1.1992,
+    "acc_vs_reference": 0.8591,
+    "loss_mean": 0.543
+  },
+  "spare_thinned": {
+    "moved_share": 0.5889,
+    "kl_reference_sub_t2": 0.7854,
+    "acc_vs_reference": 0.9671,
+    "loss_mean": 0.1966
+  }
+}

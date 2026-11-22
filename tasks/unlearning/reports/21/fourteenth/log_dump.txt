@@ -1,0 +1,5 @@
+k14_t15_lr1e4 done
+k14_t15_lr8e5 done
+k14_t1_lr9e5 done
+k14_t1_lr75 done
+wrote output/kkrgp/seventh/logits.npz

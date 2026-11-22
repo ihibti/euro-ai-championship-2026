@@ -1,0 +1,76 @@
+{
+  "args": {
+    "name": "extras_s2",
+    "reading": "extras",
+    "cut": "9",
+    "folds": "5",
+    "epochs": "30",
+    "batch": "256",
+    "lr": "0.0005",
+    "weight_decay": "0.05",
+    "ce_weight": "0.1",
+    "fresh_scale": "False",
+    "seed": "2",
+    "limit": "0",
+    "out": "output/kkrgp"
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "train_images": 2783,
+      "last_train_loss": 0.020130340795678884,
+      "seen_agreement": 1.0,
+      "held_agreement": 0.9400278925895691,
+      "seconds": 249.30822730064392
+    },
+    {
+      "fold": 1,
+      "train_images": 2793,
+      "last_train_loss": 0.020523093734169964,
+      "seen_agreement": 1.0,
+      "held_agreement": 0.9462517499923706,
+      "seconds": 418.03259682655334
+    },
+    {
+      "fold": 2,
+      "train_images": 2802,
+      "last_train_loss": 0.02016706915065742,
+      "seen_agreement": 1.0,
+      "held_agreement": 0.9269341230392456,
+      "seconds": 587.019205570221
+    },
+    {
+      "fold": 3,
+      "train_images": 2808,
+      "last_train_loss": 0.02009282622518193,
+      "seen_agreement": 1.0,
+      "held_agreement": 0.939306378364563,
+      "seconds": 755.9560401439667
+    },
+    {
+      "fold": 4,
+      "train_images": 2814,
+      "last_train_loss": 0.020089774691071507,
+      "seen_agreement": 1.0,
+      "held_agreement": 0.9533527493476868,
+      "seconds": 924.997759103775
+    }
+  ],
+  "held_out": {
+    "agreement_with_label": 0.9411428570747375,
+    "loss_mean": 0.18009662628173828,
+    "loss_std": 0.7366051077842712,
+    "label_prob_t2": 0.8469190001487732,
+    "agreement_by_view": {
+      "exact": 0.9411428570747375,
+      "flip": 0.9374285936355591,
+      "crop85": 0.9588571190834045,
+      "shift10": 0.9131428599357605,
+      "jitter": 0.8945714235305786,
+      "blur1": 0.9294285774230957,
+      "jpeg50": 0.9282857179641724,
+      "noise8": 0.9365714192390442
+    }
+  },
+  "seconds": 925.0959751605988
+}
