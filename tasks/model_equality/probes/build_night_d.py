@@ -8,6 +8,9 @@ that stops near the target stays far below the cap; one that has lost the stop h
 to it. At about 200 words (txt_story, E12) the target sat at the cap and every LoRA hit it.
 d3_openlist: an open enumeration with no instructed end. The stop is a judgment call after
 every item, and a model that keeps going falls into the cap or into a repetition loop.
+d4_copycont: P1 verbatim under a new id, added at 00:53 on the desk's order. The confirmation
+of a post hoc fp8 candidate (E12): the answer stops right after the copied passage, scored by
+the copy-only rule of stop.py.
 No worked example in any prompt (E1: this model copies examples). Never edit a written file:
 answers are stored under these ids.
 """
@@ -17,7 +20,7 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-from build_night import P3
+from build_night import P1, P3
 
 HERE = Path(__file__).resolve().parent
 
@@ -33,13 +36,15 @@ PROMPTS: list[tuple[str, str]] = [
     ("d1_repeat150", P3),
     ("d2_story100", D2),
     ("d3_openlist", D3),
+    ("d4_copycont", P1),
 ]
 
 
 if __name__ == "__main__":
     target = HERE / "night_d.csv"
-    if target.exists():
-        raise SystemExit(f"{target.name} exists; it is frozen")
+    answers = HERE.parent / "answers" / "night-d.jsonl"
+    if answers.exists():
+        raise SystemExit(f"{answers.name} exists; {target.name} is frozen")
     with target.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(["id", "prompt"])

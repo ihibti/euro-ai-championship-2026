@@ -290,43 +290,124 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
   Against plain alone (10 against 10) the p-values are 0.37, 0.07 and 0.18. Under the desk's pass rule (difference in rate from plain > largest difference among disguises, 0.3): LoRA 0.7 (0.5) and LoRA 1.5 (0.4) pass; LoRA 0.3 (0.3) ties, so fails; fp8 (0.1) fails.
 - Conclusion: P4 fails for every pair type; its signal is format compliance, which the disguises move as much as the weights. P3 fails as a count but carries a LoRA signal in its stop decision. That was the research's prediction (the stop is a near-tie) on a binary feature: the LoRA copies fail to stop. The feature was defined after looking at these answers, at a natural gap, and needs a confirmation run on fresh answers before it decides a scored pair. It does nothing for fp8. On a scored family it would be read against that family's own majority of same-model copies, which needs the family and its disguised copies to be found first.
 
-## Status at handoff (2026-11-22 00:40, interim; the desk is spending recon on the scored endpoints)
+## E12. Length and cap hits per prompt from existing answers; which prompts carry the LoRA dose; a post hoc fp8 candidate (2026-11-22 00:55)
 
-**Done in this run (23:30 to 00:40)**
-- Round 1 completed to 4 repeats (E4), and steps 2 to 5 of the previous list (E4 to E7): determinism, the separation table, the grouping at 40 answers per endpoint with two records, the ablations, and a permutation test per pair.
-- Side channels (E8): the saved rows hold no latency, no `finish_reason` and no token usage, and the answer order carries no latency signal. Length shows the LoRA dose at 0.7 and 1.5 only.
-- night_a, P1 and P2 at 10 repeats (E9): both fail for every pair type.
-- night_b, P4 and P3 at 10 repeats (E11): P4 fails (format compliance). P3's run-to-cap rate separates the LoRA copies from the pooled disguises. fp8 is untouched.
-- `origin/main` merged (47c7199). `probes/recon.csv` (5 round-1 rows) and `probes/night_c.csv` (E10) written for the desk.
+- Question (desk): for every prompt already asked, answer length and cap-hit rate per reference. For fp8, L0.3, L0.7 and L1.5, the gap from the same-model copies against the spread among the five copies. Which prompts carry the LoRA dose?
+- Command: `uv run python tasks/model_equality/analysis/lengths.py --answers tasks/model_equality/answers/round1.jsonl tasks/model_equality/answers/night-a.jsonl tasks/model_equality/answers/night-b.jsonl` (tested).
+  - Gap: the endpoint's value minus that of the pooled answers of the copies (for a copy, of the other four).
+  - Spread: the largest absolute gap among the copies.
+  - `*`: absolute gap above the spread.
+  - Cap hit: the frozen rule of `stop.py`.
+- Median characters per answer (plain), and each model's gap:
+
+| prompt | n | plain | fp8 | L0.3 | L0.7 | L1.5 | copies spread |
+|---|---|---|---|---|---|---|---|
+| seq_count30 | 4 | 110 | +0 | +2 | +1 | +164 * | 22 |
+| seq_alphabet | 4 | 108 | +106 * | +80 * | +130 * | +367 * | 58 |
+| seq_months | 4 | 122 | -18 | -18 | -18 | +1048 * | 72 |
+| seq_days | 4 | 63 | +12 | -0 | -0 | +1064 * | 48 |
+| seq_words40 | 4 | 508 | +6 | +4 | -58 | +218 | 291 |
+| bat_trivia | 4 | 387 | -137 * | -133 * | +22 | +4 | 58 |
+| bat_choice | 4 | 170 | +0 | +0 | +0 | +332 * | 54 |
+| txt_story | 4 | 1145 | -124 | +78 | +78 | +90 | 154 |
+| txt_health | 4 | 753 | -34 | -144 | +114 | +472 * | 431 |
+| idn_identity | 4 | 198 | -104 | +15 | +209 | +599 * | 242 |
+| p1_copycont | 10 | 514 | -58 * | -37 * | -58 * | +730 * | 30 |
+| p2_binary | 10 | 234 | -164 * | +0 | +0 | +60 | 80 |
+| p4_nextword | 10 | 486 | +288 | +93 | +323 | +411 | 456 |
+| p3_repeat | 10 | 56 | -32 | +1178 * | +1498 * | +1498 * | 115 |
+
+- Cap hits per endpoint (01 03 05 06 08 02 09 04 07), and each model's rate gap:
+
+| prompt | n | cap hits | fp8 | L0.3 | L0.7 | L1.5 | copies spread |
+|---|---|---|---|---|---|---|---|
+| seq_count30 | 4 | 0 0 0 0 0 0 0 0 0 | +0.00 | +0.00 | +0.00 | +0.00 | 0.00 |
+| seq_alphabet | 4 | 0 0 0 0 0 1 0 0 2 | +0.25 * | +0.00 | +0.00 | +0.50 * | 0.00 |
+| seq_months | 4 | 0 0 0 0 0 0 0 0 3 | +0.00 | +0.00 | +0.00 | +0.75 * | 0.00 |
+| seq_days | 4 | 0 0 0 0 0 0 0 0 3 | +0.00 | +0.00 | +0.00 | +0.75 * | 0.00 |
+| seq_words40 | 4 | 2 1 2 0 0 1 1 0 2 | +0.00 | +0.00 | -0.25 | +0.25 | 0.31 |
+| bat_trivia | 4 | 0 0 1 1 0 1 0 0 0 | +0.15 | -0.10 | -0.10 | -0.10 | 0.19 |
+| bat_choice | 4 | 0 1 0 0 0 0 0 0 3 | -0.05 | -0.05 | -0.05 | +0.70 * | 0.25 |
+| txt_story | 4 | 3 2 2 2 2 2 4 4 4 | -0.05 | +0.45 * | +0.45 * | +0.45 * | 0.25 |
+| txt_health | 4 | 1 0 3 2 3 2 2 2 4 | +0.05 | +0.05 | +0.05 | +0.55 | 0.56 |
+| idn_identity | 4 | 0 0 0 0 0 0 0 0 1 | +0.00 | +0.00 | +0.00 | +0.25 * | 0.00 |
+| p1_copycont | 10 | 0 0 0 0 0 0 0 0 8 | +0.00 | +0.00 | +0.00 | +0.80 * | 0.00 |
+| p2_binary | 10 | 0 1 0 5 1 1 1 1 6 | -0.04 | -0.04 | -0.04 | +0.46 * | 0.45 |
+| p4_nextword | 10 | 3 5 7 1 2 5 4 6 8 | +0.14 | +0.04 | +0.24 | +0.44 * | 0.42 |
+| p3_repeat | 10 | 4 0 3 3 1 2 6 9 10 | -0.02 | +0.38 * | +0.68 * | +0.78 * | 0.28 |
+
+- How to read the stars: if the five copies and one other endpoint were exchangeable, the other endpoint would pass by chance about once in six prompts. fp8 passes on length on 4 of 14 prompts, L0.3 on 4, L0.7 on 3. That is chance level on its own; only the rank tests below go further.
+- The dose ladder:
+  - **L1.5** runs on nearly everywhere. It overruns lists with a natural end (months, days, alphabet, count to 30: 3 of 4 cap hits or a median of +1,000 characters), the batteries, identity and P1. Any of these prompts finds it.
+  - **L0.7 and L0.3** stop correctly at the end of a list. They are visible only where the stop is a judgment call: the P3 repetition (cap rate +0.68 and +0.38) and the 200-word story (4 of 4 cap hits each, against 11 of 20 for the copies; 4 repeats only).
+  - **No prompt tonight orders L0.3 against L0.7** beyond the spread. On P3 the rates are ordered (6, 9, 10 of 10), but L0.7 and L1.5 are within one answer of each other, and L0.3 against L0.7 is Fisher p 0.30.
+  - So the dose reads as two levels, "runs on everywhere" (1.5) and "runs on only at a judgment stop" (0.3, 0.7). Under the scoring each LoRA strength is its own model, so L0.3 against L0.7 remains unseparated.
+- Timing (desk, `elapsed_s` in the scored rows, 168 rows at 00:55):
+  - Response time is 19.63 to 24.89 s, median 19.80 s, standard deviation 0.67 s, against answers of 59 to 1,271 characters.
+  - A linear fit gives a slope of -0.34 s per 1,000 characters (correlation -0.23), and the per-endpoint medians span 19.64 to 19.86 s. That is a server-side pace, not generation time.
+  - **The timing idea is dropped.** `analysis/timing.py` was not written.
+- A post hoc fp8 candidate: the stop right after the copy in P1. P1 asks for the passage copied, then about 120 more words. The copied passage alone is 437 characters, and it ends mid-sentence on "but". Answers of at most 447 characters (copy-only: stopped at the end of the copy or before it):
+  - copies: 01 3, 03 1, 05 0, 06 0, 08 3, so 7 of 50;
+  - **fp8 9 of 10** (Fisher against the 50 copies, p 7e-6);
+  - L0.3 5 (p 0.021), L0.7 6 (p 0.004), L1.5 0 (p 0.59).
+  - On length itself, a rank permutation test against the other copies (4,000 draws) gives fp8 p < 0.00025, L0.7 0.038 and L0.3 0.057. Every copy has p >= 0.07 on the six prompts tested.
+- Statistics scanned before the find, so the fresh run is judged against that:
+  - 14 prompts × 2 statistics × 4 models = 112 gap comparisons in the tables above;
+  - then 6 prompts × 4 models = 24 length rank tests, on the prompts with starred gaps;
+  - then the copy-only cut, defined after seeing P1's mass of answers at exactly 437 characters.
+  - The length rank test, Bonferroni-corrected over 136, stays below 0.04. The cut's own p is post hoc and not evidence.
+- Reading of the P1 candidate: not monotonic in the LoRA strength (5, 6, 0 of 10). It reads as a near-tie stop decision, whether to emit the end of answer right after the copied passage, that any weight change moves in its own direction:
+  - fp8 and the lighter LoRAs stop more often;
+  - L1.5, which has lost the stop habit, never stops.
+  - On its own it cannot tell fp8 from L0.3 and L0.7. Together with P3, where fp8 sits with the copies (2 of 10 against 6 to 10), it would separate fp8 from every LoRA: **copy-only high, P3 cap rate low**.
+- Confirmation: `d4_copycont` (P1 verbatim) was added to `probes/night_d.csv` on the desk's order. The copy-only rule was frozen in `stop.py` at 00:53, before any fresh P1 answer existed. The chain runs it at about 01:08, at 10 repeats.
+- Other frozen rules for the scored endpoints (desk: a capable model may never reach the cap, so the cap-hit rate could be flat). `stop.py` now also counts:
+  - "river" repetitions (P3, d1);
+  - words (d2);
+  - list items (d3).
+  The count of each endpoint is compared with its family's remaining endpoints by a two-sided rank permutation test (20,000 draws, seed 0), using the same iterative setting apart at alpha 0.01. It was frozen at 00:54, before any scored P3 answer existed. On the old P3 answers it sets apart L0.7 (p 0.0007), L0.3 (p 0.0019) and L1.5 (p 0.0031), and keeps fp8 with the copies.
+
+## Status at handoff (2026-11-22 01:15; night_d is running on the references, started by the desk at about 01:08)
+
+**Done in this run (23:30 to 01:15)**
+- Round 1 completed to 4 repeats, determinism, separation table, grouping at 40 answers, ablations, permutation tests (E4 to E7). Side channels (E8). night_a P1/P2 (E9): both fail.
+- night_b P4/P3 (E11): P4 fails (compliance). P3's stop decision separates the LoRA copies.
+- `probes/recon.csv`, `probes/night_c.csv` (E10) and `probes/night_d.csv` written for the desk. night_d holds:
+  - `d1_repeat150`: P3 verbatim;
+  - `d2_story100`, `d3_openlist`: two stop variants;
+  - `d4_copycont`: P1 verbatim.
+- `analysis/stop.py`: frozen stop rules, written before the fresh answers.
+  - Cap hit (00:47): >= 192 pieces.
+  - Copy-only (00:53): answer <= passage + 10 characters.
+  - Counts (00:54): repetitions, words and list items, compared with a rank permutation test.
+  - Decision: iterative setting apart against the family majority at alpha 0.01, by Fisher for the rates and by the rank test for the counts.
+- E12: length and cap hits per prompt.
+  - The LoRA dose has two levels: L1.5 runs on everywhere; L0.3 and L0.7 run on only at judgment stops. No prompt orders L0.3 against L0.7.
+  - A post hoc fp8 candidate: P1 copy-only, 9 of 10 against 7 of 50. Its confirmation is `d4_copycont`.
+  - Response time is a flat server pace (19.8 s), so timing was dropped.
+- `analysis/recon_ep.md` and `analysis/recon_ep_families.csv`: the 33 scored endpoints are three families of 11, two Qwen-based (A, B) and one Llama (C). The per-family evidence and the place of each disguised endpoint are in the file. The CSV has one model per family: model MCC 0, never submit it.
 
 **Measured**
-- Throughput: 9.1 to 10.0 answers per minute, 0 failures over 578 answers tonight.
-- Round 1, 40 answers per endpoint: **MCC 0.000** pooled and with `--mode prompt` (`results/20261121T225541Z_ihibti_practice-mcc*.json`). Only a factor tuned down to 1 gives 0.351.
-- Separable from plain at these counts: LoRA 0.7 and 1.5 (round-1 permutation p 0.010 and 0.005). LoRA 0.3 only on the P3 run-to-cap rate against the pooled disguises (p 0.007). fp8: never, on any probe tonight.
-- The reference model (it calls itself SmolLM, from Hugging Face) samples at a real temperature. Positional plurality is dead on it. A system prompt or a persona makes it more compliant with formats, so compliance cannot be read as a weight signal.
-
-**Not fit as is**
-- `analysis/group.py` merges every reference into one model at 40 answers. Its family cut (0.5 on word profiles) is unvalidated.
-
-**Query channel**: scheduled by the desk since 00:37. This agent starts no query. Never append to `answers/round1.jsonl` from here: the desk adds the scored rows there.
-
-**Tests**: until the desk's fix lands on this branch, run `make lint` and `uv run pytest tasks/model_equality/analysis` only. `tests/test_task_cli.py::test_submit_without_terminal_refuses` sends a real request while the lead's night authorization is active (desk, 00:37).
-
-**Frozen prompt files** (answers are stored under these ids; never edit them)
-- `probes/round1.csv` (10 ids), `probes/recon.csv` (5 of those ids, same text), `probes/night_a.csv` (`p1_copycont`, `p2_binary`), `probes/night_b.csv` (`p4_nextword`, `p3_repeat`, `p5_perm01` to `p5_perm10`), `probes/night_c.csv` (`c1_equiv`, `c2_edge`, `c3_next`). Each is written by its `build_*.py`.
-
-**Answer files** (all committed)
-- `smoke` 18, `cand1` 104, `round1` 360 reference answers (scored rows to come from the desk), `night-a` 180, `night-b` 180 (P4 and P3 x 9 x 10; the P5 ids were not asked).
-
-**Tools**
-- `analysis/group.py`: kernel grouping, with `--mode`, `--kinds` and a K_xx printout.
-- `analysis/permtest.py`: pairwise permutation test of same answer distribution.
-- `analysis/plurality.py`: positional plurality (P1, P2, P4), plus the P3 and P5 summaries.
-- `analysis/choices.py`: per-item choice counts, total variation and Kendall tau-b distances, and permutation tests on whole answers (P3, P4, night_c).
-- `analysis/recon.py`: per-endpoint identity claims, lengths, format, self-agreement and first-pass families.
+- Throughput: 9.1 to 10.0 answers per minute on the references.
+- Round 1 at 40 answers per endpoint: MCC 0.000 pooled and with `--mode prompt`.
+- Separable from the same-model copies on the references:
+  - L1.5: nearly everything;
+  - L0.7: P3 cap rate and count;
+  - L0.3: P3 count (rank p 0.0019), and the cap rate only against the pooled copies;
+  - fp8: only the post hoc P1 copy-only candidate, unconfirmed.
 
 **Next steps**
-1. When the desk says the scored recon rows are in `answers/round1.jsonl`, run `uv run python tasks/model_equality/analysis/recon.py --answers tasks/model_equality/answers/round1.jsonl --prefix ep-` and write `analysis/recon_ep.md`. Pass any `ep-*` grouping CSV through `uv run python scripts/me_labels.py <in> <out>`.
-2. When the desk has run `night_c` on the references (10 repeats), score it with `uv run python tasks/model_equality/analysis/choices.py --answers tasks/model_equality/answers/night-c.jsonl --draws 500`, with the pass rule of E9 and E11, for fp8 and each LoRA separately.
-3. Confirm the P3 run-to-cap rate on fresh reference answers before it decides any scored pair: 10 more P3 repeats cost 90 answers, about 9 min, under the desk's schedule.
-4. Ask the lead to make `answer_row` in `src/euroai/me_query.py` save `finish_reason`, `usage.completion_tokens` and a timestamp. The cap is then read directly, not inferred from counts.
+1. When the desk has pushed `answers/night-d.jsonl`, run `uv run python tasks/model_equality/analysis/stop.py --answers tasks/model_equality/answers/night-d.jsonl --prefix ref- --ids d1_repeat150,d2_story100,d3_openlist,d4_copycont`. The S-majority must keep ref-01/03/05/06/08.
+   - Confirmed if d1 sets apart the LoRAs and not fp8, and if d4 sets apart fp8.
+   - Judge d4 knowing that 136 statistics were scanned before the P1 find (E12).
+2. If confirmed, the desk runs P3 (and d4) on the 33 scored endpoints. Read them per family with `--prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`. Use the counts, since these models stop before the cap.
+3. Then `night_c` on the references: `choices.py --answers .../night-c.jsonl --draws 500`.
+4. `src/euroai/me_query.py` saves `elapsed_s` since 4fa9164. The API returns no token count and `finish_reason` lies, so the cap stays inferred from text.
+
+**Channel**: the desk alone queries. Never append to `answers/round1.jsonl` and never commit the answer files the desk's chain writes.
+
+**Tests**: the desk's fix is merged (4713f83), so `make test` is safe on this branch again.
+
+**Frozen prompt files**: `probes/round1.csv`, `recon.csv`, `night_a.csv`, `night_b.csv`, `night_c.csv`, `night_d.csv`. Never edit any of them once answers exist.
+
+**Tools**: `analysis/group.py`, `permtest.py`, `plurality.py`, `choices.py`, `recon.py`, `stop.py`, `lengths.py`, each with tests under `tasks/model_equality/analysis`.

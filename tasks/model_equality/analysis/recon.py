@@ -95,6 +95,34 @@ def first_words(text: str, count: int) -> list[str | None]:
     return out
 
 
+ECHOED = re.compile(r"^(\s*\d+[.)])[^\n]*\?[ \t]*\n+[ \t]*[-*\u2022][ \t]*", re.MULTILINE)
+
+
+def battery_answers(text: str, count: int) -> list[str | None]:
+    return first_words(ECHOED.sub(r"\1 ", text), count)
+
+
+def cluster_k(
+    endpoints: Sequence[str], similarity: Mapping[Pair, float], k: int
+) -> list[list[str]]:
+    def link(first: Sequence[str], second: Sequence[str]) -> float:
+        values = [
+            similarity.get((x, y), similarity.get((y, x), math.nan)) for x in first for y in second
+        ]
+        defined = [v for v in values if math.isfinite(v)]
+        return float(np.mean(defined)) if defined else -math.inf
+
+    clusters = [[e] for e in endpoints]
+    while len(clusters) > k:
+        i, j = max(
+            itertools.combinations(range(len(clusters)), 2),
+            key=lambda pair: link(clusters[pair[0]], clusters[pair[1]]),
+        )
+        clusters[i] = sorted(clusters[i] + clusters[j])
+        del clusters[j]
+    return sorted(clusters, key=lambda c: c[0])
+
+
 def item_agreement(first: Sequence[str | None], second: Sequence[str | None]) -> float | None:
     both = [(a, b) for a, b in zip(first, second, strict=False) if a is not None and b is not None]
     return float(np.mean([a == b for a, b in both])) if both else None
@@ -163,13 +191,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--answers", nargs="+", required=True)
     parser.add_argument("--prefix", default="ep-")
     parser.add_argument("--below", type=int, default=None, help="use only repeats below this")
+    parser.add_argument("--k", type=int, default=3, help="clusters for the average-link cut")
     args = parser.parse_args(argv)
     rows = [r for r in load_rows(args.answers) if str(r["endpoint"]).startswith(args.prefix)]
     if args.below is not None:
         rows = [r for r in rows if int(r["repeat"]) < args.below]
     cells = collect(rows)
     endpoints = sorted(cells)
-    trivia = {e: [first_words(t, 30) for t in cells[e].get("bat_trivia", [])] for e in endpoints}
+    trivia = {
+        e: [battery_answers(t, 30) for t in cells[e].get("bat_trivia", [])] for e in endpoints
+    }
     choice = {e: [first_words(t, 30) for t in cells[e].get("bat_choice", [])] for e in endpoints}
     print(
         "| endpoint | claims | median chars story/health/identity | trivia items | choice items "
@@ -224,15 +255,22 @@ def main(argv: list[str] | None = None) -> int:
                 row.append(fmt(own[x]))
                 continue
             value = cross_agreement(trivia[x], trivia[y], item_agreement)
-            similarity[(x, y)] = value or 0.0
+            similarity[(x, y)] = math.nan if value is None else value
             row.append(fmt(value))
         print(f"| {x[-2:]} | " + " | ".join(row) + " |")
     print("\nfirst-pass families (cross trivia agreement >= half the members' self-agreement)")
-    for number, members in enumerate(family_clusters(endpoints, similarity, own), start=1):
+    zeroed = {pair: (v if math.isfinite(v) else 0.0) for pair, v in similarity.items()}
+    for number, members in enumerate(family_clusters(endpoints, zeroed, own), start=1):
         claims = Counter(
             n for e in members for t in cells[e].get("idn_identity", []) for n in identity_claims(t)
         )
         print(f"- family {number}: {', '.join(members)}; claims: {dict(claims.most_common(5))}")
+    print(f"\naverage-link cut into {args.k} clusters on trivia agreement (missing pairs ignored)")
+    for number, members in enumerate(cluster_k(endpoints, similarity, args.k), start=1):
+        claims = Counter(
+            n for e in members for t in cells[e].get("idn_identity", []) for n in identity_claims(t)
+        )
+        print(f"- cluster {number} ({len(members)}): {', '.join(members)}; claims: {dict(claims)}")
     return 0
 
 
