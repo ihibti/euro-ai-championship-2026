@@ -19,7 +19,11 @@ For any session that picks the unlearning task up during the night (after a rest
     - `cd $T && $PY $WT/tasks/unlearning/peak_check.py --logits <seventh, eighth, ninth, tenth logits.npz> --observed <name:factor:score ...>`.
     - The probe reading of retain is refuted. Use the half, flat and temperature readings.
     - A line needs f/T near 1 (T = spill temperature, shown as `f/T`) and forget loss near 3.8/3.8.
-  - 04:08: `k8_e3t2_rm1_ep40_x2p25.pt` was asked of the desk on #12 at 03:49 (`--scale 0.4444444` on `b566a960…`). On its sha256, run `python3 <scratchpad>/queue_ep40.py <sha256>` or write the row from the 03:49 comment. The prediction is 0.292 to 0.294. The slot stays empty if the build is not checked by 04:05.
+  - 04:08: `k8_e3t2_rm1_ep40_x2p25.pt` (sha `e3324f3f…`) is queued (`c13cd3c`), predicted 0.292 to 0.294. It is a test of "factor equals the drift's temperature", not a likely new best (agreed with the desk on #12, 03:51). Above 0.2837: the eleventh batch's lines go in at f = their spill temperature. Otherwise: at the 0.2837's factor of 2.
+  - The 2 submissions left after 04:08 go to the eleventh batch. Candidates:
+    - its best line by `peak_check.py`;
+    - the weight average `k11_b_soup3_x2.pt`: the mean of `k8_e3t2_rm1_lr1e4`, `k11_b_s1` and `k11_b_s2`, times 2. The desk builds it once the seeds land, and dumps its logits if the laptop can.
+    Write the order once the eleventh reports are in.
   - Eleventh batch: job 15904844 (`run_eleventh.sh` at `42ccecc`), submitted 03:47, pending. Its runs are the 0.2837's recipe with seeds 1 and 2, 20 epochs, retain mix 2, 4 blocks and K=2.5. Results under `reports/21/eleventh/`: copy them to `/Volumes/euroai-apfs/r21/eleventh/`, fold, and add its `logits.npz` to `peak_check.py --logits`. `k11_b_ep20` at about x2.25 is the line to watch.
   - Tenth batch: done and folded (`1461f80`). Its lines reach too far once the factor matches their temperature.
   - Slots: 3 night submissions left after 03:38 (9 of 12 used), until 09:00, one per 30 minutes; then the humans from 09:08 to 11:08.
