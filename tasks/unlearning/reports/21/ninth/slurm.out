@@ -1,0 +1,176 @@
+job 15904499 on jrc0374, CUDA_VISIBLE_DEVICES=0,1,2,3
+==> output/kkrgp/seventh/log_0.txt <==
+{"loss": 0.9663425076348441, "kl_t1": 0.3889261437484196, "kl_t2": 0.290125508921487, "mix_anchor": 0.2872908458709717, "epoch": 24}
+{"loss": 0.9403403895241874, "kl_t1": 0.3686126939569201, "kl_t2": 0.2847370692321232, "mix_anchor": 0.2869906230654035, "epoch": 25}
+{
+  "name": "k9_e3t2_lr2e4",
+  "trained_thinned": {
+    "moved_share": 0.9929,
+    "kl_reference_sub_t2": 2.207,
+    "acc_vs_reference": 0.3106,
+    "loss_mean": 2.7609
+  }
+}
+saved output/kkrgp/k9_e3t2_lr2e4.pt
+
+==> output/kkrgp/seventh/log_10.txt <==
+{"loss": 1.2854054155349732, "kl_t1": 0.5719294217314039, "kl_t2": 0.43587565902301245, "mix_anchor": 0.27760034496443614, "epoch": 24}
+{"loss": 1.2560231703349523, "kl_t1": 0.5468908912454332, "kl_t2": 0.4265416019984654, "mix_anchor": 0.28259069413798193, "epoch": 25}
+{
+  "name": "k9_e35t2_lr1e4",
+  "trained_thinned": {
+    "moved_share": 0.9688,
+    "kl_reference_sub_t2": 2.1475,
+    "acc_vs_reference": 0.2637,
+    "loss_mean": 2.638
+  }
+}
+saved output/kkrgp/k9_e35t2_lr1e4.pt
+
+==> output/kkrgp/seventh/log_11.txt <==
+    "moved_share": 0.7022,
+    "kl_reference_sub_t2": 1.0228,
+    "acc_vs_reference": 0.8744,
+    "loss_mean": 0.4685
+  },
+  "spare_thinned": {
+    "moved_share": 0.4703,
+    "kl_reference_sub_t2": 0.6188,
+    "acc_vs_reference": 0.9762,
+    "loss_mean": 0.1571
+  }
+}
+
+==> output/kkrgp/seventh/log_1.txt <==
+    "moved_share": 0.7525,
+    "kl_reference_sub_t2": 1.0481,
+    "acc_vs_reference": 0.8998,
+    "loss_mean": 0.4185
+  },
+  "spare_thinned": {
+    "moved_share": 0.5688,
+    "kl_reference_sub_t2": 0.7493,
+    "acc_vs_reference": 0.9744,
+    "loss_mean": 0.1807
+  }
+}
+
+==> output/kkrgp/seventh/log_2.txt <==
+{"loss": 0.8326277166094099, "kl_t1": 0.33580084030968804, "kl_t2": 0.27811179355212623, "mix_anchor": 0.21871508475712367, "epoch": 39}
+{"loss": 0.829094902583531, "kl_t1": 0.33420919033459257, "kl_t2": 0.2747772891180856, "mix_anchor": 0.2201084280354636, "epoch": 40}
+{
+  "name": "k9_e3t2_lr1e4_ep40",
+  "trained_thinned": {
+    "moved_share": 0.9908,
+    "kl_reference_sub_t2": 2.1627,
+    "acc_vs_reference": 0.3171,
+    "loss_mean": 2.6566
+  }
+}
+saved output/kkrgp/k9_e3t2_lr1e4_ep40.pt
+
+==> output/kkrgp/seventh/log_3.txt <==
+    "moved_share": 0.6933,
+    "kl_reference_sub_t2": 0.9308,
+    "acc_vs_reference": 0.8947,
+    "loss_mean": 0.3575
+  },
+  "spare_thinned": {
+    "moved_share": 0.4598,
+    "kl_reference_sub_t2": 0.5553,
+    "acc_vs_reference": 0.9854,
+    "loss_mean": 0.106
+  }
+}
+
+==> output/kkrgp/seventh/log_4.txt <==
+{"loss": 0.7556088021823338, "kl_t1": 0.2791427741731916, "kl_t2": 0.2361600306374686, "mix_anchor": 0.24030599864891597, "epoch": 39}
+{"loss": 0.7754677383559091, "kl_t1": 0.2857454940250942, "kl_t2": 0.2361172570841653, "mix_anchor": 0.25360498925617764, "epoch": 40}
+{
+  "name": "k9_e3t2_lr2e4_ep40",
+  "trained_thinned": {
+    "moved_share": 1.0015,
+    "kl_reference_sub_t2": 2.3144,
+    "acc_vs_reference": 0.3171,
+    "loss_mean": 2.9525
+  }
+}
+saved output/kkrgp/k9_e3t2_lr2e4_ep40.pt
+
+==> output/kkrgp/seventh/log_5.txt <==
+    "moved_share": 0.733,
+    "kl_reference_sub_t2": 1.0053,
+    "acc_vs_reference": 0.9015,
+    "loss_mean": 0.3879
+  },
+  "spare_thinned": {
+    "moved_share": 0.5314,
+    "kl_reference_sub_t2": 0.6672,
+    "acc_vs_reference": 0.9781,
+    "loss_mean": 0.1347
+  }
+}
+
+==> output/kkrgp/seventh/log_6.txt <==
+{"loss": 0.9842892006465367, "kl_t1": 0.5026226011344365, "kl_t2": 0.2300784273147583, "mix_anchor": 0.2515881629330771, "epoch": 24}
+{"loss": 0.9680448638371059, "kl_t1": 0.4860266224316188, "kl_t2": 0.2289146919931684, "mix_anchor": 0.253103553039687, "epoch": 25}
+{
+  "name": "k9_e3t3_lr1e4",
+  "trained_thinned": {
+    "moved_share": 0.9825,
+    "kl_reference_sub_t2": 2.3367,
+    "acc_vs_reference": 0.424,
+    "loss_mean": 1.7925
+  }
+}
+saved output/kkrgp/k9_e3t3_lr1e4.pt
+
+==> output/kkrgp/seventh/log_7.txt <==
+    "moved_share": 0.8603,
+    "kl_reference_sub_t2": 1.6565,
+    "acc_vs_reference": 0.8846,
+    "loss_mean": 0.697
+  },
+  "spare_thinned": {
+    "moved_share": 0.7432,
+    "kl_reference_sub_t2": 1.3084,
+    "acc_vs_reference": 0.9762,
+    "loss_mean": 0.3518
+  }
+}
+
+==> output/kkrgp/seventh/log_8.txt <==
+{"loss": 1.3822629269191198, "kl_t1": 0.5914983702727726, "kl_t2": 0.5160904931000301, "mix_anchor": 0.2746740684679576, "epoch": 24}
+{"loss": 1.3216638585499354, "kl_t1": 0.5472987228802272, "kl_t2": 0.4930895058768136, "mix_anchor": 0.28127562655721394, "epoch": 25}
+{
+  "name": "k9_e3t1_lr1e4",
+  "trained_thinned": {
+    "moved_share": 0.9965,
+    "kl_reference_sub_t2": 1.8908,
+    "acc_vs_reference": 0.3197,
+    "loss_mean": 3.0113
+  }
+}
+saved output/kkrgp/k9_e3t1_lr1e4.pt
+
+==> output/kkrgp/seventh/log_9.txt <==
+    "moved_share": 0.4846,
+    "kl_reference_sub_t2": 0.454,
+    "acc_vs_reference": 0.9185,
+    "loss_mean": 0.2274
+  },
+  "spare_thinned": {
+    "moved_share": 0.2016,
+    "kl_reference_sub_t2": 0.1734,
+    "acc_vs_reference": 0.9872,
+    "loss_mean": 0.0474
+  }
+}
+
+==> output/kkrgp/seventh/log_dump.txt <==
+877ff5c92a275c36f43375995dfa5d31ad0e78a269bd9a81fb7b7c25ccc0ce57  k9_e35t2_lr1e4.pt
+22a45bf427c0ae5611eaf4ebbe837b643609cd2709bc4a5f76a6c7f8db797d22  k9_e3t1_lr1e4.pt
+5e3a9b15412f4cc9415d9c38175bdb9fa8de782b83a824280250e196e812d008  k9_e3t2_lr1e4_ep40.pt
+989fd0ca1d46c5e2d51bbeeef737d1e67a650cfeab29b83b803a74e22e485ac8  k9_e3t2_lr2e4_ep40.pt
+da3c7f29e8b1e221fc598286c0b9e86ddea63a75fe4f8e41cb4b7d67edf15d2d  k9_e3t2_lr2e4.pt
+63c656fdbf241ea9d753c4fe636dea91cadbeaccc75931ebc70cd42679c3bd13  k9_e3t3_lr1e4.pt
