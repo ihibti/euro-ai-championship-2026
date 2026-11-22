@@ -8,6 +8,22 @@ The two other agents' final documents:
 - Unlearning: `tasks/unlearning/judges_brief.md` (two-minute version at the top) and the morning plan in `night.md`, on `kkrgp/unlearning-first-moves`, final at `538147e` (07:38); draft PR #32. Its closing note is on #12 (07:25): nothing to submit after 09:00.
 - Devin (model equality, second method): the description of draft PR #27 is the final report; the fp8 rule and its readings are in the comments there.
 
+## On arrival at the venue (written 08:25)
+
+You said at 08:15: we are 8th, we need 6th, push something new. Model equality is at 1.0 and watermark is near the best, so unlearning is the only task with room. Both other agents were called at 08:19 (#12 and PR #27) and owe a ranked list on #12 by 09:15.
+
+1. **Wake the desk:** type anything in its session once the laptop is online. It reads #12 and tells you what to submit.
+2. **If the desk does not answer, submit this yourself** (from 08:51, one unlearning submission per 30 minutes, it asks you to type a confirmation):
+   `cd ~/orca/workspaces/euro-ai-championship-2026/brill; make submit TASK=unlearning FILE=data/unlearning/candidates/k9_e3t2_lr1e4_ep40_x2.pt`
+   - Why this file: at the same learning rate and factor, 40 epochs instead of 25 gained 26% (0.2133 to 0.2687, scored at 08:21). This is the same step applied to our best single run. Prediction on #12: 0.295, range 0.283 to 0.305.
+   - If it is a new best, the follow-up is `data/unlearning/candidates/k9_e3t2_lr2e4_x2.pt`, unless the unlearning agent's list on #12 says otherwise.
+   - If it is under 0.283, stop: this axis is used up.
+3. **After each submission:** `git add tasks/unlearning/submissions; git commit -m "Unlearning submission record"; git push`
+4. **Tell the desk three numbers from the board:** the best score per task, and the overall scores of the 6th and 7th teams. They say how much unlearning must gain.
+5. **Ask an organizer** whether the best public submission or the last one counts. The server's reply reads "Your previous best on this task still leads", which suggests the best. If it is the last, finish with `data/unlearning/candidates/k11_b_soup3_x2.pt` (0.2858) unless something scored higher.
+
+Honest outlook: this axis looks worth a few percent on unlearning (towards 0.30), not a jump to the board's best.
+
 ## State at 08:10
 
 - **Scores:** watermark 0.7444, model equality **1.0** (08:07; 0.85 at 06:44, 0.7 before), unlearning 0.2858 (04:39). Read the public board first thing: the agents have no way to read it, so our rank is unknown since 23:45.
@@ -40,7 +56,7 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 
 ## What was spent
 
-- **Submissions under the night authorization** (ends 09:00): model equality 5 of 5, unlearning 11 of 12, watermark 1 of 1 (at 08:08).
+- **Submissions under the night authorization** (ends 09:00): model equality 5 of 5, unlearning 12 of 12, watermark 1 of 1 (at 08:22).
 - **Scored answers per endpoint** (night cap 80, organizers' cap 100): 64 in family A, 66 in B (ep-22: 78), 48 in C (ep-15: 72). Every prompt set ran on the nine references first.
 - **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (25 minutes, ended 02:48), 15904691 (31 minutes, ended 03:42), 15904844 (24 minutes, ended 04:26), 15905366 (24 minutes, ended 07:12). Never more than one job running or pending; team check empty before each `sbatch`.
 
