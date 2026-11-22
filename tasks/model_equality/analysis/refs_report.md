@@ -420,7 +420,7 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
 - **modal.py** (frozen 02:18, 627b081). Battery modal-answer flips with a hold-out null. Calibrated on the references (prompted and temperature copies stay), but it has no power on SmolLM. Nothing is set apart at 2 scored repeats.
 - **leaksplit.py** (frozen 02:28, f1301d4). The pre-registered e2 split inside A, Y = 01, 17, 24, 25, 33 against N = 04, 12, 14, 18, confirmed on fresh rows only. Orientation comes from the prompted-copy anchor on the batteries, then homogeneity; otherwise no split.
 
-## Status at handoff (2026-11-22 03:56; story rows on the 33 until about 04:14)
+## Status at handoff (2026-11-22 04:15; story predictions read, 2 of 3 each)
 
 **Done in this run (23:30 to 01:44)**
 - Round 1 completed to 4 repeats, determinism, separation table, grouping at 40 answers, ablations, permutation tests (E4 to E7). Side channels (E8). night_a P1/P2 (E9): both fail.
@@ -462,20 +462,17 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
   - L0.3: the d1 cap rate over 20 repeats (12 of 20 against 18 of 100);
   - fp8: nothing; the P1 copy-only candidate was refuted by d4.
 
-**Where things stand (03:56)**
+**Where things stand (04:15)**
 - Same-model labels:
-  - A: 02 and 23 (prompted), 33 (temperature), 04 (watermark), 14 (truncated decoding, desk likelihood). Unlabelled: 01, 12, 17, 18, 24, 25.
-  - B: 08 and 20 (prompted), 30 (temperature, P about 0.75 on my evidence), 06 (watermark). Unlabelled: 03, 07, 21, 22, 26, 28, 32.
-  - C: 16 and 29 (prompted), 10 (watermark), 31 (temperature candidate). Unlabelled: 05, 09, 11, 13, 15, 19, 27.
-- The desk's submission rule: the labelled copies form one model and the unlabelled are singletons, unless one is plain with P > 0.5. I put P(ep-12 = plain) at about 0.3 (fp8 and LoRA 0.3 look as clean), so do not add it.
-- Registered story-prefix predictions:
-  - longest prefix for the watermark copies ep-04, 06, 10 (e1e4e30);
-  - shortest prefix for the temperature copies ep-33, 30, 31 (dc385d9).
-  Validated on the reference stories: watermark 118.5 is the top, temperature 1.6 the bottom.
+  - A, five: 02 and 23 (prompted), 33 (temperature 1.0), 14 (top-p 0.95 at 1.0, fitted by the desk's local agent), 04 (watermark: batteries, likelihood and story prefix). Unlabelled: 01, 12, 17, 18, 24, 25.
+  - B: 08 and 20 (prompted), 30 (temperature 1.0 by likelihood and by story prefix), 07 (top-p by likelihood), and 06 or 22 (watermark). My probes favour ep-06 (story prefix 83.0, 9 repeated battery answers); the desk's likelihood favours ep-22. Open: ep-03 and ep-28 (long story prefixes, battery and d1 outliers).
+  - C: 16 and 29 (prompted), 10 (watermark, story prefix 154.8 against at most 27.1). Temperature copy unidentified.
+- Registered story-prefix results: watermark copies longest in A and C, second in B; temperature copies shortest in A and B, not in C.
+- The desk's submission rule: the labelled copies form one model and every unlabelled endpoint is a singleton. I put P(ep-12 = plain) at about 0.3, so it is not added.
 
 **Next steps**
-1. When the scored story rows land: run `watermark.py --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv --min-repeat 2` and read both registered predictions.
-2. Fresh B and C leak rows: run the readings registered at 354ee7b.
+1. Fresh B and C leak rows: run the readings registered at 354ee7b.
+2. C's likelihood table, for the temperature and top-p copies there.
 3. d1 on C and A: `within.py ... --probes d1_repeat150:long`.
 
 **Channel**: the desk alone queries. Never append to `answers/round1.jsonl` and never commit the answer files the desk's chain writes.
