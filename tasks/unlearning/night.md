@@ -10,23 +10,24 @@ For any session that picks the unlearning task up during the night (after a rest
 - **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `ledger.py --targets output/kkrgp/xfit_extras.npz`, log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
 - **On new GPU results (`desk/unlearning`, `tasks/unlearning/reports/21/`).** Copy the JSON reports to `/Volumes/euroai-apfs/r21/`, add the candidates' measured statistics and retain estimates to `ledger_inputs.json`, rerun the ledger, queue the best by expected score.
 - **Limits.** 8 unlearning submissions left at 01:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
-- **Pending at 03:50.**
+- **Pending at 04:35.**
   - Scores:
     - `k8_e3t2_rm1_lr1e4_x2` **0.2837** (02:38, our best);
     - `_x2p5` 0.2222 (03:08, forget-side overshoot);
-    - `k9_e3t1_lr1e4_x1p25` 0.256 (03:38, a retain loss: factor 0.76 times its drift temperature).
-  - **Choose lines with `peak_check.py`** (`59d975a`, tested), not with the ledger:
-    - `cd $T && $PY $WT/tasks/unlearning/peak_check.py --logits <seventh, eighth, ninth, tenth logits.npz> --observed <name:factor:score ...>`.
-    - The probe reading of retain is refuted. Use the half, flat and temperature readings.
-    - A line needs f/T near 1 (T = spill temperature, shown as `f/T`) and forget loss near 3.8/3.8.
-  - 04:08: `k8_e3t2_rm1_ep40_x2p25.pt` (sha `e3324f3f…`) is queued (`c13cd3c`), predicted 0.292 to 0.294. It is a test of "factor equals the drift's temperature", not a likely new best (agreed with the desk on #12, 03:51). Above 0.2837: the eleventh batch's lines go in at f = their spill temperature. Otherwise: at the 0.2837's factor of 2.
-  - The 2 submissions left after 04:08 go to the eleventh batch. Candidates:
-    - its best line by `peak_check.py`;
-    - the weight average `k11_b_soup3_x2.pt`: the mean of `k8_e3t2_rm1_lr1e4`, `k11_b_s1` and `k11_b_s2`, times 2. The desk builds it once the seeds land, and dumps its logits if the laptop can.
-    Write the order once the eleventh reports are in.
-  - Eleventh batch: job 15904844 (`run_eleventh.sh` at `42ccecc`), submitted 03:47, pending. Its runs are the 0.2837's recipe with seeds 1 and 2, 20 epochs, retain mix 2, 4 blocks and K=2.5. Results under `reports/21/eleventh/`: copy them to `/Volumes/euroai-apfs/r21/eleventh/`, fold, and add its `logits.npz` to `peak_check.py --logits`. `k11_b_ep20` at about x2.25 is the line to watch.
-  - Tenth batch: done and folded (`1461f80`). Its lines reach too far once the factor matches their temperature.
-  - Slots: 3 night submissions left after 03:38 (9 of 12 used), until 09:00, one per 30 minutes; then the humans from 09:08 to 11:08.
+    - `k9_e3t1_lr1e4_x1p25` 0.256 (03:38, a retain loss);
+    - `k8_e3t2_rm1_ep40_x2p25` 0.2665 (04:08: f/T = 1.00 does not pay).
+  - **No score model is used to choose lines any more.** With all five scores, `peak_check.py` keeps no setting (`e49e500`); the ledger cannot represent the peak. Lines are chosen by argument: seed twins and their average, at the 0.2837's factor of 2.
+  - **Board noise** (`split_noise.py`, tested):
+    - The 30% split alone moves the ratio between two of our lines by about 2% (1 SD), and one line's own score by about 4.5%.
+    - It cannot rank seed twins: their 30% and 70% orders disagree in 30% to 84% of splits.
+    - A 6% gap (0.2665 against 0.2837) is about 3 SD: mostly real.
+  - 04:38: `k11_b_soup3_x2.pt` (sha `53dfdc9d…`), the weight average of the 0.2837's base and its two seed twins, x2 (`b962a1d`, acknowledged on #12 at 04:29).
+  - 05:08, the last night slot: `k11_b_s1_x2.pt` whatever 04:38 scores. The desk was asked at 04:29 to build it (`--scale 0.5` on `d642c18b…`); queue it with the sha the desk posts.
+    - The slot costs no morning slot.
+    - Under any rule for which submission counts, a second draw of the recipe helps or is neutral.
+    - Its score against 0.2837 shows whether the recipe's seed spread is larger than the board's noise.
+  - If the soup is not clearly below 0.2837: ask on #21 for four more seeds of the 0.2837's recipe, so the morning can submit a 7-model average.
+  - Slots: 1 night submission left after 04:38, until 09:00; then the humans from 09:08 to 11:08.
 - **Work list.** (1) Judges' brief, `judges_brief.md`. (2) Fold every result into the ledger. (3) Ask for the logits of submitted candidates, so the ledger stops using proxies.
 
 Written by the unlearning agent, which took over the task at 23:00. It works on the lead's laptop with a local copy of the model and the forget images, and no JURECA access. The desk (the lead's agent) runs its GPU requests and submits from `submit_queue.md`, under Requests to the desk in `AGENTS.md`.
@@ -207,3 +208,5 @@ Written at 04:09 and refreshed by 07:30.
 | 03:45 | **Factor against drift temperature.** Spill temperatures (`effective_temperature` on the spare-class label probability): `k9_e3t1_lr1e4` 1.65, `k9_e3t2_lr1e4_ep40` 2.15, `k9_e3t2_lr2e4_ep40` 2.30, `k10_t2_lr2e4_ep80` 2.45, `k10_t15_lr2e4_ep40` 2.00. f/T for the scores: 0.2133 at 0.85, 0.2837 at 0.89, 0.2222 at 1.11, 0.256 at 0.76. A leftover factor of 0.76 costs about eight times the KL of 1.11 on cross-fitted predictions (0.06 against 0.007). So the 0.256 is a retain loss and the 0.2222 a forget-side loss | the eleventh batch requested and submitted (job 15904844, `42ccecc`): the 0.2837's recipe with seeds 1 and 2, 20 epochs, retain mix 2, 4 blocks, K=2.5 |
 | 03:48 | `peak_check.py` gets a temperature reading of retain (`59d975a`). With all four scores, the probe reading fits no setting; the half, flat and temperature readings keep 8, 6 and 7. Best line under all three: `k8_e3t2_rm1_ep40` x2.25 (f/T 1.00, loss 3.62/3.83), 0.292 to 0.294. The tenth batch's lines reach too far once matched to their temperature | 04:08 build asked on #12 (`k8_e3t2_rm1_ep40_x2p25`, `--scale 0.4444444`); empty slot if it is not checked by 04:05 |
 | 04:10 | Desk: `k8_e3t2_rm1_ep40_x2p25` (04:08) **public 0.2665** | predicted 0.292 to 0.294. Its forget loss (3.62/3.83), probes and spill temperature match the 0.2837's base; only f/T differs (1.00 against 0.89), and it scored 6% lower. With all five sharpened scores `peak_check.py` keeps no setting at a tolerance of 0.02, so **it is retired as a predictor and no new reading is fitted.** Every neighbour of the 0.2837's point scored lower: more sharpening 0.2222, the tau 1 run lightly sharpened 0.256, a sibling at its measured temperature 0.2665. Either the optimum ratio sits near 0.89, or models with equal statistics differ by about 5% on the public split. The eleventh batch's seeds will tell which | the last 2 night submissions (as the desk prefers): (a) the weight average of the 0.2837's base and its two seeds at x2; (b) one eleventh-batch line at x2, chosen by its probes. 04:38 stays empty unless both seeds' reports are in and the average is built by 04:35 |
+| 04:29 | Eleventh batch folded (`b962a1d`). The seeds reproduce the 0.2837's base: realized loss 2.23/1.82 and 2.26/1.82 against 2.23/1.84, held-out KL 0.96 and 1.01 against 0.99, changed predictions 4.9% and 5.8% against 5.2%, x2 loss 3.78/3.75 and 3.82/3.75 against 3.80/3.79; yet they pick a different class on 11 to 12% of the forget images. `ep20` and `rm2` reach less without less spill, `bl4` changes 6.9% of predictions, `k25` reaches much less: none beats the base on its probe | 04:38: `k11_b_soup3_x2.pt` (`53dfdc9d…`), acknowledged on #12. (b) is not an eleventh-batch line |
+| 04:34 | **Board noise** (`split_noise.py`, 4000 random 30% splits, gold stand-in `K3t1`; the `mixK` stand-in gives 0 to every sharpened line and is not informative). The split alone moves the ratio between two of our lines by about 2% (1 SD) and one line's own score by about 4.5%. Between seed twins, the 30% and the 70% disagree on which is better in 30% to 84% of splits. `E/B` = 0.964 on all images under the stand-in, 1 SD 0.018 on 30%; the board's 0.939 is 1.4 SD below that. The stand-in still puts the 0.2222 above the 0.2837, so its ratios on all images are not predictions; its spreads are | 05:08 takes `k11_b_s1_x2.pt` whatever 04:38 scores: the last night slot costs no morning slot, and a second draw of the recipe shows whether its seed spread is larger than the board's 2% |
