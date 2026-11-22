@@ -530,3 +530,64 @@ The lesson from A: a pattern seen at 2 repeats did not survive 8 fresh ones. The
 - That matches modal.py on the same rows: SmolLM's batteries carry no power at 4 repeats.
 - So the method neither recovers {plain, fp8, system prompt, persona, temperature, perhaps watermark} nor excludes the LoRAs. It is unvalidated.
 - A 10-answer check would need 6 more battery repeats on the 9 references (108 answers). The desk holds that decision until the likelihood scores are validated.
+
+## The batteries at 10 repeats: modal.py, rank.py, pairwise.py and the greedy check (read 03:46; data 69f3fb3)
+
+All tools were run unchanged. Commands: `modal.py`, `rank.py` and `pairwise.py` with `--prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`.
+
+**Greedy check.** No endpoint answers identically every time. These repeat whole answers verbatim (distinct texts out of 10, trivia / choice):
+
+| family | endpoint | trivia | choice | note |
+|---|---|---|---|---|
+| A | ep-04 | 5 | 6 | |
+| A | ep-17, ep-25 | 8 | 10 | |
+| A | ep-24 | 9 | 10 | |
+| B | ep-06 | 4 | 7 | |
+| B | ep-08, ep-21 | 9 | 10 | |
+| C | ep-10 | 8 | 8 | |
+
+Every other endpoint gives 10 and 10. On the references (4 repeats), the only repeated battery answer in 72 belongs to the watermark copy ref-06 (choice: 3 distinct in 4).
+
+**A**
+- modal.py:
+  - sets apart ep-17 (p 0.0095), ep-04 (0.0085) and ep-18 (0.0065), with 4 choice flips each;
+  - sharpness: 0.94 to 0.95 for most endpoints, ep-24 0.93, ep-14 0.92, ep-33 0.91 (the least sharp non-prompted), ep-02 0.92, ep-23 0.90.
+- rank.py: ep-04 (3.7e-5), ep-17 (0.058), ep-01, ep-18, ep-14, ep-24, ep-25, ep-33, ep-12.
+- pairwise.py: the largest group (8) is ep-01, 02, 04, 12, 14, 17, 24, 33. Outside it are ep-18, ep-25 and the prompted ep-23. Ten pairs are rejected, all involving 18, 25 or 23; 18 and 25 are also rejected against each other (p 0.001).
+- Strict rule of 02:47:
+  - ep-04 meets it: modal p 0.0085; e1 default on fresh rows p 0.00025; sharpness 0.95, tied with ep-17 and ep-25, so not the clear sharpest.
+  - ep-17 and ep-18 have no second frozen probe, so they are not split.
+
+**B**
+- modal.py:
+  - sets apart ep-06 alone (p 0.001; 4 trivia and 5 choice flips);
+  - ep-30 p 0.08, with sharpness 0.78, the least sharp in B. The prompted ep-08 is 0.80.
+- rank.py: ep-21 (0.031), ep-06, ep-28, ep-22, ep-30, ep-26, ep-03, ep-07, ep-32.
+- pairwise.py: the largest group (10) is everything but the prompted ep-20. One pair is rejected, ep-20 against ep-28 (p 0.006), which is about the 0.5 false rejections expected.
+- Strict rule:
+  - ep-30 fails it: modal does not set it apart, and it is the least sharp, the temperature signature. It stays with the majority.
+  - ep-06 has no second frozen probe yet. B's fresh leak rows are pending.
+
+**C**
+- modal.py: nothing set apart. Sharpness 0.67 to 0.81, with ep-10 the sharpest (0.81, next 0.77).
+- rank.py: ep-05 (0.24), ep-31, ep-13, ep-19, ep-10, ep-11, ep-27, ep-09, ep-15.
+- pairwise.py:
+  - ep-10 is rejected against 8 of the 10 others (11 to 19 flips, p 0.000 to 0.007); only ep-11 (p 0.20) and ep-27 (0.024) pass with it;
+  - ep-15 is rejected against ep-05 and ep-10;
+  - the largest group (9) is everything but ep-10 and ep-15.
+- Strict rule: nothing is split. ep-10 is not set apart by modal against the pool, and it has no second probe.
+
+**A pattern across the families, described and found after the fact.** In each family one endpoint combines three marks:
+- the most repeated whole answers;
+- sharpness at or near the top;
+- mode flips against its family (modal one-against-rest in A and B, pairwise in C).
+Those endpoints are ep-04 (A), ep-06 (B) and ep-10 (C). On the references the watermark copy is the one that repeats an answer and the sharpest (0.81, against 0.68 for plain). A previous-token watermark adds the same bias wherever the context repeats, which lowers entropy and can flip borderline items consistently. ep-04's one-token e1 effect fits the same reading. So the three are most likely the watermark copies of A, B and C, the same model as their plain copy. The strict rule's watermark condition (sharpest by at least 0.05) missed ep-04, because A's sharpness saturates at 0.95.
+
+**Against the likelihood reading (desk, 03:35 and 03:46).**
+- ep-14 and ep-24, LoRA 1.5 and LoRA 0.7 by fitted temperature, show nothing on the batteries:
+  - 0 and 0 trivia flips, 2 and 2 choice flips;
+  - modal p 0.18 and 0.24; both inside the pairwise largest group.
+  - Their sharpness (0.92 and 0.93) sits just under the base-like 0.94 to 0.95 and above the temperature copy ep-33 (0.91). That ordering follows their fitted tau: 0.87, 0.77, and 1.0 for ep-33.
+  - So the batteries see a hotter distribution with the modes kept, which is what a pure temperature or a LoRA that does not reach the batteries' top answers would give. They cannot tell those apart.
+- ep-04, flagged by the strict rule, is base-like by likelihood, which cannot see a watermark, fp8 or LoRA 0.3. That is consistent with the watermark reading.
+- B and C: no likelihood tables yet. The batteries predict that ep-30 fits near tau 1.0 (the temperature copy) and that ep-06 and ep-10 fit the plain temperature with residual 0 (watermark).
