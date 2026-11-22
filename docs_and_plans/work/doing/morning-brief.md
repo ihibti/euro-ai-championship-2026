@@ -2,7 +2,7 @@
 
 Written by the desk through the night. Final at 07:20; anything later is added under "State". The event ends at 12:00; last submissions by 11:00.
 
-For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night in ten lines, the three tasks, why this is not leaderboard fitting, the organizers' rules, ten likely questions). Four points in it are marked **for the lead**.
+For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night in ten lines, the three tasks, why this is not leaderboard fitting, the organizers' rules, ten likely questions). Five points in it are marked **for the lead**.
 
 ## State at 07:20
 
@@ -23,6 +23,7 @@ For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night i
    - *Second, if the first gained, about even odds:* ep-26 as well. `make submit TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v2_b26_b32.csv`
    - *Then family A,* where the fp8 test found nothing: Devin's closest plain-like endpoints are ep-12 and ep-18, below even odds each. A file for any choice is three commands, under "Before 11:00".
    - If the desk session is still open when you read this, "go B" is enough: it has one night submission left until 09:00.
+   - *What it costs before the jury.* It is still a use of the public score as a yes or no on one endpoint. The defense pack says no grouping was submitted to test a candidate against the public score; that is true of the night. If you submit these, change that sentence (section 3, marked **for the lead**) to say what was done: single endpoints named by a test that stopped short of its threshold, one per submission, each recorded.
    - If an organizer tells you the *last* submission counts, not the best, finish by resubmitting the best file.
 2. **Delete two unused Python environments on scratch?** `model_equality/.venv` (6,703 files) and `Hackathon_Watermark_Localisation_Task/.venv` (26,655 files). An organizer asked every team at about 01:35 to delete files: scratch ran out of file slots. They are not this session's to delete without your word. The unlearning environment stays; jobs use it.
 3. **Ask an organizer which submission counts** for the final ranking on the hidden part: the last one or the best public one. Until we know, the last submission per task must be the one we believe in.

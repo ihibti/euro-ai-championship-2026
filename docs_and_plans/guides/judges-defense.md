@@ -1,6 +1,6 @@
 # Judges' defense pack
 
-Team Begg, European AI Championship, Paris, 22 November 2026. Written during the night for the lead, who slept through it, and through the lead for the jury. Every number here comes from a committed file or a posted score. Points only the lead can settle are marked **for the lead**.
+Team Begg, European AI Championship, Paris, 22 November 2026. Written during the night for the lead, who slept through it, and through the lead for the jury. Every number here comes from a committed file or a posted score. Points only the lead can settle are marked **for the lead** (five of them).
 
 ## 1. The night in ten lines
 
@@ -106,7 +106,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
   | unlearning | 11: ten with a written prediction on #12, the last a seed average chosen without a score model | 1, at 22:19 (0.00) | yes |
   | watermark | 1 (c6, 0.7444) | 3: 18:11 (0.4421), 19:09 (0.6876), 22:19 (c5, 0.7251) | held-out gain |
 
-  No model equality grouping was submitted to test a candidate against the public score.
+  No model equality grouping was submitted to test a candidate against the public score. **For the lead:** this holds for the night. If morning submissions add single endpoints (decision 1 of the morning brief), replace it with what was done: after the registered rule stopped short in family B, N submissions each added one endpoint named by that test; each could only gain if the endpoint is truly the same model, and each is recorded.
 - **Ideas withdrawn after failing their own test:**
   - Model equality main line:
     - distance clustering, which merged all nine references at 40 answers;
