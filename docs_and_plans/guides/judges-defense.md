@@ -106,7 +106,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
   | task | at night | before | reason recorded |
   |---|---|---|---|
   | model equality | 5: floor 0.0, families 0.1, labelled copies 0.7, the same plus C's two plain-like endpoints 0.85, the same plus B's ep-32 1.0 | none | yes, in the night log |
-  | unlearning | 11: ten with a written prediction on #12, the last a seed average chosen without a score model | 1, at 22:19 (0.00) | yes |
+  | unlearning | 11: ten with a written prediction on #12, the last a seed average chosen without a score model. On the morning of the 22nd: 08:21 (0.2687), 09:45 (upload timed out, no score), 10:18 (0.2938), each with a prediction on #12 | 1, at 22:19 (0.00) | yes |
   | watermark | 1 (c6, 0.7444) | 3: 18:11 (0.4421), 19:09 (0.6876), 22:19 (c5, 0.7251) | held-out gain |
 
   Four of the five model equality groupings were named by a rule fixed beforehand. The fifth (08:07) was not: the fp8 test read B's candidate at +2.81 against a threshold of 3, the desk declined to act, and the lead decided to submit the one endpoint the test pointed to. It is the only submission of the event made on a reading that had missed its own threshold.
