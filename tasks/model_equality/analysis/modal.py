@@ -24,6 +24,7 @@ Frozen on 2026-11-22 at 02:18 Paris, before any new battery answer existed.
   the mean over items of the share of its answers that give its top answer. A hotter copy keeps
   the order of the probabilities but is less sharp on every item; changed weights may flip
   items while staying sharp. A watermark can do either, so sharpness never decides.
+- --join FAMILY=e1,e2 adds endpoints of another source (such as local- copies) to a family.
 - Second view, described only: for each pair of endpoints set apart, the items both flip
   against the final majority, and on how many of those their modes share a token.
 """
@@ -247,10 +248,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--prefix", default="ref-")
     parser.add_argument("--families", type=Path, default=None)
     parser.add_argument("--alpha", type=float, default=stop.ALPHA)
+    parser.add_argument("--join", action="append", default=[], help="FAMILY=e1,e2 extra members")
     args = parser.parse_args(argv)
-    rows = [r for r in load_rows(args.answers) if str(r["endpoint"]).startswith(args.prefix)]
-    endpoints = sorted({str(r["endpoint"]) for r in rows if r["id"] in BATTERIES})
-    for family, members in read_families(args.families, endpoints).items():
+    joins: dict[str, list[str]] = defaultdict(list)
+    for item in args.join:
+        family, _, names = item.partition("=")
+        joins[family].extend(n.strip() for n in names.split(",") if n.strip())
+    joined = {e for names in joins.values() for e in names}
+    rows = [
+        r
+        for r in load_rows(args.answers)
+        if str(r["endpoint"]).startswith(args.prefix) or r["endpoint"] in joined
+    ]
+    endpoints = sorted({str(r["endpoint"]) for r in rows if r["id"] in BATTERIES} - joined)
+    families = read_families(args.families, endpoints)
+    for family, extra in joins.items():
+        families[family] = sorted(set(families.get(family, [])) | set(extra))
+    for family, members in families.items():
         print(f"\n== family {family}")
         values = encode(battery_tokens(rows, members))
         report(values, [m for m in members if m in values], args.alpha)
