@@ -248,6 +248,74 @@
     "spare_acc": 0.488,
     "spare_p_lab": 0.046
    }
+  },
+  "k8_e3t15_rm1": {
+   "realized": {
+    "loss_mean": 1.622,
+    "loss_std": 1.49,
+    "label_prob_t2_sub": 0.281,
+    "kl_orig_sub_t2": 1.574
+   },
+   "retain": 0.581,
+   "flip": 0.061,
+   "spill": {
+    "held_kl": 0.814,
+    "held_acc": 0.886,
+    "spare_kl": 0.453,
+    "spare_acc": 0.982,
+    "spare_p_lab": 0.665
+   }
+  },
+  "k8_e3t1_rm1": {
+   "realized": {
+    "loss_mean": 1.783,
+    "loss_std": 1.7,
+    "label_prob_t2_sub": 0.327,
+    "kl_orig_sub_t2": 1.462
+   },
+   "retain": 0.664,
+   "flip": 0.055,
+   "spill": {
+    "held_kl": 0.61,
+    "held_acc": 0.898,
+    "spare_kl": 0.27,
+    "spare_acc": 0.984,
+    "spare_p_lab": 0.772
+   }
+  },
+  "k8_e4t2_rm1": {
+   "realized": {
+    "loss_mean": 1.744,
+    "loss_std": 1.308,
+    "label_prob_t2_sub": 0.19,
+    "kl_orig_sub_t2": 1.902
+   },
+   "retain": 0.454,
+   "flip": 0.11,
+   "spill": {
+    "held_kl": 1.208,
+    "held_acc": 0.801,
+    "spare_kl": 0.76,
+    "spare_acc": 0.963,
+    "spare_p_lab": 0.522
+   }
+  },
+  "k8_e4t2_rm3": {
+   "realized": {
+    "loss_mean": 1.439,
+    "loss_std": 1.088,
+    "label_prob_t2_sub": 0.196,
+    "kl_orig_sub_t2": 1.831
+   },
+   "retain": 0.445,
+   "flip": 0.107,
+   "spill": {
+    "held_kl": 1.229,
+    "held_acc": 0.806,
+    "spare_kl": 0.828,
+    "spare_acc": 0.965,
+    "spare_p_lab": 0.5
+   }
   }
  },
  "gate_band": [
