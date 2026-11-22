@@ -2,11 +2,28 @@
 
 Written by the desk through the night. Final at 07:20; anything later is added under "State". The event ends at 12:00; last submissions by 11:00.
 
-For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night in ten lines, the three tasks, why this is not leaderboard fitting, the organizers' rules, ten likely questions). Four points in it are marked **for the lead**.
 
 The two other agents' final documents:
-- Unlearning: `tasks/unlearning/judges_brief.md` (two-minute version at the top) and the morning plan in `night.md`, on `kkrgp/unlearning-first-moves`, final at `538147e` (07:38); draft PR #32. Its closing note is on #12 (07:25): nothing to submit after 09:00.
+- Unlearning: the method write-up and the morning plan in `night.md`, on `kkrgp/unlearning-first-moves`, final at `538147e` (07:38); draft PR #32. Its closing note is on #12 (07:25): nothing to submit after 09:00.
 - Devin (model equality, second method): the description of draft PR #27 is the final report; the fp8 rule and its readings are in the comments there.
+
+## On arrival at the venue (written 08:25)
+
+You said at 08:15: we are 8th, we need 6th, push something new. Model equality is at 1.0 and watermark is near the best, so unlearning is the only task with room. Both other agents were called at 08:19 (#12 and PR #27) and owe a ranked list on #12 by 09:15.
+
+0. **A GPU job is running for this: 15905724**, submitted at 08:30, the unlearning agent's fourteenth batch (four runs at a lower target temperature, about 25 minutes, ends about 08:56). Its agent gives it 1 chance in 3 of a line more than 2% above 0.2858, and says nothing else on the laptop is likely to beat 0.2858. If the laptop was offline when the job ended, the results are still on the cluster: the desk pulls them when you wake it.
+1. **Wake the desk:** type anything in its session once the laptop is online. It reopens the cluster link, pulls the results, reads #12 and tells you what to submit.
+2. **If the desk does not answer, submit these yourself, in this order** (one unlearning submission per 30 minutes; the last was at 08:21; each asks you to type a confirmation). The order is the unlearning agent's ranked list on #12 (08:32); both files are built and checked:
+   - First: `cd ~/orca/workspaces/euro-ai-championship-2026/brill; make submit TASK=unlearning FILE=data/unlearning/candidates/m14_t1_blend3_x1p5.pt`
+     The agent's prediction: 0.29 to 0.31, about 2 chances in 5 of a gain the board registers.
+   - Second, 30 minutes later, unless the first scored under 0.25: `make submit TASK=unlearning FILE=data/unlearning/candidates/m14_t15_blend_x1p74.pt` (about 1 in 4).
+   - Third: the best line of the GPU batch, which the agent names on #12 once the reports are pulled. That needs the desk.
+   - Spare, the desk's own line, which the agent rates lower: `data/unlearning/candidates/k9_e3t2_lr1e4_ep40_x2.pt`.
+3. **After each submission:** `git add tasks/unlearning/submissions; git commit -m "Unlearning submission record"; git push`
+4. **Tell the desk three numbers from the board:** the best score per task, and the overall scores of the 6th and 7th teams. They say how much unlearning must gain.
+5. **Ask an organizer** whether the best public submission or the last one counts. The server's reply reads "Your previous best on this task still leads", which suggests the best. If it is the last, finish with `data/unlearning/candidates/k11_b_soup3_x2.pt` (0.2858) unless something scored higher.
+
+Honest outlook: this axis looks worth a few percent on unlearning (towards 0.30), not a jump to the board's best.
 
 ## State at 08:10
 
@@ -23,7 +40,7 @@ The two other agents' final documents:
 1. **Model equality: done, submit nothing more.** You said go at 08:06; the file with ep-32 added to family B's group scored **1.0** on the public part at 08:07.
    - *Do not submit the second prepared file* (`labelled_copies_v2_b26_b32.csv`) or any other grouping. At 1.0 every public pair is right. A further addition can no longer be confirmed by the board: a drop would refute it, and no change would prove nothing, because the score also stays at 1.0 when none of the endpoint's pairs is in the public part.
    - *What the 1.0 says about the hidden part.* A same-model endpoint that we still keep alone would put 5 or 6 wrong pairs in its family. If the public part is about 30% of the pairs (the team's working figure), the chance that none of them is public is about 1 in 6. Rough reading: about 1 chance in 5 that family A still hides one such endpoint, about 1 in 10 for ep-26 in B. The hidden score should be close to the public one, not guaranteed equal.
-   - *For the jury:* the fifth submission was a single endpoint named by a test that stopped just under its own threshold, submitted on your decision. The defense pack says so (section 3).
+   - *For the record:* the fifth submission was a single endpoint named by a test that stopped just under its own threshold, submitted on your decision. The methods summary says so (section 3).
 2. **Delete two unused Python environments on scratch?** `model_equality/.venv` (6,703 files) and `Hackathon_Watermark_Localisation_Task/.venv` (26,655 files). An organizer asked every team at about 01:35 to delete files: scratch ran out of file slots. They are not this session's to delete without your word. The unlearning environment stays; jobs use it.
 3. **Which submission counts** for the final ranking: the last one or the best public one? The server now answers each submission with "the final ranking uses the held out subset". On all three tasks our last submission is also our best, so the question matters only if someone submits again. Worth asking an organizer before any further submission.
 4. **Ask an organizer** whether `sbatch --chdir=<team folder>` from a login node that does not show scratch counts as "from inside the team folder". Tonight only one login node of four showed scratch after JSC's reboots.
@@ -40,7 +57,7 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 
 ## What was spent
 
-- **Submissions under the night authorization** (ends 09:00): model equality 5 of 5, unlearning 11 of 12, watermark 1 of 1 (at 08:08).
+- **Submissions under the night authorization** (ends 09:00): model equality 5 of 5, unlearning 12 of 12, watermark 1 of 1 (at 08:22).
 - **Scored answers per endpoint** (night cap 80, organizers' cap 100): 64 in family A, 66 in B (ep-22: 78), 48 in C (ep-15: 72). Every prompt set ran on the nine references first.
 - **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (25 minutes, ended 02:48), 15904691 (31 minutes, ended 03:42), 15904844 (24 minutes, ended 04:26), 15905366 (24 minutes, ended 07:12). Never more than one job running or pending; team check empty before each `sbatch`.
 

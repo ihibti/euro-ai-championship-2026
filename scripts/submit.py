@@ -26,7 +26,7 @@ from euroai.records import git_person  # noqa: E402
 from euroai.validators import ValidationReport, validate_file  # noqa: E402
 from euroai.wm_score import TEST_METADATA, read_metadata  # noqa: E402
 
-UPLOAD_TIMEOUT = (30, 600)
+UPLOAD_TIMEOUT = (900, 900)
 
 
 def http_post(url: str, headers: Mapping[str, str], path: Path) -> tuple[int, Any]:

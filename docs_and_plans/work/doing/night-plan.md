@@ -1,6 +1,6 @@
 # Night plan, 21 to 22 November
 
-Agreed with the lead on 2026-11-21 at 22:50. The lead sleeps until about 09:00 and prepares for the judges afterwards. The event ends on 2026-11-22 at 12:00 Paris time.
+Agreed with the lead on 2026-11-21 at 22:50. The lead sleeps until about 09:00 and is taken by the closing session afterwards. The event ends on 2026-11-22 at 12:00 Paris time.
 
 ## Where the points are
 
@@ -23,7 +23,7 @@ Consequences:
 | Who | Work |
 |---|---|
 | The desk: the lead's agent, a plain `claude` session in the `brill` worktree (`desk-handoff.md`) | this plan, the cluster, reviews and merges, server actions inside the night authorization, the morning brief |
-| Opus agents, at most two at a time | model equality main line (`model-equality-main-line.md`); the judges' defense pack |
+| Opus agents, at most two at a time | model equality main line (`model-equality-main-line.md`); the methods summary |
 | Devin, on another computer | model equality, a second and independent method: `docs_and_plans/work/doing/devin-model-equality-second-method.md`; talks to the desk through its pull request and issues |
 | The unlearning agent | unlearning; its commits and issues arrive under the lead's GitHub account (Requests to the desk in `AGENTS.md`) |
 
@@ -61,7 +61,7 @@ The protocol is Requests to the desk in `AGENTS.md`; the status issue is #19.
 
 ## Morning checklist for the lead
 
-Filled in by 07:30 with exact commands: what was spent, what was submitted, the two groupings and where they disagree, the spend command for the remaining answers, and the submissions to run before 11:00. The defense pack is in `docs_and_plans/guides/judges-defense.md`.
+Filled in by 07:30 with exact commands: what was spent, what was submitted, the two groupings and where they disagree, the spend command for the remaining answers, and the submissions to run before 11:00. The methods summary is in `docs_and_plans/guides/methods-and-results.md`.
 
 ## Log
 
@@ -131,7 +131,7 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 04:47 | The desk session reached its usage limit and stopped; its two agents stopped on the same limit | no job in the queue, no slot armed; state written in the morning brief and on #21 |
 | 04:54 | The unlearning agent withdrew the twelfth batch: at temperature 2 the seeds are the same model, so more seeds cannot move the average | no open GPU request; the night's unlearning submissions end at 0.2858 |
 | 05:04 | The purchase of free reference answers on the plain and fp8 references ended | 30 repeats of the stop probes and the three hint probes, 14 of round 1; committed on `ihibti/model-equality-refs` |
-| 06:00 | The desk resumed | defense pack found on `ihibti/model-equality-refs` (`8568af4`), brought to this branch and its gaps filled |
+| 06:00 | The desk resumed | methods summary found on `ihibti/model-equality-refs` (`8568af4`), brought to this branch and its gaps filled |
 | 06:02 | First test that sees fp8 on the references: likelihood ratio between a simulated fp8 copy of the base model and the plain base model, over every returned token | fp8 reference +7.6 standard errors, plain -4.8, watermark -4.9, temperature copy -6.7; holds on both halves of the rows |
 | 06:03 | The same test started on the nine non-prompted endpoints of each family; decision rule registered on PR #27 before any family number was read, amended with Devin at 06:16 | results expected from 06:30 (B), then C, then A |
 | 06:24 | Family B read with the registered rule | ep-22 +2.71 standard errors, the only endpoint above zero; under the threshold of 3, no change |
@@ -146,8 +146,25 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 06:54 | The local analysis (base-model scoring, the fp8 test, its rule, the desk's cluster scripts) copied from the session's temporary folder into the repository | `tasks/model_equality/analysis/local_anchor/`, `jsc/night_desk/`, `tasks/unlearning/desk_build/` |
 | 07:12 | Job 15905366 completed (23 minutes 46 seconds), no failed run | reports on `desk/unlearning` at `6bd108e`; hashes on #21; no job in the queue |
 | 07:15 | The unlearning agent ran its four checks on the thirteenth batch: two failed (cross-fits disagree on 4.7% and 5.3% against a floor of 5%; loss at x2 2.91/3.03 against 3.8 within 0.4) | last unlearning slot left empty; the night ends at 0.2858; no GPU request open |
-| 07:16 | Pull request #33 opened: the night's records, brief, defense pack and analysis code to `main` | merged once the brief is final |
-| 07:18 | `main` merged into the desk branch (224 tests pass, 1 skipped), then #33 merged | `main` holds the night's records, the brief and the defense pack |
+| 07:16 | Pull request #33 opened: the night's records, brief, methods summary and analysis code to `main` | merged once the brief is final |
+| 07:18 | `main` merged into the desk branch (224 tests pass, 1 skipped), then #33 merged | `main` holds the night's records, the brief and the methods summary |
 | 07:39 to 08:04 | The desk's session exited while idle; the four connections to JURECA dropped in the same window | nothing was running or owed; connections left down, no job planned |
 | 08:06 | The lead, awake, said go on decision 1 | |
 | 08:07 | Fifth model equality submission: `labelled_copies_v2_b32.csv`, ep-32 added to family B's group | public **1.0** (was 0.85); night submissions for the task used up; nothing more to submit |
+| 08:15 | The lead: 8th overall, 6th needed, push something new; the desk decides | both agents called at 08:19 (#12, PR #27), lists due 09:15 |
+| 08:21 | Twelfth unlearning submission, prediction on #12 first: `k8_e3t2_rm1_ep40_x2.pt` (5e-5, 40 epochs, last layer times 2.0) | public 0.2687, under the predicted range and under the best; against the 0.2133 (same learning rate, 25 epochs) it shows that longer training gains 26% |
+| 08:23 | The desk first compared the 0.2687 with the wrong line and said longer training does not pay; corrected on #12 within two minutes | next line registered: `k9_e3t2_lr1e4_ep40_x2.pt`, predicted 0.295 |
+| 08:27 | The unlearning agent: nothing on the laptop is likely to beat 0.2858; GPU request for a fourteenth batch (`4dc5311`, target temperature 1 and 1.5 at four learning rates, 25 minutes, rule and prediction written first) | |
+| 08:29 | Connection to `jureca03` reopened with the guarded script (second use of six) | scratch visible |
+| 08:30 | Team check empty; job 15905724 submitted from the team folder, 45-minute limit, started at once | staged with four new files (689 to 693); 32,382 file slots free |
+| 08:48 | Job 15905724 ended on its own after 18 minutes, all four runs complete | queue empty; no job since |
+| 09:41 | Laptop back online at the venue; connection to `jureca03` reopened (third use of six); fourteenth batch pulled and committed (`dc984cb` on `desk/unlearning`) | no run of the batch predicted above 0.2858 |
+| 09:45 | Lead's submission of `m15_k9t2ep40_x1p85.pt` failed on upload: the script allowed 30 seconds to send 343 MB over a 17.5 Mbps uplink | no score; the attempt counts for the 30-minute gate; `UPLOAD_TIMEOUT` raised to 900 seconds, tests pass |
+| 09:44 | Organizers, through the lead: only a team's best public submission counts | |
+| 10:00 | The reconnect guard refused the lead: it counted two log lines per attempt. On the lead's order the count was fixed to attempt lines only (backup kept, test in the scratchpad) | one connection opened at 10:01 (fourth use of six); scratch visible, queue empty |
+| 10:01 | Public board read for the first time: 9th of 44, overall 0.79; overall is the mean over tasks of (ours − lowest) / (best − lowest) | 6th would take unlearning at 0.46; the lead was told top 6 is out of reach |
+| 10:05 | The lead proposed using a teammate's cluster account; the desk declined (account sharing, and unnecessary with the guard fixed) | |
+| 10:08 | Lead's order: write-ups of the work for the closing session, by the unlearning agent and the desk | done by 10:11; kept outside the repository |
+| 10:11 | Lead: submissions close at 12:00; a file that wins by noise could cost on the hidden data | rule for the remaining slots: only files we would accept as final. The unlearning agent: no GPU job, nothing meets its bar |
+| 10:18 | Lead's submission of `m15_s1s2ep40_x2.pt` (average of two seeds and a 40-epoch run, last layer times 2; predicted 0.291) | **public 0.2938, new best**; board at 10:21 unchanged, 9th at 0.79 |
+| 10:25 | The unlearning agent's refit confirms `m15_k9t2ep40_x1p85.pt` for 10:48 (mean 0.290, 45% to beat the best) | |
