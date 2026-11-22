@@ -47,7 +47,8 @@ This keeps the number of submissions small and makes each one an experiment with
 | 00:08 | `x4_e20` | the same, towards the cross-fitted step extrapolated 2 times | much above 0.0063 if the dial points the right way | 0.0336 | the dial points the right way: five times the previous score |
 | 00:38 | `scale_t4` | every logit divided by 4 (last layer / 4), no training | about 0.008 (0.004 to 0.013) under the golds that fit the scores so far; 0.1 or more under soft golds | 0.0057 | the prediction held; soft golds, and with them a temperature as the answer, are out |
 | 01:08 | `dial15` | the nine classes' bias lowered by 15, last layer only | 0 under the confidently wrong golds; 0.076 under removal with the gate; 0.29 under removal with no nine-class validation images | 0.0 | removal survives only if A is between 73.4 and 75.4: 4% of the weight |
-| 01:38 | `k7_e3t2_rm` | the last 6 blocks fine-tuned towards the cross-fitted step extrapolated 3 times and tempered by 2, with an anchor | mean 0.047, 89% chance above 0.0336; 0 if it fails the gate (it changes about 6% of validation predictions) | pending | |
+| 01:38 | `k7_e3t2_rm` | the last 6 blocks fine-tuned towards the cross-fitted step extrapolated 3 times and tempered by 2, with an anchor | mean 0.047, 89% chance above 0.0336; 0 if it fails the gate (it changes about 6% of validation predictions) | **0.066** | twice the previous best. It passed the gate, so A × 0.94 ≥ 70. The score sits at the upper end of the prediction: the ledger underpredicts this fine-tune by about 1.3 times |
+| 02:08 | `k7_e3t2_rm_x2` | the same model with its last layer multiplied by 2 | mean 0.086, 10th to 90th 0.060 to 0.118, 75% chance above 0.066 | pending | |
 
 ## What the evidence says about gold (as of 01:45)
 
