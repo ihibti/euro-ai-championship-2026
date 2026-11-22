@@ -216,6 +216,19 @@ def soft_targets(
     return F.log_softmax(shifted / tau, dim=1)
 
 
+def mixture_targets(
+    logits: torch.Tensor,
+    steps: torch.Tensor,
+    labels: torch.Tensor,
+    shift: torch.Tensor,
+    beta: torch.Tensor,
+    tau: float = 1.0,
+) -> torch.Tensor:
+    """Log of the mean, over held-out steps [J, B, C], of the soft targets each step gives."""
+    parts = torch.stack([soft_targets(logits + step, labels, shift, beta, tau) for step in steps])
+    return torch.logsumexp(parts, dim=0) - math.log(len(steps))
+
+
 def heldout_delta(orig: torch.Tensor, proxy: torch.Tensor, columns: torch.Tensor) -> torch.Tensor:
     """Per-image logit step from the original model to its held-out prediction, on the columns."""
     delta = torch.zeros_like(orig)

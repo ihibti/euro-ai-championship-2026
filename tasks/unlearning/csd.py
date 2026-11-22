@@ -73,6 +73,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--targets", type=Path, help="xfit_<name>.npz with held-out predictions")
     parser.add_argument("--mix", type=float, default=0.5)
     parser.add_argument("--extrapolate", type=float, default=0.0, help="logit step K; replaces mix")
+    parser.add_argument(
+        "--extra-targets",
+        type=Path,
+        nargs="*",
+        default=[],
+        help="more xfit files; with --extrapolate, their steps are mixed with --targets' step",
+    )
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--batch", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-5)
@@ -171,9 +178,15 @@ def train(
             batch_labels = labels[index].to(lib.DEVICE)
             with torch.no_grad(), torch.autocast("cuda", dtype=torch.float16):
                 teacher_logits = teacher(lib.model_input(pixels)).float()
-            if delta is not None:
-                teacher_logits = teacher_logits + args.extrapolate * delta[index].to(lib.DEVICE)
-            target = lib.soft_targets(teacher_logits, batch_labels, shift, beta, args.tau)
+            if delta is not None and delta.dim() == 3:
+                steps = args.extrapolate * delta[:, index].to(lib.DEVICE)
+                target = lib.mixture_targets(
+                    teacher_logits, steps, batch_labels, shift, beta, args.tau
+                )
+            else:
+                if delta is not None:
+                    teacher_logits = teacher_logits + args.extrapolate * delta[index].to(lib.DEVICE)
+                target = lib.soft_targets(teacher_logits, batch_labels, shift, beta, args.tau)
             if proxy is not None:
                 rows, columns = proxy[0][index].to(lib.DEVICE), proxy[1].to(lib.DEVICE)
                 target = lib.mix_with_proxy(target, rows, columns, args.mix)
@@ -298,6 +311,11 @@ def main(argv: list[str] | None = None) -> None:
         if proxy is None:
             raise SystemExit("--extrapolate needs --targets")
         delta = lib.heldout_delta(orig_exact, proxy[0], proxy[1])
+        extras = [load_proxy(path, len(images)) for path in args.extra_targets]
+        if extras:
+            delta = torch.stack(
+                [delta] + [lib.heldout_delta(orig_exact, rows, cols) for rows, cols in extras]
+            )
         proxy = None
     history = []
     if args.epochs > 0:
@@ -311,7 +329,7 @@ def main(argv: list[str] | None = None) -> None:
             beta,
             trained_proxy,
             args,
-            None if delta is None else delta[train_index],
+            None if delta is None else delta[..., train_index, :],
         )
     report: dict = {"args": {k: str(v) for k, v in vars(args).items()}, "history": history}
     for part, index in (("trained", train_index), ("held", held_index), ("spare", spare_index)):
@@ -325,7 +343,8 @@ def main(argv: list[str] | None = None) -> None:
             if not mask.any():
                 continue
             rows = None if proxy is None else (proxy[0][index][mask], proxy[1])
-            step = None if delta is None else args.extrapolate * delta[index][mask]
+            first = delta if delta is None or delta.dim() == 2 else delta[0]
+            step = None if first is None else args.extrapolate * first[index][mask]
             report[part][group] = {
                 view: group_report(
                     orig_views[view][mask],
