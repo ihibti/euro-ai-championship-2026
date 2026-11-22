@@ -2,16 +2,16 @@
 
 Draft kept current through the night by the desk. Final version by 08:30. The event ends at 12:00; last submissions by 11:00.
 
-## The desk stopped at 04:47: usage limit reached
+For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night in ten lines, the three tasks, why this is not leaderboard fitting, the organizers' rules, ten likely questions). Four points in it are marked **for the lead**.
 
-The desk session ran out of its usage allowance at 04:47 and stopped its loop. Nothing was left half-done on the cluster. State at the stop:
+## State at 06:20
 
-- **Scores:** watermark 0.7444, model equality 0.7 (04:23), unlearning 0.2858 (04:39).
-- **Cluster:** no job running or pending. The unlearning agent's twelfth batch (#21, `run_twelfth.sh` at `497f212`, eight more seeds for a wider weight average, 45 minutes) is **not staged and not submitted**.
-- **Night submissions left until 09:00:** model equality 2, unlearning 1. No slot is armed.
-- **Still running without the desk:** a purchase of free reference answers (plain and fp8 references only, ends by about 05:10, commits itself on `ihibti/model-equality-refs`); possibly two agents of the desk until the allowance ends: one writing `docs_and_plans/guides/judges-defense.md` on `ihibti/model-equality-refs`, one testing on the laptop whether the fp8 copy can be told from the plain copy (results under the session scratchpad, `local_anchor/`).
-- **Not done:** the judges' defense pack is not on this branch yet (the model equality part exists: `tasks/model_equality/judges_brief.md` on `ihibti/model-equality-refs` at `c00c065`); the section "Before 11:00" below; the list of local model files to delete (`~/.cache/huggingface`: SmolLM2-360M, Llama-3.2-1B, Qwen2.5-1.5B and Qwen2.5-3B, about 12.5 GB).
-- **To resume the desk:** open a session in this worktree and run the `/loop` command at the top of `desk-handoff.md`.
+- **Scores:** watermark 0.7444, model equality 0.7 (04:23), unlearning 0.2858 (04:39). Read the public board first thing: the agents have no way to read it, so our rank is unknown since 23:45.
+- **Cluster:** no job running or pending, and no GPU request open.
+- **Night submissions left until 09:00:** model equality 2, unlearning 1.
+- **Unlearning is finished.** The unlearning agent withdrew its last batch and recommends no further submission (#12, 04:54).
+- **Model equality has one live lead**, see "The fp8 test" below. It may produce one more submission before you wake.
+- **The desk was down from 04:47 to 06:00** (usage limit of the session). Nothing was running on the cluster in that hour and nothing was lost.
 
 ## Decisions waiting for you
 
@@ -83,14 +83,32 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
   - The key passphrase is in `~/.config/euroai/.env`, as you put it. Remove it after the event.
 - **01:30, a model equality submission scored less than the desk expected.** The desk had the metric wrong in its head: the model part is computed inside families only, where "one model per family" scores zero. One of five night submissions went to a result worth 0.1, plus the confirmation of the families.
 - **Disk on your main laptop.** The local base models were downloaded from Hugging Face into `~/.cache/huggingface` (free disk fell from 87 GB to 27 GB at the lowest; 59 GB free at 04:00 after the ruled-out models were deleted). The models kept are listed at the end of the night for you to delete.
+- **23:47, a job queued behind the running one.** The desk queued a 5-hour job to hold the node. You pointed out the ban risk; it was cancelled at 23:54. Since then: one job in total, submitted only for ready work.
+- **04:47 to 06:00, the desk was down.** The session reached its usage limit, and its two agents with it. The unlearning agent and Devin kept working and posting.
 - **Scratch file quota.** Free slots fell from 11,800 to under 1,000 between 00:58 and 01:25. The desk created each job's output files in advance so that a full quota could not break a running job.
 
 ## Before 11:00
 
-To be filled: the last submission per task, with the exact commands.
+Commands are for nushell, from the desk's worktree.
+
+1. **Get the night's state.** `cd ~/orca/workspaces/euro-ai-championship-2026/brill; git pull`
+2. **Read the public board** and write down our rank per task. If we are 6th or better, change nothing without a reason stronger than the one behind the current submission.
+3. **Model equality.** The submitted grouping is `tasks/model_equality/results/labelled_copies_v1.csv` (0.7). A hand submission, at most one per 30 minutes, a failure counts:
+   `make submit TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v1.csv`
+   Check a file without submitting: `make check TASK=model_equality FILE=<file>`
+4. **Unlearning.** Nothing to submit. The file behind 0.2858 is `data/unlearning/candidates/k11_b_soup3_x2.pt`.
+5. **Watermark.** Nothing to submit. c6 (0.7444) stands.
+6. **Answers left on the scored endpoints** (organizers' cap 100 each, the night used at most 66): `uv run python scripts/me_query.py --budget`
+7. **Ask an organizer the two questions** under "Decisions waiting for you".
+
+The board states that only a team's best submission on a task counts. A further submission can therefore not lower our rank unless "best" is chosen on the public part and the hidden part disagrees.
+
+## To delete on your main laptop after the event
+
+- In `~/.cache/huggingface/hub`: the seven `models--*` folders and the `blobs` folder that holds their weights, 12 GB in total, all downloaded tonight (SmolLM2-360M, Llama-3.2-1B, Qwen2.5-1.5B, Qwen2.5-3B). They are needed until the last model equality decision.
+- `~/.config/euroai/night.json` (it ends by itself at 09:00) and the passphrase line in `~/.config/euroai/.env`.
 
 ## Open, not urgent
 
 - A fine-grained GitHub token for the second laptop, limited to this repository, instead of full access to your account.
 - An old desk session may still be open in Orca (PID 74888 at 23:30). It confirmed it runs nothing.
-- The judges' defense pack: `docs_and_plans/guides/judges-defense.md`.
