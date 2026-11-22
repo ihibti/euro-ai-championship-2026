@@ -147,6 +147,38 @@ def dial_candidate(
     }
 
 
+COMPOSITES = (("boats", BOATS, 20.0), ("dial", NINE_CLASSES, 15.0))
+
+
+def composite_candidate(
+    base: dict,
+    base_flip: float,
+    orig: torch.Tensor,
+    labels: torch.Tensor,
+    classes: tuple[int, ...],
+    shift: float,
+    band,
+    step: torch.Tensor,
+) -> dict:
+    """A fine-tune whose last-layer bias is then lowered by `shift` on `classes`: its dumped
+    logits minus the shift on those columns, exactly. Retain multiplies the two factors; the gate
+    adds the dial's validation flips to the fine-tune's, except when validation holds none of
+    those classes."""
+    dial = dial_candidate(orig, labels, classes, shift, band, orig + step)
+    logits = base["logits"].clone()
+    logits[:, torch.tensor(classes)] -= shift
+    dial_flip = len(classes) / 100.0 * unseen_flip(orig + step, labels, classes, shift)
+    return {
+        "logits": logits,
+        "stats": None,
+        "retain": base["retain"] * dial["retain"],
+        "gate": gate_pass(base_flip + dial_flip, band[0], band[1]),
+        "retain_without": base["retain"] * dial["retain_without"],
+        "gate_without": gate_pass(base_flip, band[0], band[1]),
+        "proxy": "dumped+dial",
+    }
+
+
 def weight(predicted: float, observed: float) -> float:
     gap = math.log(predicted + FLOOR) - math.log(observed + FLOOR)
     return math.exp(-0.5 * (gap / math.log(ERROR_FACTOR)) ** 2)
@@ -207,6 +239,13 @@ def main(argv: list[str] | None = None) -> None:
         candidates[f"dial{d:g}"] = dial_candidate(orig, labels, NINE_CLASSES, d, band, orig + step)
     for d in BOAT_DIALS:
         candidates[f"boats{d:g}"] = dial_candidate(orig, labels, BOATS, d, band, orig + step)
+    for name, spec in inputs["candidates"].items():
+        if candidates[name]["proxy"] != "dumped":
+            continue
+        for label, classes, d in COMPOSITES:
+            candidates[f"{name}+{label}{d:g}"] = composite_candidate(
+                candidates[name], spec.get("flip", 0.0), orig, labels, classes, d, band, step
+            )
 
     hypotheses = [
         (family, k, tau, 0.0, (orig + k * direction) / tau, False)
