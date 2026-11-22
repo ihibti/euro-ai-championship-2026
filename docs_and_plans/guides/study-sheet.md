@@ -1,20 +1,20 @@
 # Study sheet: what we did, why, and what to say
 
-Written by the desk at 10:15 on 22 November for the lead, to read in ten minutes before the jury. Every number is from a committed file, a posted score or the public board. The longer version is `judges-defense.md` in this folder.
+Written by the desk at 10:15 on 22 November, updated at 10:25 for the lead, to read in ten minutes before the jury. Every number is from a committed file, a posted score or the public board. The longer version is `judges-defense.md` in this folder.
 
 ## 1. Numbers to know by heart
 
-| Task | Our public score | Board rank at 10:01 | Board's best | One-line method |
+| Task | Our public score | Board rank at 10:21 | Board's best | One-line method |
 |---|---|---|---|---|
-| Model equality | **1.00** | first, tied with 14 teams | 1.00 | identify each disguise of the plain model; a simulated-fp8 test for the last ones |
+| Model equality | **1.00** | first, tied with 15 teams | 1.00 | identify each disguise of the plain model; a simulated-fp8 test for the last ones |
 | Watermark localisation | **0.7444** | 12th | 0.82 | one segmentation network per watermark, reading the decoder's feature maps |
-| Unlearning | **0.2858** | 18th | 0.48 | fine-tune towards a stand-in for the retrained model, then rescale the last layer |
+| Unlearning | **0.2938** | about 17th | 0.48 | fine-tune towards a stand-in for the retrained model, then rescale the last layer |
 | Overall | **0.79** | **9th of 44** | 0.99 | |
 
 - **Overall formula:** mean over the three tasks of (ours − lowest) / (best − lowest).
-- **The night:** 20th of 32 with 0.33 at 23:45. Model equality went 0.0 to 1.0 and unlearning 0.00 to 0.2858 while you slept.
-- **What counts:** the final ranking uses the hidden 70% of each task's data; the board shows the public 30%. Only a team's best public submission counts (organizer, 09:44).
-- **The gap to 6th (0.91):** it would take unlearning at 0.46, the level of the top two teams. 8th (0.83) would take 0.345.
+- **The night:** 20th of 32 with 0.33 at 23:45. Model equality went 0.0 to 1.0 and unlearning 0.00 to 0.2858 while you slept; 0.2938 came at 10:18.
+- **What counts:** the final ranking uses the hidden 70% of each task's data; the board shows the public 30%. Only a team's best public submission counts (organizer, 09:44). Submissions close at 12:00.
+- **The gap:** 5th to 7th stand at 0.91; reaching them would take unlearning at 0.46, the level of the top two teams. 8th (0.83) would take unlearning at 0.345 or watermark at 0.78.
 
 ## 2. How the team worked
 
@@ -61,10 +61,10 @@ Written by the desk at 10:15 on 22 November for the lead, to read in ten minutes
 **What to say about the fifth submission.** It is outside the registered rule and we say so. It added one endpoint, named beforehand by the test, and a wrong guess could only have lowered the score.
 
 **Weak points to own.**
-- 15 teams are at 1.00: the score is not what sets us apart, the method and its record are.
+- 16 teams are at 1.00: the score is not what sets us apart, the method and its record are.
 - The hidden 70% may differ: roughly 1 chance in 5 that family A still hides a same-model endpoint, 1 in 10 for ep-26 in B (the desk's estimate).
 
-## 4. Unlearning (0.2858)
+## 4. Unlearning (0.2938)
 
 **Task.** An image classifier and 3,500 of its training images to forget. Scored against "gold": models retrained without those images. Our losses and predictions on those images must match gold's; a control set penalises drift elsewhere; under 70% validation accuracy the score is 0. We had no gold model, no retained data, and no labels beyond the model's own predictions.
 
@@ -76,15 +76,15 @@ Written by the desk at 10:15 on 22 November for the lead, to read in ten minutes
 1. **Stand-in for gold (cross-fit):** split the images in folds; predict each image with blocks trained on the other folds. That approximates what a model that never saw the image would say.
 2. **Fine-tune** the last 6 of 12 blocks towards that target, pushed further in the direction of the never-seen error (factor 3), softened at temperature 2.
 3. **Multiply the last layer by 2:** it changes no predicted class and restores the confidence the soft target removed.
-4. **Average the weights of three seeds.**
+4. **Average the weights of three runs** (the best file: two seeds of the recipe and one run trained for 40 epochs instead of 25).
 
-**Path.** 0.00 (22:19) → 0.066 (01:38) → **0.2133** (02:08, the last-layer factor) → **0.2837** (02:38, learning rate 1e-4) → **0.2858** (04:39, three-seed average). Each submission had a prediction posted first.
+**Path.** 0.00 (22:19) → 0.066 (01:38) → **0.2133** (02:08, the last-layer factor) → **0.2837** (02:38, learning rate 1e-4) → **0.2858** (04:39, three-seed average) → **0.2938** (10:18, two seeds and a 40-epoch run averaged; predicted 0.291). Each submission had a prediction posted first.
 
 **What did not work.**
 - Sharper factor (x2.5): 0.2222. Gentler target: 0.256. Longer, slower run: 0.2665 and 0.2687.
 - The agent's score predictor missed three times and was retired at 04:12. A refit at 09:09 reproduces the high-scoring lines to about 2% and says this recipe tops out near **0.29**.
 - Two more GPU batches (a target mixed from three cross-fits; lower-temperature targets) produced nothing predicted above 0.2858.
-- Morning submissions at 10:16 and 10:46: see #12 for the scores.
+- Morning: 0.2687 at 08:21 (the desk's line, predicted 0.29), an upload that timed out at 09:45, then the 0.2938. Later slots at 10:48, 11:18 and 11:48: scores on #12.
 
 **The honest limit.** The top teams are at 0.42 to 0.48. That is a different class of method, not a better setting of ours. Our stand-in for gold is the weak link: we never had a retrained model to aim at.
 
@@ -110,7 +110,7 @@ Written by the desk at 10:15 on 22 November for the lead, to read in ten minutes
 | Only the desk submits and uses the cluster | One point of control for the organizers' limits |
 | No grouping submitted as a trial against the board during the night | The public 30% is not the ranking; one exception, yours, stated openly |
 | B was not submitted at 06:45 although likely right | The reading missed the threshold fixed beforehand |
-| Morning unlearning submissions are exploratory | Only the best counts, so a lower score costs nothing |
+| Morning unlearning submissions: only files we would accept as final | The best public file is the one ranked on the hidden 70%, so a file that wins by noise could cost us; a gain counts only beyond about 1% |
 | No use of a second account or queue to get more GPU | One job per team is the organizers' rule; a ban ends the event |
 
 ## 7. Mistakes, stated plainly
@@ -128,5 +128,5 @@ Written by the desk at 10:15 on 22 November for the lead, to read in ten minutes
 2. **Did you fit the public board?** Rules were written before their data. Unlearning submissions each carried a prediction. One model equality submission was outside its rule; we name it.
 3. **Can you really tell fp8 from plain?** On the references, at +9.0 standard errors, with every other endpoint negative. In family C it passed the preset threshold; in B it stopped just under.
 4. **Is multiplying the last layer a trick?** It changes no predicted class. It undoes the softness of a temperature-2 target, and the factor came from a measurement made before any score.
-5. **Why is unlearning low?** We had no retrained model to aim at. Our stand-in caps the recipe near 0.29; the best teams found a better target.
+5. **Why is unlearning low?** We had no retrained model to aim at. Our stand-in caps the recipe near 0.29, where we now stand; the best teams found a better target.
 6. **How did agents run unattended?** One goal each, a stop rule, a file to write to; only one of them could act outside, inside caps a human wrote.
