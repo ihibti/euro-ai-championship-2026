@@ -154,3 +154,6 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 08:15 | The lead: 8th overall, 6th needed, push something new; the desk decides | both agents called at 08:19 (#12, PR #27), lists due 09:15 |
 | 08:21 | Twelfth unlearning submission, prediction on #12 first: `k8_e3t2_rm1_ep40_x2.pt` (5e-5, 40 epochs, last layer times 2.0) | public 0.2687, under the predicted range and under the best; against the 0.2133 (same learning rate, 25 epochs) it shows that longer training gains 26% |
 | 08:23 | The desk first compared the 0.2687 with the wrong line and said longer training does not pay; corrected on #12 within two minutes | next line registered: `k9_e3t2_lr1e4_ep40_x2.pt`, predicted 0.295 |
+| 08:27 | The unlearning agent: nothing on the laptop is likely to beat 0.2858; GPU request for a fourteenth batch (`4dc5311`, target temperature 1 and 1.5 at four learning rates, 25 minutes, rule and prediction written first) | |
+| 08:29 | Connection to `jureca03` reopened with the guarded script (second use of six) | scratch visible |
+| 08:30 | Team check empty; job 15905724 submitted from the team folder, 45-minute limit, started at once | staged with four new files (689 to 693); 32,382 file slots free |

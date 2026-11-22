@@ -12,9 +12,11 @@ The two other agents' final documents:
 
 You said at 08:15: we are 8th, we need 6th, push something new. Model equality is at 1.0 and watermark is near the best, so unlearning is the only task with room. Both other agents were called at 08:19 (#12 and PR #27) and owe a ranked list on #12 by 09:15.
 
-1. **Wake the desk:** type anything in its session once the laptop is online. It reads #12 and tells you what to submit.
+0. **A GPU job is running for this: 15905724**, submitted at 08:30, the unlearning agent's fourteenth batch (four runs at a lower target temperature, about 25 minutes, ends about 08:56). Its agent gives it 1 chance in 3 of a line more than 2% above 0.2858, and says nothing else on the laptop is likely to beat 0.2858. If the laptop was offline when the job ended, the results are still on the cluster: the desk pulls them when you wake it.
+1. **Wake the desk:** type anything in its session once the laptop is online. It reopens the cluster link, pulls the results, reads #12 and tells you what to submit.
 2. **If the desk does not answer, submit this yourself** (from 08:51, one unlearning submission per 30 minutes, it asks you to type a confirmation):
    `cd ~/orca/workspaces/euro-ai-championship-2026/brill; make submit TASK=unlearning FILE=data/unlearning/candidates/k9_e3t2_lr1e4_ep40_x2.pt`
+   - The unlearning agent disagrees with this file: by its diagnostics the `k9` runs overshoot. It is a test of the desk's reading against the agent's; if you have few slots, keep them for the fourteenth batch's line.
    - Why this file: at the same learning rate and factor, 40 epochs instead of 25 gained 26% (0.2133 to 0.2687, scored at 08:21). This is the same step applied to our best single run. Prediction on #12: 0.295, range 0.283 to 0.305.
    - If it is a new best, the follow-up is `data/unlearning/candidates/k9_e3t2_lr2e4_x2.pt`, unless the unlearning agent's list on #12 says otherwise.
    - If it is under 0.283, stop: this axis is used up.
