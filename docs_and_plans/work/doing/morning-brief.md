@@ -10,7 +10,7 @@ For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night i
 - **Cluster:** no job running or pending. The last one, 15905366 (the unlearning agent's thirteenth batch), ran from 06:48 to 07:12 without a failed run.
 - **Night submissions left until 09:00:** model equality 1, unlearning 1.
 - **Unlearning:** the last night slot is used only if the thirteenth batch passes the four checks its agent wrote before the job (#21).
-- **Model equality:** the new test found family C's fp8 copy; see "The fp8 test" below. One decision on family B is yours (decision 1).
+- **Model equality:** a new test found family C's fp8 copy, which gave the 0.85; see "Model equality" below. The next step is yours (decision 1).
 - **The desk was down from 04:47 to 06:00** (usage limit of the session). Nothing was running on the cluster in that hour and nothing was lost.
 
 ## Decisions waiting for you
@@ -69,7 +69,7 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
   - *fp8 copy* (06:00 to 06:45): the laptop builds an fp8 copy of each base model, quantized the way the serving software (vLLM) does it, and compares how well that copy and the plain model explain an endpoint's answers. On the references the fp8 endpoint stands at +9.0 standard errors and the eight others between -2.6 and -6.7.
 - **The fp8 rule, fixed on PR #27 before any family number was read.** An endpoint at +3 or more is the family's fp8 copy. Devin's two closest plain-like endpoints then join the same-model group, unless the fp8 copy is one of them.
   - *Family C.* ep-15 read +2.94, then +3.53 after 24 more answers. ep-13 and ep-19 joined the group: public 0.7 became 0.85.
-  - *Family B.* ep-22 read +2.71, then +2.81 after 12 more answers: under the threshold, no change. Every other endpoint of B is negative. Decision 1 is about this.
+  - *Family B.* ep-22 read +2.71, then +2.81 after 12 more answers: under the threshold, no change. Every other endpoint of B is negative, except the top-p copy ep-07 at +0.78. Decision 1 is about this.
   - *Family A.* No endpoint above zero. No change, and no candidate.
 - **Submitted at 06:44, public 0.85:** `tasks/model_equality/results/labelled_copies_v2.csv`.
 
@@ -92,7 +92,7 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
   - `~/.config/euroai/jureca_relog.sh` and `ssh_askpass.sh`: one guarded reconnect attempt, with a log in `~/.config/euroai/jureca_relog.log`. Used once, as a test, on `jureca01`.
   - The key passphrase is in `~/.config/euroai/.env`, as you put it. Remove it after the event.
 - **01:30, a model equality submission scored less than the desk expected.** The desk had the metric wrong in its head: the model part is computed inside families only, where "one model per family" scores zero. One of five night submissions went to a result worth 0.1, plus the confirmation of the families.
-- **Disk on your main laptop.** The local base models were downloaded from Hugging Face into `~/.cache/huggingface` (free disk fell from 87 GB to 27 GB at the lowest; 59 GB free at 04:00 after the ruled-out models were deleted). The models kept are listed at the end of the night for you to delete.
+- **Disk on your main laptop.** The local base models were downloaded from Hugging Face into `~/.cache/huggingface` (free disk fell from 87 GB to 27 GB at the lowest; 63 GB free at 07:00 after the ruled-out models were deleted). What to delete is listed near the end of this brief.
 - **23:47, a job queued behind the running one.** The desk queued a 5-hour job to hold the node. You pointed out the ban risk; it was cancelled at 23:54. Since then: one job in total, submitted only for ready work.
 - **04:47 to 06:00, the desk was down.** The session reached its usage limit, and its two agents with it. The unlearning agent and Devin kept working and posting.
 - **Scratch file quota.** Free slots fell from 11,800 to under 1,000 between 00:58 and 01:25. The desk created each job's output files in advance so that a full quota could not break a running job.
@@ -102,7 +102,7 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 Commands are for nushell, from the desk's worktree.
 
 1. **Get the night's state.** `cd ~/orca/workspaces/euro-ai-championship-2026/brill; git pull`
-2. **Read the public board** and write down our rank per task. If we are 6th or better, change nothing without a reason stronger than the one behind the current submission.
+2. **Read the public board** and write down our rank per task. If we are 6th or better, the only changes worth a slot are those of decision 1, which cannot lower a score.
 3. **Model equality.** The submitted grouping is `tasks/model_equality/results/labelled_copies_v2.csv` (0.85). For decision 1:
    - the two prepared files are under decision 1 (at most one submission per 30 minutes, a failure counts);
    - to buy the last answers on ep-22 first, from the other worktree: `cd ~/worktrees/euro-ai-championship-2026/model-equality-refs; uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/bat.csv --repeats 20 --name round1 --endpoints ep-22 --spend` (it asks you to confirm at the terminal once the night authorization has ended; 14 answers, about 2 minutes). Then ask the desk, or a new session, to "score ep-22 and read family B with `fp8_rule.py`".
@@ -113,7 +113,7 @@ Commands are for nushell, from the desk's worktree.
      `make check TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v3.csv`
 4. **Unlearning.** Nothing to submit. The file behind 0.2858 is `data/unlearning/candidates/k11_b_soup3_x2.pt`.
 5. **Watermark.** Nothing to submit. c6 (0.7444) stands.
-6. **Answers left on the scored endpoints** (organizers' cap 100 each, the night used at most 66): `uv run python scripts/me_query.py --budget`
+6. **Answers left on the scored endpoints** (organizers' cap 100 each; the night used 78 on ep-22, 72 on ep-15, at most 66 elsewhere): `uv run python scripts/me_query.py --budget`
 7. **Ask an organizer the two questions** under "Decisions waiting for you".
 
 The board states that only a team's best submission on a task counts. A further submission can therefore not lower our rank unless "best" is chosen on the public part and the hidden part disagrees.
