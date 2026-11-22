@@ -1,4 +1,4 @@
-"""Predict candidates from the scores of sharpened fine-tunes, without the ledger's single-model golds.
+"""Predict sharpened fine-tunes from their scores, without the ledger's single-model golds.
 
 The 03:08 score (one notch more sharpening, 0.2837 to 0.2222) showed a peak in the forget-set loss
 that the ledger cannot represent. This check scores each line as
@@ -166,9 +166,8 @@ def main(argv: list[str] | None = None) -> None:
     for (name, factor), feat in feats.items():
         mean, low, high = table.get((name, factor), (float("nan"),) * 3)
         loss = f"{feat['mean']:.2f}/{feat['std']:.2f}"
-        print(
-            f"{name:<22}{factor:>7g} {loss:>11} {feat['retain']:7.3f} | {mean:.3f} | {low:.3f} | {high:.3f}"
-        )
+        band = f"{mean:.3f} | {low:.3f} | {high:.3f}"
+        print(f"{name:<22}{factor:>7g} {loss:>11} {feat['retain']:7.3f} | {band}")
 
 
 if __name__ == "__main__":
