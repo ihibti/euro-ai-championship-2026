@@ -84,6 +84,22 @@ ANSWERS: dict[str, Callable[[list[str]], list[str]]] = {
 }
 
 
+RULE_CASES: dict[str, list[str]] = {
+    "6 same (labelled + 12); 18, 01, 17, 24, 25 changed": ["S"] * 6 + ["F", "C1", "C2", "C3", "C4"],
+    "6 same (labelled + 18); 12, 01, 17, 24, 25 changed": ["S"] * 5
+    + ["F", "S", "C1", "C2", "C3", "C4"],
+    "7 same (labelled + 12 + 18); 01, 17, 24, 25 changed": ["S"] * 7 + ["C1", "C2", "C3", "C4"],
+    "5 same (one labelled copy changed, 12 plain); 18 and the four changed": ["S"] * 4
+    + ["X", "S", "F", "C1", "C2", "C3", "C4"],
+    "12 and 18 changed, the plain among 01, 17, 24, 25": ["S"] * 5
+    + ["F", "G", "S", "C2", "C3", "C4"],
+}
+
+
+def rule_answer(add: int) -> list[str]:
+    return ["G"] * (5 + add) + [f"u{i}" for i in range(6 - add)]
+
+
 def family_mcc(truth: list[str], guess: list[str]) -> float:
     names = [f"e{i:02d}" for i in range(len(truth))]
     labelled = {n: ("F", t) for n, t in zip(names, truth, strict=True)}
@@ -170,6 +186,17 @@ def main() -> int:
                 cells.append(f"{total:.3f}")
             lines.append(f"| {k} | " + " | ".join(cells) + " |")
         lines.append("")
+    lines += [
+        "## The desk's 03:53 rule: labelled same-model copies as one model, the unlabelled alone",
+        "",
+        "Order: five labelled copies, then ep-12, ep-18, then ep-01, 17, 24, 25.",
+        "",
+        "| truth | rule | + ep-12 | + ep-12 and ep-18 |",
+        "|---|---|---|---|",
+    ]
+    for name, truth in RULE_CASES.items():
+        cells = [f"{family_mcc(truth, rule_answer(add)):.3f}" for add in (0, 1, 2)]
+        lines.append(f"| {name} | " + " | ".join(cells) + " |")
     out = HERE / "partial_worth.md"
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))

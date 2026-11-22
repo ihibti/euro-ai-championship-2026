@@ -74,3 +74,14 @@ c = 5 changed endpoints:
 | 4 | -0.150 | -0.048 | 0.065 | 0.188 | 0.320 |
 | 5 | -0.155 | -0.045 | 0.083 | 0.230 | 0.395 |
 
+## The desk's 03:53 rule: labelled same-model copies as one model, the unlabelled alone
+
+Order: five labelled copies, then ep-12, ep-18, then ep-01, 17, 24, 25.
+
+| truth | rule | + ep-12 | + ep-12 and ep-18 |
+|---|---|---|---|
+| 6 same (labelled + 12); 18, 01, 17, 24, 25 changed | 0.770 | 1.000 | 0.779 |
+| 6 same (labelled + 18); 12, 01, 17, 24, 25 changed | 0.770 | 0.542 | 0.779 |
+| 7 same (labelled + 12 + 18); 01, 17, 24, 25 changed | 0.600 | 0.779 | 1.000 |
+| 5 same (one labelled copy changed, 12 plain); 18 and the four changed | 0.511 | 0.770 | 0.600 |
+| 12 and 18 changed, the plain among 01, 17, 24, 25 | 0.770 | 0.542 | 0.359 |
