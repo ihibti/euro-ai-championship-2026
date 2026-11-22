@@ -17,6 +17,12 @@ repeats on ref-01 and ref-02; 4 rows with repeat >= 11 existed and none had been
 - Decision: the hint is revived on this side when the combined p < ALPHA (0.01) and at least 3 of
   the 4 probes point the predicted way (fp8's mean midrank below plain's). Otherwise it is not.
 - Described only: the d1 stop.ran_long and d4 stop.copy_only counts.
+Extension registered at 04:38 Paris, the d rule above unchanged: the chain had stopped the
+night_d run at repeat 11 (1 fresh row per probe and endpoint) and was appending p3_repeat (the
+same prompt as d1) to night-b.jsonl, 18 rows per endpoint at repeats 10 to 27, none read; repeats
+0 to 9 had been read. Command: --answers night-b.jsonl --ids p3_repeat --min-repeat 10, measure
+stop.repetitions, the same one-sided test; with a single probe the rule is p < ALPHA (the
+agreement count needs min(3, probes)).
 """
 
 from __future__ import annotations
@@ -42,6 +48,7 @@ ALPHA = 0.01
 DRAWS = 20000
 SEED = 0
 MIN_AGREE = 3
+D_IDS = ("d1_repeat150", "d2_story100", "d3_openlist", "d4_copycont")
 
 
 def stripped_length(text: str) -> int:
@@ -49,6 +56,7 @@ def stripped_length(text: str) -> int:
 
 
 MEASURES: dict[str, Callable[[str], int]] = {
+    "p3_repeat": stop.repetitions,
     "d1_repeat150": stop.repetitions,
     "d2_story100": stop.word_count,
     "d3_openlist": stop.list_items,
@@ -99,7 +107,7 @@ def verdict(
 ) -> tuple[float, int, bool]:
     combined = rank.fisher_combined(list(pvalues.values()))
     agree = sum(g > 0 for g in gaps.values())
-    return combined, agree, bool(combined < alpha and agree >= MIN_AGREE)
+    return combined, agree, bool(combined < alpha and agree >= min(MIN_AGREE, len(gaps)))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -109,14 +117,17 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--min-repeat", type=int, default=FRESH)
     parser.add_argument("--max-repeat", type=int, default=None)
+    parser.add_argument("--ids", default=",".join(D_IDS))
     args = parser.parse_args(argv)
+    ids = [i.strip() for i in args.ids.split(",") if i.strip()]
     texts = fresh_texts(load_rows(args.answers), (PLAIN, FP8), args.min_repeat, args.max_repeat)
     pvalues, gaps = {}, {}
     last = "end" if args.max_repeat is None else args.max_repeat
     print(f"repeats {args.min_repeat} to {last}")
     print("| probe | n plain / fp8 | median plain | median fp8 | plain minus fp8 midrank | p |")
     print("|---|---|---|---|---|---|")
-    for prompt_id, measure in MEASURES.items():
+    for prompt_id in ids:
+        measure = MEASURES[prompt_id]
         plain = [measure(t) for t in texts.get((PLAIN, prompt_id), [])]
         other = [measure(t) for t in texts.get((FP8, prompt_id), [])]
         if not plain or not other:
@@ -127,7 +138,12 @@ def main(argv: list[str] | None = None) -> int:
             f"| {prompt_id} | {len(plain)} / {len(other)} | {np.median(plain):.0f} "
             f"| {np.median(other):.0f} | {gaps[prompt_id]:+.2f} | {pvalues[prompt_id]:.4f} |"
         )
-    for prompt_id, flag in (("d1_repeat150", stop.ran_long), ("d4_copycont", stop.copy_only)):
+    flagged = (
+        ("d1_repeat150", stop.ran_long),
+        ("p3_repeat", stop.ran_long),
+        ("d4_copycont", stop.copy_only),
+    )
+    for prompt_id, flag in (f for f in flagged if f[0] in ids):
         a = sum(flag(t) for t in texts.get((PLAIN, prompt_id), []))
         b = sum(flag(t) for t in texts.get((FP8, prompt_id), []))
         n1, n2 = len(texts.get((PLAIN, prompt_id), [])), len(texts.get((FP8, prompt_id), []))

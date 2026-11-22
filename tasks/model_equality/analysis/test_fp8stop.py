@@ -52,3 +52,9 @@ def test_verdict_needs_both_the_combined_p_and_three_agreeing_probes():
     assert not fp8stop.verdict({"a": 0.3, "b": 0.4, "c": 0.5, "d": 0.9}, gaps)[2]
     two = {"a": 1.0, "b": 1.0, "c": -1.0, "d": -1.0}
     assert not fp8stop.verdict({"a": 1e-6, "b": 1e-6, "c": 0.9, "d": 0.9}, two)[2]
+
+
+def test_a_single_probe_decides_on_its_own_p():
+    assert fp8stop.verdict({"p3_repeat": 0.001}, {"p3_repeat": 2.0})[2]
+    assert not fp8stop.verdict({"p3_repeat": 0.001}, {"p3_repeat": -2.0})[2]
+    assert not fp8stop.verdict({"p3_repeat": 0.05}, {"p3_repeat": 2.0})[2]
