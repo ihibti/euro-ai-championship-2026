@@ -173,6 +173,14 @@ def predicted(index, pred, ms, retain, levels=LEVELS) -> np.ndarray:
     return levels[c][:, None] * ms[:, m, d].T * pred[s] * retain[None, :]
 
 
+def expected_gain(values: np.ndarray, reference: np.ndarray, best: float) -> float:
+    """Mean gain over the best observed score, each draw anchored on that line's observed score.
+
+    `values` and `reference` are one line's and the best line's scores under the same draws.
+    """
+    return float((best * np.maximum(values / reference - 1.0, 0.0)).mean())
+
+
 MIX_KS = (3.0, 4.0, 5.0)
 MIX_TAUS = (1.0, 1.5)
 MIX_SHARES = (0.3, 0.5, 0.7)
@@ -351,6 +359,9 @@ def main(argv: list[str] | None = None) -> None:
         help="soften the cross-fitted logits that stand for the original on the control set",
     )
     parser.add_argument("--out", type=Path, default=Path("output/kkrgp/score_fit.json"))
+    parser.add_argument(
+        "--draws-out", type=Path, default=None, help="save every line's drawn scores (.npz)"
+    )
     args = parser.parse_args(argv)
 
     store = load_logits(args.logits)
@@ -461,6 +472,13 @@ def main(argv: list[str] | None = None) -> None:
     values = predicted(draw(weights, args.draws), pred, ms, retain, levels)
     best_obs = int(np.argmax(scores))
     reference = values[:, best_obs]
+    if args.draws_out is not None:
+        np.savez_compressed(
+            args.draws_out,
+            values=values.astype(np.float32),
+            names=np.array([e[0] for e in entries]),
+            best=np.array([best_obs, scores[best_obs]]),
+        )
     lines = {}
     print(
         f"\nbest factor per line: mean (10th to 90th) | P(beats {observed[best_obs][0]} under "
@@ -471,18 +489,23 @@ def main(argv: list[str] | None = None) -> None:
         j = idx[int(np.argmax(values[:, idx].mean(0)))]
         mean, low, high = summary(values[:, j])
         beats = float((values[:, j] > reference).mean())
+        gains = [expected_gain(values[:, k], reference, float(scores[best_obs])) for k in idx]
+        g = idx[int(np.argmax(gains))]
         lines[base] = {
             "factor": entries[j][2],
             "mean": mean,
             "p10": low,
             "p90": high,
             "p_beats_best": beats,
+            "gain": max(gains),
+            "gain_factor": entries[g][2],
             "loss": stats[j].tolist(),
             "curve": {f"{entries[k][2]:g}": float(values[:, k].mean()) for k in idx},
         }
         print(
             f"  {base:24s} x{entries[j][2]:<5g} {mean:.4f} ({low:.4f} to {high:.4f}) | "
-            f"P {beats:.2f} | loss {stats[j, 0]:.2f}/{stats[j, 1]:.2f} flip {flips[j]:.3f}"
+            f"P {beats:.2f} | gain {max(gains):.4f} at x{entries[g][2]:g} | "
+            f"loss {stats[j, 0]:.2f}/{stats[j, 1]:.2f} flip {flips[j]:.3f}"
         )
     args.out.parent.mkdir(parents=True, exist_ok=True)
     record = {

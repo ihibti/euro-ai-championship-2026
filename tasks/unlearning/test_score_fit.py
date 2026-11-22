@@ -86,6 +86,17 @@ def test_fit_recovers_the_hypothesis_that_made_the_scores():
     assert values.mean(0) == pytest.approx(observed, rel=0.05)
 
 
+def test_expected_gain_anchors_each_draw_and_rewards_spread():
+    reference = np.array([1.0, 2.0, 1.0, 2.0])
+    assert sf.expected_gain(reference, reference, 0.3) == 0.0
+    assert sf.expected_gain(np.array([1.1, 1.8, 1.0, 2.0]), reference, 0.3) == pytest.approx(
+        0.3 * 0.1 / 4
+    )
+    narrow = sf.expected_gain(reference * np.array([1.01, 0.99, 1.01, 0.99]), reference, 0.3)
+    wide = sf.expected_gain(reference * np.array([1.05, 0.95, 1.05, 0.95]), reference, 0.3)
+    assert wide == pytest.approx(5 * narrow)
+
+
 def test_control_drift_is_zero_at_the_spill_temperature_without_noise():
     proxy = torch.from_numpy(_logits(6, rows=60, scale=2.0))
     noise = torch.zeros_like(proxy)
