@@ -55,3 +55,20 @@ def test_retain_modes_keep_flatten_or_halve_the_differences():
         0.75
     )
     assert feats[("b", 1.0)]["retain"] == 0.8
+
+
+def test_observed_scores_parse_with_the_best_first():
+    rows = peak_check.parse_observed(["a_b:2:0.2222", "a_b:2.5:0.2837", "c:1.25:0.25"])
+    assert rows[0] == ("a_b", 2.5, 0.2837)
+    assert [r[2] for r in rows] == [0.2837, 0.25, 0.2222]
+
+
+def test_worst_case_skips_readings_that_kept_nothing():
+    tables = {
+        "probe": {},
+        "half": {("a", 2.0): (0.29, 0.28, 0.30)},
+        "flat": {("a", 2.0): (0.27, 0.26, 0.28)},
+    }
+    live = [m for m in ("probe", "half", "flat") if tables[m]]
+    assert peak_check.worst_case(tables, live, ("a", 2.0)) == 0.27
+    assert peak_check.worst_case(tables, live, ("b", 1.0)) == float("-inf")

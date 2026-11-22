@@ -50,6 +50,15 @@ OBSERVED = (
 )
 
 
+def parse_observed(items: list[str]) -> tuple:
+    """`name:factor:score` strings, kept with the best score first (it becomes the anchor)."""
+    rows = []
+    for item in items:
+        name, factor, score = item.rsplit(":", 2)
+        rows.append((name, float(factor), float(score)))
+    return tuple(sorted(rows, key=lambda r: -r[2]))
+
+
 def kl_t(p_logits: torch.Tensor, q_logits: torch.Tensor, t: float = 2.0) -> float:
     p = F.log_softmax(p_logits / t, 1)
     q = F.log_softmax(q_logits / t, 1)
@@ -97,6 +106,12 @@ def with_retain(feats: dict, mode: str, anchor: tuple) -> dict:
     return {k: {**f, "retain": level + share * (f["retain"] - level)} for k, f in feats.items()}
 
 
+def worst_case(tables: dict, modes: list, key: tuple) -> float:
+    """The lowest prediction over the readings that kept a setting; -inf when none did."""
+    values = [tables[m][key][0] for m in modes if key in tables[m]]
+    return min(values) if values else float("-inf")
+
+
 def raw_score(feat: dict, gold: tuple[float, float], ref: str) -> float:
     return ms_term(feat["mean"], feat["std"], *gold) * feat["pred"][ref] * feat["retain"]
 
@@ -136,6 +151,12 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--logits", type=Path, nargs="+", required=True)
     parser.add_argument("--tolerance", type=float, default=0.02)
     parser.add_argument("--top", type=int, default=15, help="lines shown, best worst-case first")
+    parser.add_argument(
+        "--observed",
+        nargs="*",
+        default=[],
+        help="extra sharpened scores as name:factor:score, added to OBSERVED",
+    )
     args = parser.parse_args(argv)
     orig = torch.from_numpy(np.load(args.orig)).float()
     labels = orig.argmax(1)
@@ -160,20 +181,26 @@ def main(argv: list[str] | None = None) -> None:
     for name in sorted(set(dumped) & set(spills)):
         for factor in FACTORS:
             feats[(name, factor)] = features(dumped[name], factor, orig, labels, spills[name], refs)
-    for name, factor, _ in OBSERVED:
+    observed_rows = parse_observed([f"{n}:{f}:{s}" for n, f, s in OBSERVED] + list(args.observed))
+    for name, factor, _ in observed_rows:
         if (name, factor) not in feats:
             feats[(name, factor)] = features(dumped[name], factor, orig, labels, spills[name], refs)
-    anchor = OBSERVED[0][:2]
+    anchor = observed_rows[0][:2]
     tables = {}
     for mode in RETAIN_MODES:
         kept, tables[mode] = calibrated(
-            with_retain(feats, mode, anchor), OBSERVED, GOLD_LEVELS, tuple(refs), args.tolerance
+            with_retain(feats, mode, anchor),
+            observed_rows,
+            GOLD_LEVELS,
+            tuple(refs),
+            args.tolerance,
         )
         print(f"{mode}: {len(kept)} settings kept")
     nan = (float("nan"),) * 3
-    worst = {k: min(tables[m].get(k, nan)[0] for m in RETAIN_MODES) for k in feats}
-    observed = {(n, f): s for n, f, s in OBSERVED}
-    shown = sorted(feats, key=lambda k: -worst[k] if worst[k] == worst[k] else 0)[: args.top]
+    live = [m for m in RETAIN_MODES if tables[m]]
+    worst = {k: worst_case(tables, live, k) for k in feats}
+    observed = {(n, f): s for n, f, s in observed_rows}
+    shown = sorted(feats, key=lambda k: -worst[k])[: args.top]
     shown += [k for k in observed if k not in shown]
     print(f"{'candidate':<24}{'x':>6} {'loss':>11} {'retain':>7} | probe | half | flat | observed")
     for key in shown:
