@@ -236,7 +236,13 @@ def main(argv: list[str] | None = None) -> None:
         "--inputs", type=Path, default=Path(__file__).with_name("ledger_inputs.json")
     )
     parser.add_argument("--out", type=Path, default=Path("output/kkrgp/ledger.json"))
-    parser.add_argument("--logits", type=Path, help="dump_logits.py output: exact logits win")
+    parser.add_argument(
+        "--logits",
+        type=Path,
+        nargs="+",
+        default=[],
+        help="dump_logits.py outputs: exact logits win, later files over earlier ones",
+    )
     args = parser.parse_args(argv)
     orig = torch.from_numpy(np.load(args.orig)).float()
     labels = orig.argmax(1)
@@ -258,8 +264,8 @@ def main(argv: list[str] | None = None) -> None:
             "retain": spec["retain"],
             "proxy": (round(a, 2), round(b, 2)),
         }
-    if args.logits is not None:
-        with np.load(args.logits) as dumped:
+    for path in args.logits:
+        with np.load(path) as dumped:
             for name in candidates:
                 key = f"{name}__exact"
                 if key in dumped.files:
@@ -290,9 +296,7 @@ def main(argv: list[str] | None = None) -> None:
             candidates[f"{name}x{factor:g}"] = {
                 "logits": candidates[name]["logits"] * factor,
                 "stats": None,
-                "retain": sharpened_retain(
-                    spec["spill"], factor, orig, candidates[name]["logits"]
-                ),
+                "retain": sharpened_retain(spec["spill"], factor, orig, candidates[name]["logits"]),
                 "flip": spec.get("flip", 0.0),
                 "proxy": "dumped x" if candidates[name]["proxy"] == "dumped" else "proxy x",
             }
