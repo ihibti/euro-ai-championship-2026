@@ -59,31 +59,26 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 
 ## Model equality
 
-- **Families: settled.** Three families of 11, found identically by the main line, by Devin and by the desk, and right on the public pairs (the 0.1 is the whole family share).
-- **Prompted copies found (02:25).** Each family has one system-prompt copy (ep-02, ep-08, ep-29) and one persona copy (ep-23, ep-20, ep-16), shown by what they quote when asked for their instructions. They are the same model as their family's plain copy. A submission that split them, prepared at 02:05, was held back and would have been wrong.
-- **Inside the families (90% of the score): the method that works (03:00 to 04:00).** The laptop runs each family's public base model (A: Qwen2.5-3B-Instruct, B: Qwen2.5-1.5B-Instruct, C: a Llama 3.x, being fitted) and scores every recorded answer token by token. That gives, per endpoint, the sampling temperature it fits and whether the fit is the same on every prompt. Validated on the nine references, where the truth is published:
-  - temperature copy: fits 1.0 on every prompt;
-  - watermark copy: fits the plain temperature, but unevenly, in both directions;
-  - strong adapters (LoRA 0.7, 1.5): shifted and uneven, one direction;
-  - fp8 and LoRA 0.3: indistinguishable from plain. This is the limit of every method we have.
-- **Labels at 04:25, submitted at 04:23 for a public 0.7.**
-
-  | Family | One model: the plain model in disguise (positively identified) | Adapter candidates, each alone | Look like the base model, each alone (plain and fp8 hide here) |
-  |---|---|---|---|
-  | A (Qwen2.5-3B) | ep-02, ep-23 (prompts), ep-33 (temperature 1.0), ep-14 (top-p 0.95), ep-04 (watermark) | ep-24 | ep-01, 12, 17, 18, 25 |
-  | B (Qwen2.5-1.5B) | ep-08, ep-20, ep-30, ep-07, ep-06 | ep-03, ep-28 | ep-21, 22, 26, 32 |
-  | C (Llama-3.2-1B) | ep-29, ep-16, ep-31, ep-27, ep-10 | ep-05, ep-11 | ep-09, 13, 15, 19 |
-
-- **The fp8 test (06:00 to 06:45): 0.7 became 0.85.**
-  - *What it is.* The laptop builds an fp8 copy of each base model, quantized the way the serving software (vLLM) does it, and compares token by token how well that copy and the plain model explain an endpoint's answers. On the references the fp8 endpoint stands at +9.0 standard errors and the plain one at -6.1; the seven others are negative too.
-  - *The rule, fixed on PR #27 before any family number was read.* An endpoint at +3 or more is the family's fp8 copy. Devin's two closest plain-like endpoints then join the same-model group unless the fp8 copy is one of them.
-  - *Family C.* ep-15 read +2.94, then +3.53 after 24 more answers. ep-13 and ep-19 joined the group. Public score 0.85.
-  - *Family B.* ep-22 read +2.71, then +2.81 after 12 more answers: under the threshold, no change. Every other endpoint of B is negative, ep-32 the most (-5.03).
+- **Families: settled.** Three families of 11, found identically by the main line, by Devin and by the desk, and right on the public pairs (0.1 of the score).
+- **Inside the families (0.9 of the score), how each copy of the plain model was found.** Every method ran first on the nine free references, where the truth is published.
+  - *Prompted copies* (02:25): asked for their instructions, one copy per family quotes a fixed system prompt and one gives a persona.
+  - *Temperature, top-p and watermark copies* (03:00 to 04:20): the laptop runs each family's public base model (A: Qwen2.5-3B-Instruct, B: Qwen2.5-1.5B-Instruct, C: Llama-3.2-1B-Instruct) and scores every answer token by token. That gives the sampling temperature each endpoint fits, the tokens a truncated sampler could not have produced, and the watermark's uneven fit.
+  - *fp8 copy* (06:00 to 06:45): the laptop builds an fp8 copy of each base model, quantized the way the serving software (vLLM) does it, and compares how well that copy and the plain model explain an endpoint's answers. On the references the fp8 endpoint stands at +9.0 standard errors and the eight others between -2.6 and -6.7.
+- **The fp8 rule, fixed on PR #27 before any family number was read.** An endpoint at +3 or more is the family's fp8 copy. Devin's two closest plain-like endpoints then join the same-model group, unless the fp8 copy is one of them.
+  - *Family C.* ep-15 read +2.94, then +3.53 after 24 more answers. ep-13 and ep-19 joined the group: public 0.7 became 0.85.
+  - *Family B.* ep-22 read +2.71, then +2.81 after 12 more answers: under the threshold, no change. Every other endpoint of B is negative. Decision 1 is about this.
   - *Family A.* No endpoint above zero. No change, and no candidate.
-- **What the 0.7 meant.** The model part is about 0.67 on the public pairs. The rule gives 0.77 if each family has exactly one more same-model endpoint (its plain copy) and 0.60 if it has two. The points still open are the plain copy of each family.
-- **Submission rule.** Per family, the positively identified copies form one model and every other endpoint is its own model. It never claims two endpoints are the same without evidence. Checked by Devin's code: it scores 0.77 on the model part if exactly one more endpoint is the plain copy, 0.60 or 0.46 if one or two further undetectable same-model copies hide among the rest, 0.51 if one of our labels is wrong.
-- **Where the two analysts disagree.** ep-12 as A's plain copy: Devin 0.6, the main line 0.3 to 0.4; not added. ep-06 against ep-22 as B's watermark copy.
-- **Devin's second method** (battery modes, cliques) and the main line's battery rules were frozen before each read. A split of family A proposed by the desk at 02:25 failed its pre-registered test at 02:58 and was never submitted.
+- **Submitted at 06:44, public 0.85:** `tasks/model_equality/results/labelled_copies_v2.csv`.
+
+  | Family | One model: the plain model and its disguises | fp8 copy, alone | Adapter marks, each alone | Plain-like, each alone |
+  |---|---|---|---|---|
+  | A (Qwen2.5-3B) | ep-02, 23 (prompts), 33 (temperature 1.0), 14 (top-p 0.95), 04 (watermark) | not found | ep-24 | ep-01, 12, 17, 18, 25 |
+  | B (Qwen2.5-1.5B) | ep-08, 20, 30, 07, 06 | ep-22, likely | ep-03, 21, 28 | ep-26, 32 |
+  | C (Llama-3.2-1B) | ep-29, 16, 31, 27, 10, and since 06:44 ep-13, 19 | ep-15 | ep-05, 11 | ep-09 |
+
+- **What is still missing.** A's and B's plain copies, and whatever the eleventh endpoint of each family is. In C the two plain-like endpoints added together were worth +0.15, which suggests a family holds two plain-like copies of the plain model, not one.
+- **Submission rule the desk kept.** A grouping is submitted only when a method fixed on the references names it. No grouping was submitted to try an endpoint against the public score. Four submissions: 0.0 (floor), 0.1 (families), 0.7, 0.85.
+- **Devin's second method** (battery modes, closeness, a full-distribution test) reached the same 15 labels independently and supplied the closest pairs the fp8 rule uses. Its own prediction for C's fp8 copy weakened on the second read; he said so before the desk's number came in.
 
 ## Incidents you should know
 
