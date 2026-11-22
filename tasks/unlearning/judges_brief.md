@@ -105,6 +105,22 @@ The ledger can score a fine-tune that reached its target exactly: the target log
 - **The target is not what limits the score; how far training gets towards it is.** With retain about 0.6, a fine-tune that reached a K4, tau 2 target would score about 0.3.
 - **The eighth batch measures which change buys the most reach for the least spill:** 40 epochs, a doubled learning rate, 9 blocks instead of 6, and K4 and K5 targets.
 
+## The eighth batch: what reaches further with less spill
+
+Each run changes one argument of `k7_e3t2_rm` (the 0.066). Its spill probe measures the drift on held-out forget images and on classes it never trained on.
+
+| change | trained loss | held-out KL | spare-class KL | held-out predictions changed |
+|---|---|---|---|---|
+| none (`k7_e3t2_rm`) | 1.61 | 1.11 | 0.74 | 11% |
+| untempered target, tau 1 | 2.02 | 0.61 | 0.27 | 10% |
+| learning rate 1e-4 instead of 5e-5 | 2.34 | 0.99 | 0.62 | 10% |
+| target tempered by 1.5 | 1.82 | 0.81 | 0.45 | 11% |
+| K=4 instead of 3 | 1.95 | 1.21 | 0.76 | 20% |
+
+- **The untempered target and the higher learning rate each win on both counts:** more reach and less spill. The ninth batch (`run_ninth.sh`) combines them.
+- **K=4 doubles the changed predictions,** which puts the gate at risk. Moving further has to come from training, not from a further target.
+- **Why tau 1 spills less:** a tempered target teaches the network to be less confident everywhere, and that softness leaks to images it never trained on. That leak is the temperature-like spill that sharpening removes after the fact. An untempered target avoids it during training.
+
 ## The plateau at 0.16
 
 Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from different code point to a recipe whose result does not depend on the code: either the limit of training the forget images to uniform outputs, or the best point of a one-knob family such as dividing every logit by one temperature. `plateau.py` shows which golds make each recipe land on 0.16, and the ledger asks which of those golds also predict our own scores. The temperature family is out after `scale_t4`.
