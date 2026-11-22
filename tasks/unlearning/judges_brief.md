@@ -168,10 +168,23 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 
 ## Reproduce
 
-From the unlearning data folder, with the task's Python environment (`source /Volumes/euroai-apfs/ops/env.sh; cd $T` on the lead's laptop):
+**The 0.2133, in three steps**, from the unlearning data folder with the task's environment:
+
+1. **The cross-fitted targets** (GPU): `output/kkrgp/xfit_extras.npz`, as in `run_third.sh`.
+2. **The fine-tune** (GPU, about 8 minutes): `k7_e3t2_rm.pt`, sha256 `107d98f8…`, as in the seventh batch.
+3. **The sharpening** (CPU, seconds): `k7_e3t2_rm_x2.pt`, sha256 `f69f9ba1…`. Only `head.weight` and `head.bias` differ from step 2, each exactly 2 times.
 
 ```
-python $WT/tasks/unlearning/ledger.py  --targets output/kkrgp/xfit_extras.npz
+python $WT/tasks/unlearning/xfit.py --name extras --reading extras
+python $WT/tasks/unlearning/csd.py --full 0 --hedge 0 --blocks 6 --lr 5e-5 --epochs 25 --name k7_e3t2_rm --targets output/kkrgp/xfit_extras.npz --extrapolate 3 --tau 2 --retain-mix 1
+python $WT/tasks/unlearning/splice_head.py --model output/kkrgp/k7_e3t2_rm.pt --scale 0.5 --save output/kkrgp/k7_e3t2_rm_x2.pt
+```
+
+**The analysis**, from the same folder (`source /Volumes/euroai-apfs/ops/env.sh; cd $T` on the lead's laptop):
+
+```
+python $WT/tasks/unlearning/fold_reports.py /Volumes/euroai-apfs/r21/eighth
+python $WT/tasks/unlearning/ledger.py  --targets output/kkrgp/xfit_extras.npz --logits /Volumes/euroai-apfs/r21/seventh/logits.npz /Volumes/euroai-apfs/r21/eighth/logits.npz
 python $WT/tasks/unlearning/plateau.py --targets output/kkrgp/xfit_extras.npz
 python -m pytest $WT/tasks/unlearning -q
 ```
