@@ -126,6 +126,16 @@ The plan written at 23:00 (`map_even40`, `x3_ext_m80`, then a K sweep) was carri
 
 Written at 04:09, revised at 04:55, final at 07:50 (`538147e`).
 
+**Update at 09:20. It supersedes the slot times, the recommendation and "nothing is left" below.**
+- **The lead ordered the unlearning push at 08:15** (#12): we are 8th overall, need 6th, and unlearning is the only task with room.
+- **Slots follow the desk's 08:21 submission.** The tau-1 blend goes in when the lead is at the laptop, then one slot every 30 minutes; the last by 11:00.
+- **`submit_queue.md` holds the rule for each slot,** written before each score. Its first row without a submission record whose condition holds is the next file.
+- **The morning's score model** (`score_fit.py --retain control --proxy-temperature 1.25`; brief, section "The morning"):
+  - it predicts each high line from the others within 1 to 2.5%;
+  - it explains the 0.256 by under-sharpening;
+  - it says nothing we hold beats 0.2858 by more than about 2%.
+- **10:20** takes the fourteenth batch's line or the best blend, by the queue's rule. **10:50** is the desk's to choose. Only the best submission counts, so a resubmission of the 0.2858 cannot change the ranking.
+
 - **Read first:**
   0. draft PR #32, the night's work in one diff, for the task owner to merge after review;
   1. `judges_brief.md`, which opens with a two-minute version for presenting;
