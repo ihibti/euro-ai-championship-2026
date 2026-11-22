@@ -157,9 +157,27 @@ The two misses sit at the edges. x2.5 is the only line past the peak; with it in
 
 | file | written | prediction | public |
 |---|---|---|---|
-| `m14_t1_blend3_x1p5.pt` (tau-1 runs 3:1, x1.5) | 08:32, two-condition rule | 0.29 to 0.31 | pending |
-| the same | 09:01, model with the probes' retain | about 0.27 (0.26 to 0.30), 1 in 4 above 0.2858 | pending |
-| the same | 09:09, model with the stand-in's retain | 0.267 to 0.272, 1 in 10 above 0.2858 | pending |
+| `m14_t1_blend3_x1p5.pt` (tau-1 runs 3:1, x1.5) | 08:32, two-condition rule | 0.29 to 0.31 | not submitted |
+| the same | 09:01, model with the probes' retain | about 0.27 (0.26 to 0.30), 1 in 4 above 0.2858 | not submitted |
+| the same | 09:09, model with the stand-in's retain | 0.267 to 0.272, 1 in 10 above 0.2858 | not submitted |
+| `m15_k9t2ep40_x1p85.pt` (the ninth batch's 40-epoch tau-2 run, x1.85) | 09:09, model | 0.2855 to 0.2874 | no score: the 09:45 upload timed out on the client |
+| `m15_s1s2ep40_x2.pt` (weight average of the 0.2858's two seed runs and that run, x2) | 09:46 and 09:57, model | 0.291, 64% above 0.2858 | pending (10:16) |
+| the 10:46 line, by the rule of 09:57 | 09:57 | `k9_e35t2_lr1e4_x1p95` if 10:16 scores 0.2866 or above (71% to beat the blend if it lands at 0.295 or above); otherwise `k14_t1_lr9e5_x1p47` (two-condition rule 0.29 to 0.31, model 0.272) | pending |
+
+**What happened to the morning's plan.** At 09:44 the lead confirmed that only a team's best submission counts. The slots left before 11:00 therefore went to lines that could beat 0.2858, not to a test of the tau-1 blend, which the model had put below it. The first, the ninth batch's 40-epoch run at x1.85, would also have been the model's first test on an unscored recipe. Its upload timed out at 09:45 on the client, the attempt counted for the 30-minute gate, and two slots were left.
+
+**The fourteenth batch (tau 1 and tau 1.5 at the operating point, 08:48).** All four runs pass the two conditions set on #21 at 08:26: the loss factor is 0.93 to 1.06 times 0.89 T, and 4.7 to 5.1% of predictions change. The model puts every one below 0.2858 (0.266 to 0.280 at their best factors). Its reason is the one it gives for the 0.256: once sharpened to the right factor, spill is no lever, and the cooler targets lose on the prediction term. The batch is where the two-condition rule and the model disagree most.
+
+**The last two slots: expected gain over the best (09:57).** With one slot after the next and only the best counting, the mean is the wrong criterion. A plan is worth the mean, over the model's draws, of max(0, its best line's score anchored on 0.2858, minus 0.2858) (`score_fit.py --draws-out`, `slot_gain.py`, 3 tests).
+- The blend `m15_s1s2ep40_x2` alone: 0.0060.
+- With `k9_e35t2_lr1e4` at x1.95: 0.0097. That run's target is extrapolated 3.5 times instead of 3, and its forget loss is 4.4 against the blend's 4.0. It pays when gold's forget loss sits high, which is when the blend also scores high.
+- With any fourteenth-batch line: still 0.0060. Inside the model, whenever such a line beats 0.2858, the blend beats it by more.
+
+So the 10:46 slot depends on the 10:16 score, by a rule written before it.
+- **High score:** the blend held, so take the line that reaches further.
+- **Low score:** inside the model no line has a real expected gain. Take the two-condition rule's line, whose upside lies where the model is wrong.
+
+**The weight-average caveat, measured.** The blend averages runs of 25 and 40 epochs, and the model stands it in with the average of their logits. The only real soup with dumped logits is the thirteenth batch's seed twins: its forget loss sits 0.8% below its logit average's, with a KL of 0.0004 at T=2. The blend's members sit 1.3 times further apart than seed twins (logit RMS 0.53 against 0.42). The second-order gap grows with the square of that distance, so we expect about 2% in forget loss and under 1% in score.
 
 ## The utility gate, and localisation
 
@@ -449,7 +467,8 @@ python $WT/tasks/unlearning/plateau.py --targets output/kkrgp/xfit_extras.npz
 python $WT/tasks/unlearning/split_noise.py --draws 4000
 python $WT/tasks/unlearning/twins.py
 python $WT/tasks/unlearning/check_thirteenth.py /Volumes/euroai-apfs/r21/thirteenth
-python $WT/tasks/unlearning/score_fit.py --retain control --proxy-temperature 1.25
+python $WT/tasks/unlearning/score_fit.py --retain control --proxy-temperature 1.25 --draws-out output/kkrgp/score_fit_draws.npz
 python $WT/tasks/unlearning/blend_search.py $WT/tasks/unlearning blends.json
+python $WT/tasks/unlearning/slot_gain.py output/kkrgp/score_fit_draws.npz --first m15_s1s2ep40x2 --lines k9_e35t2_lr1e4x1.95,k9_e3t2_lr1e4_ep40x1.85,k14_t1_lr9e5x1.45,k14_t15_lr1e4x1.7
 python -m pytest $WT/tasks/unlearning -q
 ```
