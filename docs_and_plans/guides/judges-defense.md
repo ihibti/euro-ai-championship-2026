@@ -79,12 +79,12 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 - **Gold, parametrised.** Since gold is unknown, a family of gold hypotheses was built from a cross-fitted prediction: each image predicted by blocks that never saw it.
 - **A written prediction per submission.** Every candidate was scored under every hypothesis with the server's formulas, tested in code. Each submission carried a written prediction, posted on #12 before its score. Each score then reweighted the hypotheses.
 - **The recipe.** Fine-tune the last 6 of 12 blocks towards that prediction, pushed further in the direction a model that never saw the image would err, softened by a temperature of 2. Then multiply the last layer by 2. That changes no predicted class and restores confidence.
-- **The final submission.** The weight average of three seeds of the best recipe (0.2858). The three seeds match on every statistic we measure, but pick different classes on 11 to 12% of the forget images. Averaging cancels part of that noise.
+- **The final submission.** The weight average of three seeds of the best recipe (0.2858). The three seeds match on every statistic we measure. They pick different classes on 16% of the forget images, but only between near-tied classes: at temperature 2, where the prediction term is measured, they agree within 0.6%. The average is the lower-variance file of the three, not a different model.
 
 **Evidence it is sound.**
 - Each of the first ten night submissions changed one setting and carried a prediction posted before its score. For example, the temperature-only test predicted about 0.008 and scored 0.0057. The eleventh, the seed average, was chosen without a score model.
 - Spill probes on held-out images measured drift before anything was queued.
-- A simulation of random 30% splits shows that the ratio between two of our lines moves by about 2% (one standard deviation), so differences of a few percent on the board are partly noise.
+- A simulation of 4,000 random 30% splits shows that the ratio between two of our lines moves by about 1% (one standard deviation). Every gap the night acted on is far outside that: 6% between 0.2665 and 0.2837, 22% to 0.2222. The average's own +0.7% is inside it.
 
 **Result.** From 0.00 at 22:19, through 0.066 (01:38), 0.2133 (02:08) and 0.2837 (02:38), to 0.2858 (04:39). The steps in between scored 0.2222, 0.256 and 0.2665, each lower, and each said why.
 
