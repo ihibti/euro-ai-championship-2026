@@ -42,6 +42,7 @@ NIGHT_PROMPTS: dict[str, str] = {
     "f2_echo": "echo",
     "bat_choice": "choice",
     "bat_trivia": "trivia",
+    "txt_story": "prefix:12",
 }
 TOKEN = re.compile(r"\w+|[^\w\s]")
 BIT = re.compile(r"(?<![0-9])[01](?![0-9])")
@@ -192,7 +193,18 @@ def trivia_views(response: str) -> list[str | None]:
     return [None if np.isnan(v) else str(int(v)) for v in values]
 
 
+def prefix_views(response: str, length: int) -> list[str | None]:
+    tokens = TOKEN.findall(response)
+    views, prefix = [], ""
+    for position in range(length):
+        prefix = prefix + "\x1f" + (tokens[position] if position < len(tokens) else END)
+        views.append(prefix)
+    return views
+
+
 def views_of(kind: str, prompt: str, response: str) -> list[str | None]:
+    if kind.startswith("prefix:"):
+        return prefix_views(response, int(kind.split(":")[1]))
     if kind == "choice":
         return choice_views(prompt, response)
     if kind == "trivia":

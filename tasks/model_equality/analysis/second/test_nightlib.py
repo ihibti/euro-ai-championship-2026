@@ -152,3 +152,10 @@ def test_battery_views_give_one_letter_or_one_correctness_per_item():
     assert n.choice_views(prompt, "1. A") == ["A", None]
     views = n.trivia_views("1. Canberra\n2. Six")
     assert views[:2] == ["1", "0"] and views[2] is None
+
+
+def test_prefix_views_are_cumulative_and_padded():
+    views = n.prefix_views("The storm came.", 5)
+    assert len(views) == 5
+    assert views[0] == "\x1fThe" and views[1] == "\x1fThe\x1fstorm"
+    assert views[4].endswith(n.END) and views[3].endswith(".")
