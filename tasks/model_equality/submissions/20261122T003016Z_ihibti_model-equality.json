@@ -1,0 +1,28 @@
+{
+  "attempted_at": "2026-11-22T00:30:16.305163+00:00",
+  "authorization": "night",
+  "bytes": 385,
+  "file": "tasks/model_equality/analysis/families_ep.csv",
+  "git": {
+    "branch": "ihibti/setup-hackathon-swarm-workspace",
+    "commit": "fdb443f595c5106c99ef736452d33781aa7f0c42",
+    "dirty": false
+  },
+  "http_status": 200,
+  "message": "score 0.1; previous best None; improved None; New best on this task. Score shown is on the public split; the final ranking uses the held out subset, revealed after submissions close.",
+  "person": "ihibti",
+  "response": {
+    "message": "New best on this task. Score shown is on the public split; the final ranking uses the held out subset, revealed after submissions close.",
+    "score": 0.1,
+    "status": "success",
+    "submission_id": 2290
+  },
+  "score": 0.1,
+  "server_task_id": "33-model-equality",
+  "sha256": "58edda1959899f592da2bd6899af5ae6665d46714e8cc7518fc757d8ddda0a25",
+  "status": "success",
+  "task": "model_equality",
+  "validation_notes": [
+    "33 endpoints, 3 family labels, 3 models"
+  ]
+}
