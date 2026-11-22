@@ -10,19 +10,13 @@ For any session that picks the unlearning task up during the night (after a rest
 - **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `ledger.py --targets output/kkrgp/xfit_extras.npz`, log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
 - **On new GPU results (`desk/unlearning`, `tasks/unlearning/reports/21/`).** Copy the JSON reports to `/Volumes/euroai-apfs/r21/`, add the candidates' measured statistics and retain estimates to `ledger_inputs.json`, rerun the ledger, queue the best by expected score.
 - **Limits.** 8 unlearning submissions left at 01:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
-- **Pending at 04:50.**
-  - Scores:
-    - `k11_b_soup3_x2` **0.2858** (04:39, our best): the weight average of the 0.2837's base and its two seed twins, x2;
-    - `k8_e3t2_rm1_lr1e4_x2` 0.2837 (02:38);
-    - `_x2p5` 0.2222 (03:08, forget-side overshoot);
-    - `k9_e3t1_lr1e4_x1p25` 0.256 (03:38, a retain loss);
-    - `k8_e3t2_rm1_ep40_x2p25` 0.2665 (04:08: f/T = 1.00 does not pay).
-  - **No score model is used to choose lines any more.** With all five sharpened scores, `peak_check.py` keeps no setting (`e49e500`); the ledger cannot represent the peak. Lines are chosen by argument.
-  - **Board noise** (`split_noise.py`, tested): the 30% split alone moves the ratio between two of our lines by about 2% (1 SD). It cannot rank seed twins. So the soup's +0.7% is noise; its value is lower variance on the hidden 70%.
-  - **05:08 stays empty** (changed at 04:50 from `k11_b_s1_x2`, on the desk's argument at 04:40). A twin's score cannot be read at the board's noise. If it won by noise, it would replace the lower-variance average as our best with no gain in expectation. Factor moves on the average are predicted below it by the scores we have: 0.256 at f/T 0.76, 0.2665 at 1.00, 0.2222 at x2.5. No line different in kind is ready.
-  - **Twelfth batch asked on #21** (`run_twelfth.sh` at `497f212`): eight more seeds of the 0.2837's recipe; `k12_soup_x2.pt`, the average of all eleven, x2; logits of the seeds, of `k11_b_soup3_x2` and of `k12_soup_x2`. Results under `reports/21/twelfth/`. Copy them to `/Volumes/euroai-apfs/r21/twelfth/`, then check that the 11-model average's x2 forget loss stays near 3.8/3.8 and that its changed predictions stay under 6%. Then queue it for the humans (09:08) on #12.
-  - Next offline work: a target that matches a mixture of retrained models at T=2 (the prediction term's gold is a mixture), as a possible thirteenth batch, smoke-tested locally first.
-  - Slots: night authorization used up after 05:08 (left empty); the humans submit from 09:08 to 11:08.
+- **State at 04:55: the night's search is over.**
+  - **The desk stopped at 04:47** (usage limit). No job of ours is queued, nothing was staged, and no night submission is left to use (05:08 was left empty on purpose). Our best is **0.2858**, `k11_b_soup3_x2.pt` (sha `53dfdc9d…`): the weight average of the 0.2837's base and its two seed twins, x2.
+  - Scores: 0.2858 (04:39, the average); 0.2837 (02:38, its base x2); 0.2665 (04:08, f/T 1.00); 0.256 (03:38, a retain loss); 0.2222 (03:08, x2.5 overshoot); 0.2133 (02:08); 0.066 (01:38).
+  - **Board noise** (`split_noise.py`, corrected at 04:51 to use the original's predictions as labels): the 30% split moves the ratio between two of our lines by about 1% (1 SD), and one line's own score by about 2%. The average's +0.7% over its base is inside it; every other gap of the night (6% and more) is far outside.
+  - **The seed twins are the same model at T=2** (`twins.py`). Their probability mixture sits 0.03% of the prediction term's scale from their logit average, and each twin 0.6% from the mixture. More seeds, or distilling the mixture, cannot move the prediction term. **The twelfth batch is withdrawn** (#21).
+  - No score model predicts lines (`peak_check.py` retired at 04:10; the ledger cannot represent the peak).
+  - Left for the morning: nothing needs submitting. Any new unlearning line needs a GPU run staged by the lead, and none on the table is predicted to beat 0.2858 by more than the board's noise.
 - **Work list.** (1) Judges' brief, `judges_brief.md`. (2) Fold every result into the ledger. (3) Ask for the logits of submitted candidates, so the ledger stops using proxies.
 
 Written by the unlearning agent, which took over the task at 23:00. It works on the lead's laptop with a local copy of the model and the forget images, and no JURECA access. The desk (the lead's agent) runs its GPU requests and submits from `submit_queue.md`, under Requests to the desk in `AGENTS.md`.
@@ -112,25 +106,26 @@ The plan written at 23:00 (`map_even40`, `x3_ext_m80`, then a K sweep) was carri
 
 ## Morning plan (for the humans, from 09:00)
 
-Written at 04:09, revised at 04:40, refreshed by 07:30.
+Written at 04:09, revised at 04:55, refreshed by 07:30.
 
 - **Read first:**
   1. `judges_brief.md`, which opens with the result;
   2. `submit_queue.md`, every submission with its prediction and score;
   3. this file's log.
-- **Our best at 04:40:** 0.2837, `k8_e3t2_rm1_lr1e4_x2.pt` (sha `522e5851…`) on the lead's main laptop. If nothing better has scored by 11:00, this is the one that counts. Nothing needs re-submitting, since only the best counts.
-- **Slots after 09:00:** 09:08, 09:38, 10:08, 10:38, and 11:08 at the latest. The night authorization ends at 09:00. From then on a human at a terminal submits with `make submit`.
-- **What to submit:** the queue's open lines, in order. The unlearning agent keeps the queue current until 07:30.
-  - Night: 04:38 the weight average `k11_b_soup3_x2.pt`; 05:08 the seed twin `k11_b_s1_x2.pt`.
-  - Morning candidate, if the 04:38 average does not score clearly below 0.2837: `k12_soup_x2.pt`, the average of eleven seeds of the 0.2837's recipe (`run_twelfth.sh`, asked on #21 after the 04:38 score).
-  - No score model predicts lines any more (`peak_check.py` is retired, the ledger cannot represent the peak). Choose by argument: same recipe, same factor, less seed noise.
+- **Our best at 04:55:** **0.2858**, `k11_b_soup3_x2.pt` (sha `53dfdc9d…`, on the desk's laptop and in the team's `unlearning/output/kkrgp/`). If nothing better scores by 11:00, this is the one that counts. Nothing needs re-submitting, since only the best counts.
+- **Slots after 09:00:** 09:08, 09:38, 10:08, 10:38, and 11:08 at the latest. The night authorization ended with the desk at 04:47. From then on a human at a terminal submits with `make submit`.
+- **Recommendation: spend the morning on the other two tasks.** The unlearning search converged at the 0.2837's recipe with its last layer times 2:
+  - every neighbour scored lower: more sharpening, less sharpening relative to the drift, a sibling at its own temperature, a less-spilling tau 1 run;
+  - its seed twins are the same model at T=2, so averaging more of them cannot show on the board.
+  A further gain needs a new mechanism and a GPU run before 10:00. None is ready, and none predicted to beat 0.2858 by more than the board's 1%.
+- **If a human wants one more unlearning line anyway:** the open request on #21 is withdrawn; ask the unlearning agent (or read `night.md`) before staging anything.
 - **What the night established (each point is a score):**
   - **Sharpening a tempered fine-tune is the recipe:** 0.066 for the fine-tune alone, 0.2133 with its last layer times 2.
   - **More reach pays only up to the 0.2837's level:** forget-set loss 3.8/3.8 once sharpened.
   - **One notch more sharpening on the same model costs 22%** (0.2837 to 0.2222).
   - **The factor has to stay near 0.89 times the drift's temperature on unseen images.** The tau 1 run at 0.76 times its temperature scored 0.256 despite half the spill; a sibling of the 0.2837's base at 1.00 times scored 0.2665.
 - **What not to do:**
-  - do not choose among seed twins, or among lines within about 4% of each other, by their public score: the 30% split alone moves the ratio between two of our lines by about 2% (1 SD, `split_noise.py`);
+  - do not choose among seed twins, or among lines within about 2% of each other, by their public score: the 30% split alone moves the ratio between two of our lines by about 1% (1 SD, `split_noise.py`);
   - no factor above the base's spill temperature (`peak_check.py` prints it as f/T);
   - no fine-tune that reaches further than the 0.2837's base, at its factor;
   - no candidate without a spill probe;
@@ -208,3 +203,6 @@ Written at 04:09, revised at 04:40, refreshed by 07:30.
 | 04:29 | Eleventh batch folded (`b962a1d`). The seeds reproduce the 0.2837's base: realized loss 2.23/1.82 and 2.26/1.82 against 2.23/1.84, held-out KL 0.96 and 1.01 against 0.99, changed predictions 4.9% and 5.8% against 5.2%, x2 loss 3.78/3.75 and 3.82/3.75 against 3.80/3.79; yet they pick a different class on 11 to 12% of the forget images. `ep20` and `rm2` reach less without less spill, `bl4` changes 6.9% of predictions, `k25` reaches much less: none beats the base on its probe | 04:38: `k11_b_soup3_x2.pt` (`53dfdc9d…`), acknowledged on #12. (b) is not an eleventh-batch line |
 | 04:34 | **Board noise** (`split_noise.py`, 4000 random 30% splits, gold stand-in `K3t1`; the `mixK` stand-in gives 0 to every sharpened line and is not informative). The split alone moves the ratio between two of our lines by about 2% (1 SD) and one line's own score by about 4.5%. Between seed twins, the 30% and the 70% disagree on which is better in 30% to 84% of splits. `E/B` = 0.964 on all images under the stand-in, 1 SD 0.018 on 30%; the board's 0.939 is 1.4 SD below that. The stand-in still puts the 0.2222 above the 0.2837, so its ratios on all images are not predictions; its spreads are | 05:08 takes `k11_b_s1_x2.pt` whatever 04:38 scores: the last night slot costs no morning slot, and a second draw of the recipe shows whether its seed spread is larger than the board's 2% |
 | 04:46 | Desk: `k11_b_soup3_x2` (04:39) **public 0.2858, our best** | no score model predicted it; the argument was that averaging three seed twins keeps the recipe's point and cancels seed noise. It landed where its best member did (+0.7%, inside the board's 2%): the 0.2837 was a typical draw of its recipe | 05:08 empty (the desk's argument: a near-point line cannot be read at the board's noise and could only displace the lower-variance file); the twelfth batch (eight more seeds, the 11-model average) asked on #21 under the rule written at 04:34 (average at 0.272 or more) |
+| 04:50 | Desk (#21, 04:47): usage limit reached; the twelfth batch is not staged, no job of ours is queued, nothing on scratch was changed | no more night submissions or GPU runs unless the desk resumes |
+| 04:51 | **Labels in `split_noise.py` corrected.** It had taken the `labels` stored in `xfit_extras.npz`, which are the cross-fit's own predicted classes (equal to the argmax of `pred_exact` on every image, different from the original's on 5.2%). The original fits every forget image (mean top probability 0.9997), so its predictions are the labels, as in `peak_check.py`. Corrected: the 30% split moves the ratio between two of our lines by about 1% (1 SD) instead of 2%, one line's own score by about 2% instead of 4.5%. The 6% gap between 0.2665 and 0.2837 is about 6 SD | the conclusions hold and get stronger; the brief and #12 are corrected |
+| 04:53 | **The twins are the same model at T=2** (`twins.py`): they pick different classes on 16% of the forget images, yet their probability mixture is 0.0013 nats from their logit average (0.03% of its 4.33 nats from the original), and each twin 0.026 (0.6%). Their disagreements are between near-tied classes | **the twelfth batch is withdrawn**: more seeds, or distilling the twins' mixture into one network, cannot move the prediction term; the night's search is over at 0.2858 |

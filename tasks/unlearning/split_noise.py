@@ -2,15 +2,20 @@
 
 The board scores a random 30% of the forget images (an altered copy follows its source); the final
 ranking uses the other 70%. This draws many such splits and computes, for pairs of submitted lines,
-the ratio of their forget terms on the 30% and on the matching 70%, against a stand-in for gold:
-
-- `K3t1`: the cross-fitted prediction, extrapolated 3 times from the original;
-- `mixK`: a mixture of the steps 1 to 4 at temperature 2.
+the ratio of their forget terms on the 30% and on the matching 70%, against a stand-in for gold: the
+cross-fitted prediction, extrapolated 3 times from the original (`K3t1`). A mixture of the steps 1
+to 4 at temperature 2 was tried as a second stand-in and dropped: it gives the sharpened lines
+forget terms near 0 and puts the 0.2133 at 7.6 times the 0.2837.
 
 The forget term follows the metric on each group (exact images, and jittered copies standing in for
-the hidden altered ones): mean/spread term at temperature 1 on the true labels, times the prediction
+the hidden altered ones): mean/spread term at temperature 1 on the labels, times the prediction
 term from KL at temperature 2, averaged over the two groups. Retain does not depend on the split,
 so a ratio of forget terms is a ratio of final scores.
+
+The labels are the original's predictions on the exact images: it fits every forget image with a
+mean top probability of 0.9997, so they are its training labels. The `labels` stored in
+`xfit_extras.npz` are the cross-fit's own predicted classes (they equal the argmax of `pred_exact`
+on every image and differ from the original's on 5.2%), so they are not used here.
 
 Read per pair:
 - `full`: the ratio on all images, the part of the gap that is the models' own;
@@ -113,7 +118,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args(argv)
     with np.load(args.targets) as data:
-        pred, labels = data["pred_exact"].astype(np.float64), data["labels"]
+        pred = data["pred_exact"].astype(np.float64)
     cache = {}
     for batch in {b for b, _, _ in LINES.values()}:
         with np.load(LOGITS / batch / "logits.npz") as data:
@@ -125,18 +130,15 @@ def main(argv: list[str] | None = None) -> None:
         twins = [LINES[k] for k in ("B 0.2837", "s1 x2", "s2 x2")]
         models["soup x2"] = 2.0 * np.mean([cache[b][f"{n}__{view}"] for b, n, _ in twins], 0)
         views[view] = (orig, models)
+    labels = cache["eleventh"]["orig__exact"].argmax(1)
     rng = np.random.default_rng(args.seed)
     masks = split_masks(len(labels), args.draws, PUBLIC_SHARE, rng)
     everything = np.ones((1, len(labels)))
     step = pred - cache["eleventh"]["orig__exact"]
-    for gold_name in ("K3t1", "mixK"):
+    for gold_name in ("K3t1",):
         terms = {"pub": {}, "rest": {}, "full": {}}
         for orig, models in views.values():
-            if gold_name == "K3t1":
-                gold = orig + 3 * step
-            else:
-                mix = np.mean([np.exp(log_softmax((orig + k * step) / 2)) for k in (1, 2, 3, 4)], 0)
-                gold = 2 * np.log(mix)
+            gold = orig + 3 * step
             g = per_image(gold, gold, labels)
             o = per_image(orig, gold, labels)
             for name, logits in models.items():

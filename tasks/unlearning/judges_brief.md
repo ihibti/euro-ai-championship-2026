@@ -4,7 +4,7 @@ Written during the night of 21 to 22 November by the unlearning agent, for the t
 
 ## The result in one paragraph
 
-Our best public score is **0.2837** (`k8_e3t2_rm1_lr1e4_x2`, 02:38), up from 0 at 21:19 and 0.2133 at 02:08.
+Our best public score is **0.2858** (`k11_b_soup3_x2`, 04:39), up from 0 at 21:19, 0.2133 at 02:08 and 0.2837 at 02:38. It is the weight average of three seed runs of one recipe (0.2837 for the first alone).
 
 **The recipe has two steps.**
 1. **Fine-tune.** The last 6 of the 12 blocks are fine-tuned on the forget images (and augmented copies) towards a target built from a cross-fitted held-out prediction. The target is extrapolated 3 times in the direction where the model would err if it had never seen the image, and tempered by 2. A mixup anchor distils the original on blends of two forget images.
@@ -15,7 +15,7 @@ Our best public score is **0.2837** (`k8_e3t2_rm1_lr1e4_x2`, 02:38), up from 0 a
 - **The tempered target spreads probability over the sibling classes,** which is what the gold models' average looks like at temperature 2.
 - **Sharpening restores per-model confidence and undoes the drift.** It brings back the single models' confidence on the loss side. It also takes back the temperature-like drift that the soft target leaked to unseen images, which is what the retain score penalises.
 
-The 0.2837 is the same recipe trained at learning rate 1e-4 instead of 5e-5. Every submission was chosen from predictions written on #12 before its score, one change at a time. Reproducing either score takes the commands at the end and about 8 GPU minutes.
+The 0.2837 is the same recipe trained at learning rate 1e-4 instead of 5e-5; the 0.2858 averages the weights of that run and two reruns with other seeds, then multiplies the last layer by 2. Every submission was chosen from predictions written on #12 before its score, one change at a time. Reproducing either score takes the commands at the end and about 8 GPU minutes.
 
 ## The problem in four sentences
 
@@ -68,6 +68,7 @@ This keeps the number of submissions small and makes each one an experiment with
 | 03:08 | `k8_e3t2_rm1_lr1e4_x2p5` | the same fine-tune with the factor one notch further, 2.5 | ledger mean 0.283, 10th to 90th 0.211 to 0.373, 54% chance above 0.2837 | 0.2222 | **one notch more sharpening cost 22%**: the forget-set loss has a peak near the 0.2837's level. The ledger cannot represent it and is set aside for the factor (section below) |
 | 03:38 | `k9_e3t1_lr1e4_x1p25` | the ninth batch's untempered (tau 1) fine-tune, last layer times 1.25 | `peak_check.py` mean 0.294, 0.281 to 0.316 over the 13 gold settings that reproduce both scores. It replaces the line fixed at 02:56, which the same check puts at 0.185 | 0.256 | **at the 0.2837's forget-loss level, half the probe spill scored 10% less.** The factor left a third of the drift's temperature (f/T = 0.76): on unseen images, sharpening must match the drift's temperature. The probes' lower spill does not carry over by itself |
 | 04:08 | `k8_e3t2_rm1_ep40_x2p25` | the eighth batch's 40-epoch run, last layer times 2.25: exactly its measured spill temperature | `peak_check.py` 0.292 to 0.294 over three readings of retain; written down as a test, not a likely new best | 0.2665 | its forget loss, probes and spill temperature match the 0.2837's base; only the factor relative to the temperature differs (1.00 against 0.89), and it scores 6% lower. Every neighbour of the 0.2837's point has now scored lower. With all five scores the check fits no setting and is retired as a predictor |
+| 04:39 | `k11_b_soup3_x2` | the weight average of the 0.2837's base and its two seed twins (same recipe, seeds 1 and 2), last layer times 2 | no score model; written before the score: above 0.2837 averaging pays, about 0.28 the 0.2837 is a typical draw, clearly below a lucky draw | **0.2858** | a typical draw: +0.7% is inside the board's 1% noise between two lines. Our final line, for its lower seed noise on the hidden 70% |
 
 ## What the evidence says about gold (as of 02:15)
 
@@ -155,13 +156,13 @@ With all five sharpened scores, `peak_check.py` no longer fits any setting. We s
 
 The last night submissions were the weight average of the 0.2837's base and two new seeds, and the eleventh batch's best line by its probes. Both need no score model.
 
-## Board noise and seed twins (04:30)
+## Board noise and seed twins
 
-**How much the public 30% moves a score** (`split_noise.py`, tested in `test_split_noise.py`, 4000 random 30% splits of the 3500 forget images, jittered copies standing in for the hidden altered ones):
-- the ratio between two of our lines moves by about 2% (1 SD);
-- one line's own forget term moves by about 4.5%, so a private score can sit that far from the public one;
-- seed twins cannot be ranked by the board: on 30% to 84% of splits, the 30% and the 70% disagree on which twin is better;
-- a gap of 6% (0.2665 against 0.2837) is about 3 SD of the split: mostly a real difference.
+**How much the public 30% moves a score** (`split_noise.py`, tested in `test_split_noise.py`, 4000 random 30% splits of the 3500 forget images, jittered copies standing in for the hidden altered ones, labels = the original's predictions):
+- the ratio between two of our lines moves by about 1% (1 SD);
+- one line's own forget term moves by about 2%, so a private score can sit that far from the public one;
+- seed twins cannot be ranked by the board: their true gap is near 0, so the 30% and the 70% often disagree on which is better;
+- every gap the night acted on is far outside that noise: 6% between 0.2665 and 0.2837 (about 6 SD), 10% to 0.256, 22% to 0.2222.
 
 The stand-in for gold is one model, the cross-fit extrapolated 3 times. Its ratios on all images are not predictions: it puts the 0.2222 above the 0.2837. The spreads depend little on it, since they come from how unevenly the per-image losses fall across images.
 
@@ -171,7 +172,11 @@ The stand-in for gold is one model, the cross-fit extrapolated 3 times. Its rati
 - changed predictions 4.9% and 5.8% against 5.2%;
 - forget loss at x2 3.78/3.75 and 3.82/3.75 against 3.80/3.79.
 
-Yet the twins pick a different class on 11 to 12% of the forget images. A submitted line is one draw of its recipe, and the final 70% is a different split. Averaging the weights of the three twins (`k11_b_soup3_x2`, `soup.py`) keeps the recipe's point and cancels part of what is seed noise in each model. It needs no score model, and should do at least as well on the hidden 70% as a single twin.
+The three pick different classes on 16% of the forget images, but only between near-tied classes. At temperature 2, where the prediction term is measured, they are the same model (`twins.py`, tested):
+- their probability mixture sits 0.0013 nats from their logit average, 0.03% of its 4.33 nats from the original;
+- each twin sits 0.026 nats from the mixture, 0.6%.
+
+**The weight average** of the three, x2 (`k11_b_soup3_x2`, built with the same arithmetic as `soup.py`), scored **0.2858**, against 0.2837 for its base. That is +0.7%, inside the board's 1%. So the 0.2837 was a typical draw of its recipe. The average is our final line because it carries less seed noise into the hidden 70%, not because of its public margin. The twins' near-identity at T=2 also says that more seeds, or distilling their mixture into one network, cannot move the score. The twelfth batch (eight more seeds) was withdrawn for that reason.
 
 ## Where the ceiling is: training reach
 
@@ -234,6 +239,7 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 - **The ledger had a modelling error, found and fixed at 01:13.** It multiplied each prediction by the share of the accuracy band where the candidate passes the gate. A submission either passes or scores 0, so a 0 was read as a miss rather than as a possible gate failure. That made `dial15`'s 0 rule out the removal reading entirely. Since `7b51a3c`, A is inferred jointly with gold, and the removal reading keeps the 4% it deserves.
 - **Until 01:40 the posterior sat on the edge of the gold grid** (gold right on a third of the images, the furthest gold modelled). Widening the grid lowered every prediction by 10 to 20% and left the ranking unchanged. The predictions written on #12 before 01:40 come from the narrower grid.
 - **The ledger's golds are single models, and the real target is several.** Against a single confidently wrong gold, sharpening always helps; against the real mixture it peaks. The 0.2222 at 03:08 showed it. From 03:15 the factor and the base are chosen with `peak_check.py`, which is calibrated on two public scores and can therefore follow the public 30%. Choices are also required to show their advantage in the probes.
+- **Labels.** The forget images come without labels. We use the original's predictions, which it makes with a mean top probability of 0.9997 on these training images. The `labels` field in our cross-fit file holds the cross-fit's own predicted classes; `split_noise.py` used it by mistake until 04:51, which doubled its noise estimates.
 - **Our models of the score stop at about 5%.** Near the best point, lines that match it on every statistic we measure still score up to 6% lower (0.2665 against 0.2837). Choices below that level are made on the probes and on noise reduction (weight averaging), not on a predicted score.
 - The hidden altered copies are not modelled. Our own alterations (flip, crop, rotation, shift, blur, JPEG, jitter, noise) track the exact images closely in every report.
 - Retain is estimated from held-out forget images and spare classes, not from the real control set.
@@ -257,7 +263,7 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 - **Is the factor tuned to the board?**
   - It moved one notch at a time with a written prediction each time. 2 scored 0.2837; 2.5 scored 0.2222.
   - We did not continue upwards, and we did not fine-tune the factor around 2 on the board. The 03:38 line keeps the 0.2837's loss level with a different base, chosen for its lower spill in the probes.
-- **Why submit an average of three models?** The three runs share the recipe and differ only by seed, by at most 0.073 in any weight, so their average is still a fine-tune of the same model, loads into the same architecture and keeps the gate. The twins agree on every statistic and disagree on the class of 11 to 12% of the forget images: that disagreement is noise, and averaging removes part of it. The board cannot tell the twins apart (section above), so choosing the best-scoring twin would be choosing on the public split's noise.
+- **Why submit an average of three models?** The three runs share the recipe and differ only by seed, by at most 0.073 in any weight, so their average is still a fine-tune of the same model, loads into the same architecture and keeps the gate. The twins agree on every statistic and disagree on the class of 16% of the forget images, between near-tied classes: that disagreement is noise, and averaging removes part of it. The board cannot tell the twins apart (section above), so choosing the best-scoring twin would be choosing on the public split's noise.
 - **Why did you break your own pre-registered rule at 03:38?** The rule assumed that further-reaching fine-tunes pay at the same factor, and the 03:08 score refuted the model behind it. Submitting the rule's line would have tested a model we already knew to be wrong. We withdrew it before its slot, posted the reason and the replacement's prediction on #12 before its score, and kept the slot for a line whose advantage shows in the probes.
 
 ## Reproduce
@@ -281,5 +287,6 @@ python $WT/tasks/unlearning/fold_reports.py /Volumes/euroai-apfs/r21/eighth
 python $WT/tasks/unlearning/ledger.py  --targets output/kkrgp/xfit_extras.npz --logits /Volumes/euroai-apfs/r21/seventh/logits.npz /Volumes/euroai-apfs/r21/eighth/logits.npz
 python $WT/tasks/unlearning/plateau.py --targets output/kkrgp/xfit_extras.npz
 python $WT/tasks/unlearning/split_noise.py --draws 4000
+python $WT/tasks/unlearning/twins.py
 python -m pytest $WT/tasks/unlearning -q
 ```
