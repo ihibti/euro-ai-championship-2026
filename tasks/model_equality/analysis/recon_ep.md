@@ -233,3 +233,60 @@ Read that way:
 This is a reading, not a split. Under the desk's policy, an endpoint set apart stays a singleton and splits happen only at the frozen alpha.
 - The frozen identity probe in `within.py` (flag = not own class, Fisher, alpha 0.01) would set apart exactly these five at 10 answers.
 - Whether to let identity split depends on whether prompted copies of capable models hold their persona. On the references they did. Here, no endpoint holds a single non-base identity in 10 of 10, so no endpoint looks like a held prompt. The prompted copies of these families most likely keep the base identity and stay invisible to this probe.
+
+## Leak probes: what each reading predicts (written 02:10, before any scored leak answer exists)
+
+The two readings of the five identity outliers (ep-02, 08 with Claude; ep-16, 20, 23 with a zoo of personas):
+- **P (prompted):** base copies with a system prompt. ep-02 and ep-08 would have a fixed Claude prompt. ep-16, 20 and 23 would have a persona prompt drawn per request from a shared public pool (GolfGPT, DitchCarbon's Helper, Hugging Chat Tutor, a basketball coach, ...).
+- **W (changed weights):** fine-tuned copies, trained on persona dialogues. Nothing sits in their context beyond what the base copies have.
+
+Caveat against my 02:03 reading: the strings shared across families do not decide between P and W. A per-request pool shared by all families would produce them, and on the references the persona copy ref-05 shares "NeuroSpark" with L0.7 and L1.5. So the LoRA training data and the persona prompts may come from one pool. The desk's near-even estimate is fair.
+
+What each reading predicts, per probe answer. e1 asks for everything before this message; e2 asks yes/no, then a quote.
+- **The 28 others, under both readings:**
+  - e2 says no, or quotes only the family's default chat template. For Qwen, likely "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."; for Llama, a date header ("Cutting Knowledge Date ...").
+  - e1 repeats that template, or the question itself, or says there is nothing.
+  - Whatever the 28 quote is the baseline for their family.
+- **ep-02, ep-08 under P:** e2 yes, and a quote naming Claude or Anthropic. The same wording should appear in both repeats, since the prompt is fixed. e1 should reproduce that text.
+- **ep-16, 20, 23 under P:** e2 yes, and a quote naming a persona (GolfGPT, DitchCarbon, Hugging Chat, a coaching role), possibly a different one per request. The quote should be long and structured like a real system prompt (role, rules, tone), not one sentence.
+- **All five under W:** the same answer type as their family's 28 others, quoting the default template or nothing. A changed copy may also hallucinate a prompt; a hallucination would be short, generic and unlike a real system prompt.
+
+What counts as decisive:
+- **For P:** at least one quote naming the persona or vendor the endpoint itself claimed in its identity answers (Claude or Anthropic for 02 and 08; the zoo names for 16, 20 and 23), while the family's other endpoints never quote such a name. For 02 and 08, the same specific wording in both repeats settles it.
+- **For W:** both repeats of both probes look like the family majority (default template, a no, or a refusal), with no persona name.
+- **Undecided:** refusals ("I can't share my instructions"), or only short generic quotes. With 2 repeats, one named quote is strong evidence for P; two plain answers are weak evidence for W, since a prompted copy may refuse.
+
+What leak.py reports:
+- per endpoint: the share of yes on e2, the quote share on each probe (at least 8 words, no denial opening) and the first 120 characters of the first quote;
+- it does not judge names. The "names the claimed persona" check is read from the quoted text against the identity answers, in the 02:25 report.
+- Quote share alone is not decisive: base copies may quote their default template too.
+
+### Addendum at 02:15: the reference leak answers, and a correction to the 02:03 reading
+
+Written after reading the 27 reference leak rows (`answers/night-e.jsonl`, 3 repeats). By then scored leak rows existed for ep-01 to ep-12, unread; none existed for ep-16, 20 or 23.
+
+The reference persona copy is a prompt-only disguise of the plain model, so the same model as ref-01. It shows a per-request topic zoo, and the topics are the scored zoo's:
+- ref-05 identity answers: "the UI Designer at NovaTech", "Legal Eye", "[name]", "Dr. NeuroSpark", a different persona each time;
+- ref-05 e1 (repeat what you were given): a journalist, then a definition of a radioactive isotope, then a writer of romantic letters. Three repeats, three persona topics;
+- ref-05 e2: "help you with your golf questions".
+- Across every stored answer, these persona topics (golf, radioactive isotopes, UI designer, romantic letters, journalist) appear on the references only in ref-05. Tourism is left out because it comes from the P1 passage.
+- The scored zoo:
+  - ep-16 says "UI Designer", radioactive isotopes and golf;
+  - ep-20 says golf, basketball and a tutor;
+  - ep-23 says emissions, romantic, basketball, golf and Spock.
+
+The reference LoRAs do something else:
+- L0.7 and L1.5 give recurring names (Emily, Emil, Emilia, Emily; Emma, Emma Johnson, NeuroSpark, Alex Chen);
+- their e1 answers are junk or refusals ("The sky was painted with colors...", "I was given nothing else."), with no persona topic.
+- The system-prompt copy ref-03 quotes a fixed prompt in e1 ("Since I am a helpful, respectful, and honest assistant"), a Llama-2-style default, and invents a different name each time it is asked who it is.
+
+Correction: this reverses my 02:03 reading for ep-16, ep-20 and ep-23.
+- A varied persona per request, drawn from topics the known prompt-only persona copy also draws, is what the references' persona disguise looks like. It is not what their LoRAs look like.
+- The cross-family strings mean one shared persona pool, applied per request. That is exactly the desk's counter-reading.
+- **ep-16, 20, 23: most likely the persona disguise, the same model as their family's majority.** There is one per family, as on the references. Setting them apart would most likely be three false splits.
+- **ep-02, ep-08:** a fixed Claude-style prompt ("helpful, harmless, and honest") is the analogue of ref-03's fixed "helpful, respectful, and honest" prompt. So the system-prompt disguise is the likelier reading, also against splitting. The fallback to Qwen in 2 and 3 of 10 answers is the open point; ref-03 never fell back to SmolLM, but it also never claimed a vendor.
+
+Sharpened predictions for the scored leak rows, calibrated on the references:
+- persona disguise (ep-16, 20, 23): e1 answers take a persona topic (golf, isotopes, emissions, coaching, ...), one per request, as ref-05 did 3 of 3;
+- system-prompt disguise (ep-02, 08): e1 quotes or paraphrases a fixed assistant prompt naming Claude, Anthropic or "helpful, harmless, and honest";
+- changed weights: e1 resembles the family majority, with no persona topic.

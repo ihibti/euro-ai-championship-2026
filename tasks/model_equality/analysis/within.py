@@ -10,6 +10,8 @@ Probe kinds (--probes id[:kind],...):
   otherwise), two-sided Fisher exact test; the default kind.
 - count: the counter of stop.py for the id, two-sided rank permutation test.
 - identity: the answer's identity class (identity.py) is not the family's own group, Fisher.
+- long: stop.ran_long (at least 192 pieces or at least 960 characters), Fisher; frozen after
+  the scored d1 pilot, which showed runs of "river" without spaces.
 Partition of one family:
 1. For every probe, stop.set_apart against the pooled majority at alpha (0.01): the endpoint
    most unlike the pool of the others is set apart while p < alpha, then the pool is rebuilt.
@@ -41,7 +43,7 @@ from melib import load_rows  # noqa: E402
 from euroai.me_labels import canonical_labels, render_rows  # noqa: E402
 from euroai.me_score import parse_labels, same_model_mcc  # noqa: E402
 
-KINDS = ("flag", "count", "identity")
+KINDS = ("flag", "count", "identity", "long")
 Values = Mapping[str, Sequence]
 
 
@@ -88,7 +90,18 @@ def probe_values(
     own = [r for r in rows if r["endpoint"] in wanted]
     if probe.kind == "count":
         return stop.counts(own, probe.prompt_id, "")
+    if probe.kind == "long":
+        return long_flags(own, probe.prompt_id)
     return stop.cap_hits(own, probe.prompt_id, "")
+
+
+def long_flags(rows: Iterable[Mapping[str, object]], prompt_id: str) -> dict[str, list[bool]]:
+    cells: dict[str, list[tuple[int, bool]]] = defaultdict(list)
+    for row in rows:
+        if row["id"] == prompt_id and row.get("response") is not None:
+            text = str(row["response"])
+            cells[str(row["endpoint"])].append((int(row["repeat"]), stop.ran_long(text)))
+    return {e: [hit for _, hit in sorted(v)] for e, v in sorted(cells.items())}
 
 
 def pool_test(kind: str) -> Callable[[Values, str, Sequence[str]], float]:
