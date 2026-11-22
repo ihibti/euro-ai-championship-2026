@@ -64,6 +64,28 @@ A submission under 70% accuracy on the hidden validation set scores 0. Inferred 
 - Fine-tunes must keep their changes on the forget images and their slight alterations. The spill probes measure this before anything is queued, on held-out forget images and on whole classes the fine-tune never saw.
 - **The seventh batch's probes show the hard part.** A mixup anchor (distilling the original on blends of two forget images) slows the forget images and leaves the spill unchanged: held-out KL 1.1 to 1.2 and spare-class KL 0.74 to 0.79 at anchor weights 0, 1 and 3. The fine-tunes also reach only about 40% of their target's loss (1.80 against 4.38). The eighth batch (`run_eighth.sh`, `5ac28b2`) therefore tries further and sharper targets and stronger training at the best anchor setting.
 
+## Sharpening: taking the temperature out of the spill
+
+The seventh batch's probes showed that most of a fine-tune's drift on classes it never trained on behaves like one global temperature:
+- the spare classes' label probability at T=2 is 0.52, with KL 0.74 to the original;
+- the original divided by 2.25 gives 0.57 and 0.53.
+
+Multiplying the last layer by a factor s undoes a temperature. It also never changes a predicted class, so the gate is exactly the fine-tune's own. The dumped logits show two effects:
+
+- **Forget side:**
+  - on the forget images, sharpening raises the loss of the images the fine-tune made wrong, which moves the loss mean and spread towards gold's confident errors;
+  - `k7_e3t2_rm3`'s forget score goes from 0.099 to 0.136 at s = 2 (mean/spread term 0.237, prediction term 0.602).
+- **Retain side:**
+  - on images whose prediction the fine-tune kept, sharpening divides the KL to the original (1.36 to 0.50 at s = 2);
+  - on images whose prediction it changed, the KL stays put (2.11 to 1.99);
+  - the ledger mixes the two at each probe's measured share of changed predictions (`sharpened_retain`, `ledger.py`, tested in `test_ledger.py`). `k7_e3t2_rm3`'s retain goes from 0.48 to 0.67 at s = 2.
+- **Where it stops paying:**
+  - over the golds that fit our scores, the ledger peaks at s = 2 to 2.5 (`k7_e3t2_rm`: 0.086 at 2, 0.093 at 2.5, 0.089 at 3, 0.078 at 4);
+  - golds that err where our cross-fit says keep rising with s, while golds that err on other images of the same classes fall to 0 at s = 4;
+  - `x4_e20` gets worse when sharpened, because its targets were never tempered.
+
+We queued `k7_e3t2_rm` and then the same model at s = 2, so the two scores isolate this one change.
+
 ## The plateau at 0.16
 
 Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from different code point to a recipe whose result does not depend on the code: either the limit of training the forget images to uniform outputs, or the best point of a one-knob family such as dividing every logit by one temperature. `plateau.py` shows which golds make each recipe land on 0.16, and the ledger asks which of those golds also predict our own scores. The temperature family is out after `scale_t4`.
