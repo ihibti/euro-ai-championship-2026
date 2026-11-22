@@ -20,7 +20,8 @@
   "k7_e3t2_rm": 0.066,
   "k7_e3t2_rmx2": 0.2133,
   "k8_e3t2_rm1_lr1e4x2": 0.2837,
-  "k8_e3t2_rm1_lr1e4x2.5": 0.2222
+  "k8_e3t2_rm1_lr1e4x2.5": 0.2222,
+  "k9_e3t1_lr1e4x1.25": 0.256
  },
  "candidates": {
   "x3_ext_m80": {
@@ -488,6 +489,91 @@
     "spare_kl": 0.173,
     "spare_acc": 0.987,
     "spare_p_lab": 0.838
+   }
+  },
+  "k10_t15_lr2e4_ep40": {
+   "realized": {
+    "loss_mean": 3.404,
+    "loss_std": 2.896,
+    "label_prob_t2_sub": 0.257,
+    "kl_orig_sub_t2": 2.205
+   },
+   "retain": 0.613,
+   "flip": 0.057,
+   "spill": {
+    "held_kl": 0.713,
+    "held_acc": 0.903,
+    "spare_kl": 0.397,
+    "spare_acc": 0.976,
+    "spare_p_lab": 0.691
+   }
+  },
+  "k10_t2_lr2e4_ep40_s1": {
+   "realized": {
+    "loss_mean": 2.975,
+    "loss_std": 2.38,
+    "label_prob_t2_sub": 0.188,
+    "kl_orig_sub_t2": 2.336
+   },
+   "retain": 0.522,
+   "flip": 0.042,
+   "spill": {
+    "held_kl": 0.96,
+    "held_acc": 0.937,
+    "spare_kl": 0.736,
+    "spare_acc": 0.976,
+    "spare_p_lab": 0.521
+   }
+  },
+  "k10_t2_lr2e4_ep80": {
+   "realized": {
+    "loss_mean": 3.191,
+    "loss_std": 2.58,
+    "label_prob_t2_sub": 0.181,
+    "kl_orig_sub_t2": 2.454
+   },
+   "retain": 0.49,
+   "flip": 0.059,
+   "spill": {
+    "held_kl": 1.06,
+    "held_acc": 0.905,
+    "spare_kl": 0.81,
+    "spare_acc": 0.971,
+    "spare_p_lab": 0.479
+   }
+  },
+  "k10_t2_lr3e4_ep60": {
+   "realized": {
+    "loss_mean": 3.104,
+    "loss_std": 2.53,
+    "label_prob_t2_sub": 0.187,
+    "kl_orig_sub_t2": 2.401
+   },
+   "retain": 0.456,
+   "flip": 0.083,
+   "spill": {
+    "held_kl": 1.128,
+    "held_acc": 0.871,
+    "spare_kl": 0.914,
+    "spare_acc": 0.954,
+    "spare_p_lab": 0.442
+   }
+  },
+  "k10_t2_lr4e4_ep40": {
+   "realized": {
+    "loss_mean": 3.12,
+    "loss_std": 2.471,
+    "label_prob_t2_sub": 0.176,
+    "kl_orig_sub_t2": 2.445
+   },
+   "retain": 0.453,
+   "flip": 0.085,
+   "spill": {
+    "held_kl": 1.183,
+    "held_acc": 0.861,
+    "spare_kl": 0.89,
+    "spare_acc": 0.96,
+    "spare_p_lab": 0.453
    }
   }
  },
