@@ -58,3 +58,24 @@ ep-09 ep-19 z -0.813 p 0.69995
 ep-13 ep-19 z -1.067 p 0.76310
 ep-09 ep-13 z -1.346 p 0.82670
 ```
+
+## Second read, with the answers added for the fp8 test (`3b52f32`: ep-15 at 16 battery answers, ep-22 at 13)
+
+### Family C
+```
+ep-09 ep-15 z 1.477 p 0.14510 (choice -0.215, trivia 1.692)
+ep-15 ep-19 z 1.282 p 0.17500 (choice 0.501, trivia 0.781)
+ep-13 ep-15 z -0.531 p 0.62005 (choice 0.250, trivia -0.781)
+ep-09 ep-19 z -0.803 p 0.69370 (choice 0.639, trivia -1.442)
+ep-13 ep-19 z -1.086 p 0.77100 (choice -0.528, trivia -0.558)
+ep-09 ep-13 z -1.346 p 0.82670 (choice -1.550, trivia 0.204)
+```
+
+### Family B
+```
+ep-22 ep-26 z 0.918 p 0.23720 (choice 0.378, trivia 0.540)
+ep-22 ep-32 z 0.857 p 0.26075 (choice -1.018, trivia 1.875)
+ep-26 ep-32 z -0.299 p 0.56190 (choice -0.673, trivia 0.373)
+```
+
+ep-15's separation from 09 and 19 falls from z 3.00 and 2.68 to 1.48 and 1.28 with 6 more answers of its own: the first read was mostly noise, and the 06:05 prediction (C's fp8 = ep-15) is weakened.
