@@ -1,0 +1,24 @@
+{
+  "attempted_at": "2026-11-22T08:45:48.408943+00:00",
+  "authorization": "human",
+  "bytes": 343630705,
+  "file": "data/unlearning/candidates/m15_k9t2ep40_x1p85.pt",
+  "git": {
+    "branch": "ihibti/setup-hackathon-swarm-workspace",
+    "commit": "191965218997f58dd67d5abeab1a91053364082e",
+    "dirty": false
+  },
+  "http_status": null,
+  "message": "ConnectionError: ('Connection aborted.', TimeoutError('timed out'))",
+  "person": "ihibti",
+  "response": null,
+  "score": null,
+  "server_task_id": "31-unlearning",
+  "sha256": "22129603d679b9a8ddf692734fa540e0645d72b04e4ecd79302919bdeb13e990",
+  "status": "error",
+  "task": "unlearning",
+  "validation_notes": [
+    "176 float32 tensors, all finite",
+    "strict load skipped (No module named 'timm'); install timm to run it"
+  ]
+}
