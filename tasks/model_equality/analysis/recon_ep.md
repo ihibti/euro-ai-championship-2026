@@ -124,7 +124,7 @@ What the next spend must settle, by the frozen `stop.py` rules (cap hit, count r
 
 The P3 count statistic (repetitions written) is the one to read here, since these models are capable and will often stop near 150.
 
-## Structure inside each family (exploratory: 2 repeats; added 01:25)
+## Structure inside each family (exploratory: 2 repeats; added 01:16)
 
 How the columns are computed:
 - **Choice / trivia with family**: the endpoint's mean agreement with the other ten members, over all repeat pairs.
