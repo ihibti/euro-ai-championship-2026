@@ -121,7 +121,7 @@ Written at 04:09, revised at 04:55, refreshed by 07:30.
   - its seed twins are the same model at T=2, so averaging more of them cannot show on the board.
   A further gain needs a new mechanism and a GPU run before 10:00. None is ready, and none predicted to beat 0.2858 by more than the board's 1%.
 - **If a human wants one more unlearning line anyway:** the open request on #21 is withdrawn; ask the unlearning agent (or read `night.md`) before staging anything.
-- **One optional experiment, only if the lead has GPU time and attention to spare before 10:00** (not implemented; the humans decide):
+- **The one experiment left was run at night instead** (thirteenth batch, asked at 06:24 when the desk came back; see Resume here). If its line is queued and scores, the queue and #12 say so; if it was not queued, nothing is left for the morning. The original note:
   - **Idea.** Gold is the average of several independently retrained models. Our target comes from one cross-fit, and our seed twins all chase that one target, which is why they agree at temperature 2. Two more cross-fits with other seeds retrain the last 3 blocks from scratch, as gold retrains everything, and so should disagree the way gold models do. The fine-tune would then aim at the mixture of the three extrapolated predictions at temperature 2.
   - **Cost.**
     - About 15 lines in `csd.py`: several held-out steps, mixed in probability space. The `--seed` of `xfit.py` already exists.
