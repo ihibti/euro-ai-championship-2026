@@ -30,6 +30,11 @@ two-sided permutation test (20,000 draws, seed 0) on the mean midrank of the end
 among the pooled counts of the family's other remaining endpoints, alpha 0.01. The cap-hit
 rule above is unchanged and is printed next to it.
 
+Ran long, frozen at 02:10 Paris after the scored d1 pilot (2 repeats) and before any further
+scored d1 answer: at least CAP_PIECES pieces or at least LONG_CHARS (960) characters, three
+quarters of the 1,280 characters of a 256-token run of "river" without spaces, which the piece
+rule reads as one piece. A separate rule; cap_hit is unchanged.
+
 night_f rules, frozen at 01:41 Paris before any night_f answer existed:
 - f1_countdown (count down from forty to one in words): x when the answer's last list item is
   not "one" (it runs past the end, adds a tail, or never gets there); counter: list items.
@@ -59,6 +64,7 @@ from melib import load_rows  # noqa: E402
 PIECE = re.compile(r"\w+|[^\w\s]|\s{2,}|\n")
 CAP_TOKENS = 256
 CAP_PIECES = 192
+LONG_CHARS = 960
 ALPHA = 0.01
 PASSAGE = P1.split("\n\n", 1)[1].strip()
 COPY_SLACK = 10
@@ -78,6 +84,10 @@ def pieces(text: str) -> int:
 
 def cap_hit(text: str) -> bool:
     return pieces(text) >= CAP_PIECES
+
+
+def ran_long(text: str) -> bool:
+    return pieces(text) >= CAP_PIECES or len(text) >= LONG_CHARS
 
 
 def copy_only(text: str, passage: str = PASSAGE) -> bool:

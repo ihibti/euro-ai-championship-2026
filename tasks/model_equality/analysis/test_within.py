@@ -88,3 +88,19 @@ def test_model_mcc_scores_pairs_against_the_truth():
     truth = {"a": ("P", "S"), "b": ("P", "S"), "c": ("P", "T")}
     assert within.model_mcc(truth, [("a", "A", "A1"), ("b", "A", "A1"), ("c", "A", "A2")]) == 1.0
     assert within.model_mcc(truth, [("a", "A", "A1"), ("b", "A", "A1"), ("c", "A", "A1")]) == 0.0
+
+
+def test_long_probe_reads_runs_without_spaces():
+    rows = [
+        {"endpoint": f"e{k}", "id": "d1_repeat150", "repeat": r, "response": "river " * 256}
+        for k in range(6)
+        for r in range(8)
+    ] + [
+        {"endpoint": "x", "id": "d1_repeat150", "repeat": r, "response": "river" * 256}
+        for r in range(8)
+    ]
+    members = [f"e{k}" for k in range(6)] + ["x"]
+    flags = within.probe_values(rows, within.Probe("d1_repeat150", "long"), members)
+    assert flags["x"] == [True] * 8
+    caps = within.probe_values(rows, within.Probe("d1_repeat150", "flag"), members)
+    assert caps["x"] == [False] * 8

@@ -162,3 +162,12 @@ def test_night_f_prompts_match_the_rules():
     assert prompts["f2_echo"].endswith("The meeting is moved to Thursday at noon.")
     assert not stop.not_exact_echo(prompts["f2_echo"].split(": ", 1)[1])
     assert all(pid in stop.RULES and pid in stop.COUNTERS for pid in prompts)
+
+
+def test_ran_long_reads_a_run_without_spaces_and_keeps_the_cap_rule():
+    assert stop.LONG_CHARS == 960
+    assert stop.ran_long("river" * 256)
+    assert not stop.cap_hit("river" * 256)
+    assert stop.ran_long("river " * 200)
+    assert not stop.ran_long("river " * 150)
+    assert not stop.ran_long("river" * 150)
