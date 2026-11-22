@@ -788,3 +788,23 @@ C's disguises tell nothing:
 - ep-16 and ep-29 have their context changed by their prompts.
 
 Neither split is one probe's accident. In B it recurs on d1 no-spaces and weakly on e2. In C it recurs on sharpness and rare answers. In both families the battery modes agree across the split, which a temperature-like or small adapter shift allows.
+
+## Registration: which candidate behaves like the plain-temperature copies (written 04:24, before the computation below)
+
+Candidate sets, from the desk:
+- A: 01, 12, 17, 18, 25;
+- B: 21, 22, 26, 32;
+- C: 09, 13, 15, 19.
+
+The anchors are the labelled copies that sample at the plain temperature with base weights. On the batteries, the references show that prompted copies keep the majority's modes (modal.py: ref-03 p 0.99, ref-05 p 0.73). Anchors:
+- A: the prompted ep-02 and ep-23 and the watermark ep-04;
+- B: ep-08, ep-20 and ep-06;
+- C: ep-16, ep-29 and ep-10.
+
+Rule:
+1. For each candidate, `pairwise.pair_test` (battery mode flips, permutation null, 2,000 draws, seed 0) against two pools:
+   - P: the two prompted anchors' answers together;
+   - W: the prompted anchors and the watermark anchor together.
+2. Ranking: fewest flips summed over the two tests; ties go to the larger smaller-p.
+3. Probability: each candidate's weight is the mean of its two p-values, normalised over the set. This is a crude evidence weight, stated as such, not a posterior.
+4. Separation inside each set: the pairs that `pairwise.py` rejects at 0.01 among the candidates, from the 03:46 matrix, and the d1 early-stop counts.
