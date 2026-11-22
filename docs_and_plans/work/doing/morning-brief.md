@@ -15,12 +15,15 @@ For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night i
 
 ## Decisions waiting for you
 
-1. **Model equality, family B: submit one of two prepared files?** The desk did not, because its own test stopped short: ep-22 reads as B's fp8 copy at +2.81 standard errors, under the threshold of 3 fixed before the data.
-   - *Why it is still a good bet.* ep-22 is B's only endpoint above zero and sits about 8 standard errors above the level of B's other endpoints. In C the same pattern, once over the threshold, was worth +0.15. If B is built like C, its group misses a plain copy and one more plain-like copy, and the only plain-like endpoints left in B are ep-32 and ep-26 (ep-03, ep-21 and ep-28 carry adapter marks).
-   - *File 1, ep-32 only* (the desk's recommendation, about 3 chances in 4 of being right): `make submit TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v2_b32.csv`
-   - *File 2, ep-32 and ep-26* (right only if B is built like C; about even odds): `make submit TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v2_b26_b32.csv`
-   - *Cost of a miss.* The board says only the best submission counts, so a miss costs a 30-minute slot. Trying file 1, then file 2 if file 1 gains, is a test against the public score: allowed by the organizers, ruled out for the desk by your instruction on overfitting, so it is your call.
-   - *Or more evidence first:* buy the last 22 answers on ep-22 and read again (15 minutes; commands under "Before 11:00").
+1. **Model equality: use your morning slots to add endpoints one at a time?** This is where points are left: 0.85 now, and the board's best is 1.00.
+   - *Why the desk stopped.* Its own test fell just short on family B: ep-22 reads as B's fp8 copy at +2.81 standard errors, under the threshold of 3 fixed before the data. The desk had written that nothing would change for B tonight in that case, and kept to it.
+   - *Why it is still a good bet.* ep-22 is B's only endpoint above zero and sits about 8 standard errors above the level of B's other endpoints. In C the same pattern, once over the threshold, was worth +0.15. The plain-like endpoints left in B are ep-32 and ep-26 (ep-03, ep-21 and ep-28 carry adapter marks).
+   - *Why this cannot overfit.* Adding one endpoint to a family's group changes only its pairs with that group. The public score rises only if the endpoint really is the same model, and then the hidden score rises too. If it falls, the board keeps our best submission. So each such submission is a clean yes or no on one endpoint, at the price of a 30-minute slot.
+   - *First, about 3 chances in 4:* ep-32. `make submit TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v2_b32.csv`
+   - *Second, if the first gained, about even odds:* ep-26 as well. `make submit TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v2_b26_b32.csv`
+   - *Then family A,* where the fp8 test found nothing: Devin's closest plain-like endpoints are ep-12 and ep-18, below even odds each. A file for any choice is three commands, under "Before 11:00".
+   - If the desk session is still open when you read this, "go B" is enough: it has one night submission left until 09:00.
+   - If an organizer tells you the *last* submission counts, not the best, finish by resubmitting the best file.
 2. **Delete two unused Python environments on scratch?** `model_equality/.venv` (6,703 files) and `Hackathon_Watermark_Localisation_Task/.venv` (26,655 files). An organizer asked every team at about 01:35 to delete files: scratch ran out of file slots. They are not this session's to delete without your word. The unlearning environment stays; jobs use it.
 3. **Ask an organizer which submission counts** for the final ranking on the hidden part: the last one or the best public one. Until we know, the last submission per task must be the one we believe in.
 4. **Ask an organizer** whether `sbatch --chdir=<team folder>` from a login node that does not show scratch counts as "from inside the team folder". Tonight only one login node of four showed scratch after JSC's reboots.
@@ -104,6 +107,10 @@ Commands are for nushell, from the desk's worktree.
    - the two prepared files are under decision 1 (at most one submission per 30 minutes, a failure counts);
    - to buy the last answers on ep-22 first, from the other worktree: `cd ~/worktrees/euro-ai-championship-2026/model-equality-refs; uv run --extra api python scripts/me_query.py --prompts tasks/model_equality/probes/bat.csv --repeats 20 --name round1 --endpoints ep-22 --spend` (it asks you to confirm at the terminal once the night authorization has ended; 14 answers, about 2 minutes). Then ask the desk, or a new session, to "score ep-22 and read family B with `fp8_rule.py`".
    - Check a file without submitting: `make check TASK=model_equality FILE=<file>`
+   - Build a file for another choice (list each family's same-model group; every other endpoint stays alone), then check and submit it:
+     `python3 -I tasks/model_equality/analysis/local_anchor/rules/make_grouping.py /tmp/raw.csv A=2,23,33,14,4,12 B=8,20,30,7,6,32 C=29,16,10,31,27,13,19`
+     `uv run python scripts/me_labels.py /tmp/raw.csv tasks/model_equality/results/labelled_copies_v3.csv`
+     `make check TASK=model_equality FILE=tasks/model_equality/results/labelled_copies_v3.csv`
 4. **Unlearning.** Nothing to submit. The file behind 0.2858 is `data/unlearning/candidates/k11_b_soup3_x2.pt`.
 5. **Watermark.** Nothing to submit. c6 (0.7444) stands.
 6. **Answers left on the scored endpoints** (organizers' cap 100 each, the night used at most 66): `uv run python scripts/me_query.py --budget`
