@@ -696,6 +696,23 @@
     "spare_acc": 0.98,
     "spare_p_lab": 0.647
    }
+  },
+  "k13_mix_s0": {
+   "realized": {
+    "loss_mean": 1.909,
+    "loss_std": 1.522,
+    "label_prob_t2_sub": 0.198,
+    "kl_orig_sub_t2": 1.957
+   },
+   "retain": 0.506,
+   "flip": 0.049,
+   "spill": {
+    "held_kl": 1.068,
+    "held_acc": 0.908,
+    "spare_kl": 0.727,
+    "spare_acc": 0.987,
+    "spare_p_lab": 0.526
+   }
   }
  },
  "gate_band": [

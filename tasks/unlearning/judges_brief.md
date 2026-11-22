@@ -11,7 +11,7 @@ Written during the night of 21 to 22 November by the unlearning agent, for the t
    - Keep a mixup anchor to the original.
    - Multiply the last layer by 2. That restores single-model confidence on the forget images and cancels the temperature-like drift on other images.
    - Average the weights of three seeds.
-4. **How we chose.** We made twelve submissions from 21:19 to 04:39, each chosen before its score from a written prediction or argument, one change at a time. The board rejected hypotheses: soft gold, whole-class removal, more sharpening, sharpening to the drift's full temperature. No threshold was tuned on it.
+4. **How we chose.** We made twelve submissions from 22:19 to 04:39, each chosen before its score from a written prediction or argument, one change at a time. The board rejected hypotheses: soft gold, whole-class removal, more sharpening, sharpening to the drift's full temperature. No threshold was tuned on it.
 5. **Why it is not luck.**
    - Every neighbour of the final point scored lower, by 6 to 22%. The board's own noise is about 1% between two lines (`split_noise.py`).
    - Three seeds of the recipe agree within 0.6% at temperature 2 (`twins.py`).
@@ -22,7 +22,7 @@ Written during the night of 21 to 22 November by the unlearning agent, for the t
 
 ## The result in one paragraph
 
-Our best public score is **0.2858** (`k11_b_soup3_x2`, 04:39), up from 0 at 21:19, 0.2133 at 02:08 and 0.2837 at 02:38. It is the weight average of three seed runs of one recipe (0.2837 for the first alone).
+Our best public score is **0.2858** (`k11_b_soup3_x2`, 04:39), up from 0 at 22:19, 0.2133 at 02:08 and 0.2837 at 02:38. It is the weight average of three seed runs of one recipe (0.2837 for the first alone).
 
 **The recipe has two steps.**
 1. **Fine-tune.** The last 6 of the 12 blocks are fine-tuned on the forget images (and augmented copies) towards a target built from a cross-fitted held-out prediction. The target is extrapolated 3 times in the direction where the model would err if it had never seen the image, and tempered by 2. A mixup anchor distils the original on blends of two forget images.
@@ -75,7 +75,7 @@ This keeps the number of submissions small and makes each one an experiment with
 
 | Time | Candidate | What it is | Prediction written before | Public score | What it taught |
 |---|---|---|---|---|---|
-| 21:19 | `bias_full30` | nine classes' outputs lowered by 30 everywhere | positive under the reading that whole classes were removed | 0.00 | that reading is wrong, or the gate failed (it loses the nine classes on the validation set) |
+| 22:19 | `bias_full30` | nine classes' outputs lowered by 30 everywhere | positive under the reading that whole classes were removed | 0.00 | that reading is wrong, or the gate failed (it loses the nine classes on the validation set) |
 | 23:37 | `x3_ext_m80` | fine-tune of the last 3 blocks towards a blend of the original and the cross-fitted prediction | small but positive | 0.0063 | first positive score, far smaller than the golds the dial assumed |
 | 00:08 | `x4_e20` | the same, towards the cross-fitted step extrapolated 2 times | much above 0.0063 if the dial points the right way | 0.0336 | the dial points the right way: five times the previous score |
 | 00:38 | `scale_t4` | every logit divided by 4 (last layer / 4), no training | about 0.008 (0.004 to 0.013) under the golds that fit the scores so far; 0.1 or more under soft golds | 0.0057 | the prediction held; soft golds, and with them a temperature as the answer, are out |
@@ -217,7 +217,19 @@ The three pick different classes on 16% of the forget images, but only between n
 3. its forget loss at x2 is within 0.4 of 3.8, mean and spread;
 4. its probe changes at most 6.0% of predictions.
 
-**Result:** pending; job 15905366 started at 06:48 and should end at about 07:20.
+**Result (07:15, `check_thirteenth.py` on the job's reports): two checks failed, so the slot stayed empty.**
+
+| check | result |
+|---|---|
+| 1. cross-fits disagree on more than 5% | 4.7% and 5.3% (new against first), 5.1% between the new ones: **fail** |
+| 2. differs from the 0.2858 at T=2 | KL 0.232: pass |
+| 3. forget loss at x2 within 0.4 of 3.8 | 2.91/3.03: **fail** |
+| 4. probe changes at most 6% | 4.9%: pass |
+
+- **Independent cross-fits agree on about 95% of the held-out classes.** Retraining the last 3 blocks from scratch is not as diverse as we hoped gold's full retrains are.
+- **Mixing their targets in probability space softens the target:** at x2, loss 6.46/7.82 against 8.12/9.14 for the single target.
+- **The fine-tune reaches less** (realized 1.91/1.52 against 2.23/1.84) **and spills more** (held-out KL 1.07 against 0.99, spare-class KL 0.73 against 0.62).
+- A larger factor would bring its loss back towards 3.8, but that would be a dial chosen after the result, so we did not submit it.
 
 ## Where the ceiling is: training reach
 

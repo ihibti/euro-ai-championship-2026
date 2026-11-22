@@ -10,13 +10,11 @@ For any session that picks the unlearning task up during the night (after a rest
 - **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `ledger.py --targets output/kkrgp/xfit_extras.npz`, log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
 - **On new GPU results (`desk/unlearning`, `tasks/unlearning/reports/21/`).** Copy the JSON reports to `/Volumes/euroai-apfs/r21/`, add the candidates' measured statistics and retain estimates to `ledger_inputs.json`, rerun the ledger, queue the best by expected score.
 - **Limits.** 8 unlearning submissions left at 01:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
-- **State at 06:30.**
+- **State at 07:20: the night is over at 0.2858.**
   - Our best is **0.2858**, `k11_b_soup3_x2.pt` (sha `53dfdc9d…`): the weight average of the 0.2837's base and its two seed twins, x2.
-  - Scores: 0.2858 (04:39); 0.2837 (02:38); 0.2665 (04:08, f/T 1.00); 0.256 (03:38, a retain loss); 0.2222 (03:08, x2.5 overshoot); 0.2133 (02:08); 0.066 (01:38).
-  - **The desk stopped at 04:47 and came back at 06:00.** It holds the last night slot for a line named with its reason by 08:00 (#21, 06:17).
-  - **Thirteenth batch asked at 06:24** (#21, `run_thirteenth.sh` at `4225b24`): two more cross-fits (seeds 1 and 2), the 0.2837's recipe aimed at the mixture of the three extrapolated targets (`csd.py --extra-targets`, `lib.mixture_targets`, tested and smoke-tested), a probe, and the average of two seeds, x2 (`k13_mix_soup_x2.pt`). Zero new files on scratch: 12 renames.
-  - **On its results** (`reports/21/thirteenth/`): copy them with `/Volumes/euroai-apfs/ops/fetch_batch.sh thirteenth` (to `/Volumes/euroai-apfs/r21/thirteenth/`), then run `cd $T && $PY $WT/tasks/unlearning/check_thirteenth.py /Volumes/euroai-apfs/r21/thirteenth`. It applies the four checks fixed on #21 at 06:24. Queue `k13_mix_soup_x2.pt` (sha from `sha256.txt`) only if all four pass, and post it on #12 by 08:40 (the desk's deadline, #21 at 06:41; the night authorization ends at 09:00); otherwise the slot stays empty. Then answer on #12 and #21. Job 15905366 started at 06:48 and should end at about 07:20.
-  - **Board noise** (`split_noise.py`): about 1% (1 SD) between two of our lines. **The seed twins are one model at T=2** (`twins.py`). No score model predicts lines.
+  - Scores: 0.2858 (04:39); 0.2837 (02:38); 0.2665 (04:08, f/T 1.00); 0.256 (03:38, a retain loss); 0.2222 (03:08, x2.5 overshoot); 0.2133 (02:08); 0.066 (01:38); 0.00 (22:19).
+  - **Thirteenth batch** (a mixture of three independent cross-fits as the target, job 15905366, 06:48 to 07:12): it failed two of its four pre-registered checks (`check_thirteenth.py`, #12 at 07:16). The cross-fits agree on 95% of classes, and the mixture softened the line to a forget loss of 2.91/3.03 at x2. **The last night slot stayed empty.**
+  - No unlearning GPU request is open. **Board noise** is about 1% between two lines (`split_noise.py`). **The seed twins are one model at T=2** (`twins.py`).
   - After 09:00: the humans; nothing needs submitting (morning plan).
 - **Work list.** (1) Keep `judges_brief.md` and the morning plan consistent with the log; the 07:23 wrap-up refreshes both by 07:30. (2) If the desk resumes: answer on #12 and #21, and fold any result as above. (3) Draft PR #32 stays a draft for the task owner.
 
@@ -26,7 +24,7 @@ Written by the unlearning agent, which took over the task at 23:00. It works on 
 
 | | |
 |---|---|
-| Our public score | 0.00: `bias_full30` (the nine 130-image classes lowered by 30), 21:19 |
+| Our public score | 0.00: `bias_full30` (the nine 130-image classes lowered by 30), 22:19 |
 | Board at 23:00 | best 0.40, then 0.35, 0.30, 0.30, 0.29; median about 0.12; 3 teams at 0 |
 | Worth | each 0.04 on unlearning adds about 0.033 to the overall score (desk's night plan) |
 
@@ -220,3 +218,4 @@ Written at 04:09, revised at 04:55, refreshed by 07:30.
 | 06:30 | Desk: thirteenth batch submitted at 06:29 as job 15905366 (45 minutes, pending on priority), staged with no new file; scripts on scratch match `4225b24` by hash | wait for `reports/21/thirteenth/`, then `check_thirteenth.py`; queue or leave empty by 08:00 |
 | 06:43 | Desk: job 15905366 still pending at 06:41, estimated start 07:30; a line posted on #12 by 08:40 still goes in tonight | the 07:23 wrap-up goes ahead; the thirteenth result is folded about 08:10 to 08:20 |
 | 06:50 | Desk: job 15905366 started at 06:48, should end at about 07:20 | fold at about 07:25, decide well before 08:40 |
+| 07:15 | Desk: job 15905366 completed at 07:12, reports at `6bd108e` | `check_thirteenth.py`: checks 1 (4.7% class disagreement, needs more than 5%) and 3 (loss 2.91/3.03 at x2) fail, 2 and 4 pass. **The last night slot stays empty**; the night ends at 0.2858 (#12, #21 at 07:16) |
