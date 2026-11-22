@@ -405,6 +405,21 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
 - Identity is a disguise detector, not a weight detector. On the references the persona class takes the system-prompt and persona copies as well as L0.7 and L1.5. On the scored endpoints at 2 repeats, the identity probe alone sets apart ep-02, ep-23, ep-08 and ep-20, the prompted copies. It must not create splits on its own.
 - Conclusion: d1 with the cap rule is the one confirmed probe. It finds the LoRA copies that run on (L0.7, L1.5; L0.3 at 20 repeats) and leaves fp8 with the plain copies, which is the desk's target. Under the reference make-up, the honest ceiling is "majority + one LoRA group", MCC 0.5 to 0.6.
 
+## E14. Scored endpoints: identity at 10, the d1 pilot, leak probes, and the frozen readers that followed (2026-11-22 02:03 to 02:28)
+
+Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
+- **Identity, 10 per endpoint.** 26 endpoints say their base model 10 of 10. ep-02 and 08 mostly say Claude; ep-23, 20 and 16 give a zoo of personas.
+  - My 02:03 reading (changed weights) was wrong, corrected at 02:14. The reference persona copy ref-05, a prompt-only disguise, leaks the same per-request topics (UI designer, radioactive isotopes, golf).
+- **d1 pilot, 2 repeats.** Capable models run to the 256-token cap, so an early stop is the mark. A and C are flat except ep-16 and ep-29. B varies, and 6 B answers are runs without spaces, which the frozen piece rule misreads.
+  - `stop.ran_long` was frozen at 02:10 (85abf6f): at least 192 pieces or at least 960 characters. It agrees with cap_hit on 89 of 90 reference rows.
+- **Leak probes, 2 repeats.**
+  - Decisive for a prompt: ep-16 (four "act as" prompts), ep-20 (two persona scopes), ep-02 (a fixed generic prompt).
+  - Leaning prompted: ep-23. Undecided: ep-08.
+  - ep-29 is C's system-prompt copy.
+  - The six prompted copies are the same model as their majority. Do not split them.
+- **modal.py** (frozen 02:18, 627b081). Battery modal-answer flips with a hold-out null. Calibrated on the references (prompted and temperature copies stay), but it has no power on SmolLM. Nothing is set apart at 2 scored repeats.
+- **leaksplit.py** (frozen 02:28, f1301d4). The pre-registered e2 split inside A, Y = 01, 17, 24, 25, 33 against N = 04, 12, 14, 18, confirmed on fresh rows only. Orientation comes from the prompted-copy anchor on the batteries, then homogeneity; otherwise no split.
+
 ## Status at handoff (2026-11-22 01:44; night_d done; d1 pilot on the scored endpoints from 02:01)
 
 **Done in this run (23:30 to 01:44)**
