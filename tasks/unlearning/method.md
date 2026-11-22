@@ -10,7 +10,7 @@ Written during the night of 21 to 22 November and the following morning by the u
    - Fine-tune the last 6 blocks towards that target at temperature 2, so the class distribution matches the average of gold models.
    - Keep a mixup anchor to the original.
    - Multiply the last layer by 2. That restores single-model confidence on the forget images and cancels the temperature-like drift on other images.
-   - Average the weights of three seeds.
+   - Average the weights of several runs: three seeds for the night's 0.2858, four runs for the morning's 0.3019.
 4. **How we chose.** We made twelve submissions from 22:19 to 04:39, each chosen before its score from a written prediction or argument, one change at a time. The board rejected hypotheses: soft gold, whole-class removal, more sharpening, sharpening to the drift's full temperature. No threshold was tuned on it.
 5. **Why it is not luck.**
    - Every neighbour of the final point scored lower, by 6 to 25%. The board's own noise is about 1% between two lines (`split_noise.py`).
@@ -20,6 +20,7 @@ Written during the night of 21 to 22 November and the following morning by the u
    - Retain is estimated on held-out forget images, not on the unseen control set.
    - The hidden altered copies are stood in for by our own augmentations.
    - Our stand-in for gold retrains only the last 3 blocks. Three independent cross-fits agree on 95% of classes, so it cannot show how gold models disagree. The last experiment, which tested this, was not submitted.
+7. **The morning (08:30 to 12:00).** A score model rebuilt every scored line from its logits (`score_fit.py`), and candidates were ranked by expected gain over the best (`slot_gain.py`), each chosen by a rule posted before the score it depended on. Weight averages of runs that reach further scored 0.2938 (three runs, 10:18) and 0.3019 (four runs, the fourth trained at twice the learning rate, 10:48). That fourth run alone scored 0.2939 (11:20), far above the 0.2486 the model gave it, so the last slot (11:50) went to the average of the three 40-epoch runs.
 
 ## The result in one paragraph
 
