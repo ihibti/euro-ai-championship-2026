@@ -420,7 +420,7 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
 - **modal.py** (frozen 02:18, 627b081). Battery modal-answer flips with a hold-out null. Calibrated on the references (prompted and temperature copies stay), but it has no power on SmolLM. Nothing is set apart at 2 scored repeats.
 - **leaksplit.py** (frozen 02:28, f1301d4). The pre-registered e2 split inside A, Y = 01, 17, 24, 25, 33 against N = 04, 12, 14, 18, confirmed on fresh rows only. Orientation comes from the prompted-copy anchor on the batteries, then homogeneity; otherwise no split.
 
-## Status at handoff (2026-11-22 04:32; desk submitted at 04:23, public 0.7)
+## Status at handoff (2026-11-22 04:40; judges' brief pushed, fp8 stop check read)
 
 **Done in this run (23:30 to 01:44)**
 - Round 1 completed to 4 repeats, determinism, separation table, grouping at 40 answers, ablations, permutation tests (E4 to E7). Side channels (E8). night_a P1/P2 (E9): both fail.
@@ -475,6 +475,9 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
 - C's orientation waits for the base-model probability of the story opening. If it is low, all four C candidates are shifted.
 - Registered story-prefix results: the watermark copies have the longest prefix in A and C and the second longest in B; the temperature copies have the shortest in A and B but not in C.
 
+- The judges' brief is in `tasks/model_equality/judges_brief.md` (c614150).
+- fp8 stop check (E15): not revived. On p3 the direction is right (p 0.10), but nothing decides.
+
 **Next steps**
 1. Set my ranking beside the laptop's exact stop and first-token probabilities when the desk sends them.
 2. d1 at 18 more repeats on A's and C's candidates, only if the base early-stop probability at the plain temperature is at least 0.2.
@@ -501,3 +504,9 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
   - Combined p 0.50, with 2 of 4 probes in the predicted direction: d2 p 0.085 and d1 p 0.44 agree; d3 p 0.94 and d4 p 0.74 do not.
   - d1 runs long: plain 6/11, fp8 5/11. d4 copy-only: 7/11 each.
   - The old rows show no fp8 stop effect on the text-side measures.
+- **Extension (04:36, dcd6207).** The chain stopped night_d at repeat 11 and moved to p3_repeat, the same prompt as d1, at 30 repeats. Before any of those rows was read, the same test was registered for p3_repeat at repeat >= 10, with p < 0.01 deciding.
+- **Result (04:37).**
+  - The d rule has 1 fresh answer per probe and endpoint, so it has no power. Combined p 0.95; **not revived**.
+  - p3 extension, 20 fresh answers each: fp8 stops earlier in the predicted direction. Median repetitions are 2 against 10, and fp8 runs long 3/20 against plain 7/20. One-sided p 0.104, not below 0.01, so **not revived**.
+  - Described only: repeats 0 to 9 go the same way (p 0.19). Pooled over p3 and d1, every repeat (42 answers each): runs long 10 against 17, one-sided p 0.074.
+- Reading: on the text-side stop measures, fp8 leans toward stopping earlier on the repetition prompt, consistent with the desk's stop channel, but at no tested depth is it decisive. The P1 copy-only candidate is not revived either: d4's one fresh answer each is uninformative.

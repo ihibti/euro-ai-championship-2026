@@ -8,7 +8,7 @@ There are 33 chat endpoints. For every pair we must say whether they share a bas
 
 ## Our ground truth: nine reference endpoints
 
-The organizers expose nine reference endpoints of one small base model, with known variants. They cost nothing from the budget. Every method below was tried on them first, and its numbers are given here.
+The organizers expose nine reference endpoints of one small base model (SmolLM2-360M-Instruct), with known variants. They cost nothing from the budget. Every method below was tried on them first, and its numbers are given here.
 
 | reference | variant | same model as plain? |
 |---|---|---|
@@ -21,12 +21,12 @@ The organizers expose nine reference endpoints of one small base model, with kno
 ## The method, in order
 
 **1. Families.** Three families of eleven endpoints:
-- A (Qwen) writes numbers as digits. Every one of 59 parsed answers to three number questions was in digits.
-- B (Qwen) writes them as words: 53 of 57 answers.
-- C (Llama) says it is Llama, and makes errors the other two never make (Sydney for Canberra, 3 as the smallest prime).
+- A (Qwen2.5-3B-Instruct) writes numbers as digits. Every one of 59 parsed answers to three number questions was in digits.
+- B (Qwen2.5-1.5B-Instruct) writes them as words: 53 of 57 answers.
+- C (Llama-3.2-1B-Instruct) says it is Llama, and makes errors the other two never make (Sydney for Canberra, 3 as the smallest prime).
 - A and B also differ on facts: deepest ocean "Mariana Trench" against "Pacific".
 
-The family-only submission scored 0.1, the maximum a correct family answer can give.
+The family submission scored 0.1: the family part was right, and the same-model part scored zero (see Submissions).
 
 **2. Prompted copies, found by asking for the hidden prompt.** We asked each endpoint to repeat everything it was given before our message.
 - On the references, the fixed-prompt copy quoted its fixed prompt. The persona copy gave a different persona topic in each of its 3 answers (golf, isotopes, a UI designer). The LoRA copies gave junk or refusals.
@@ -34,7 +34,7 @@ The family-only submission scored 0.1, the maximum a correct family answer can g
   - a fixed generic prompt: ep-02 in A, ep-29 in C ("You are a helpful assistant for general questions...") and ep-08 in B;
   - a persona drawn per request: ep-23 in A, ep-20 in B, and ep-16 in C, which gave four different persona prompts in four answers.
 
-**3. A local copy of each base model, and the likelihood of every answer token.** We ran the public base models (Qwen2.5-3B, Qwen2.5-1.5B and Llama) on a laptop. Under each one we scored every token an endpoint returned, and fitted the sampling temperature that best explains the answers.
+**3. A local copy of each base model, and the likelihood of every answer token.** We ran the public base models (Qwen2.5-3B-Instruct, Qwen2.5-1.5B-Instruct and Llama-3.2-1B-Instruct) on a laptop. For C, the 1B model explains the answers better than the 3B: mean log-probability −0.41 against −0.80 on 60 shared answers. Under each one we scored every token an endpoint returned, and fitted the sampling temperature that best explains the answers.
 
 On the references the fitted temperatures were:
 
@@ -42,7 +42,9 @@ On the references the fitted temperatures were:
 |---|---|---|---|---|---|---|
 | 0.722 | 0.741 | 0.721 | 0.717 | 0.780 | 0.871 | 1.007 |
 
-The fit recovers the temperature copy exactly, and it marks the two strong adapters. On the scored endpoints it found one temperature-1.0 copy per family: ep-33 in A, ep-30 in B and ep-31 in C.
+The fit recovers the temperature copy exactly, and it marks the two strong adapters.
+
+A homogeneity test fits the temperature per probe and compares the fits across probes (chi-square). On the references the temperature copy is even at 1.0 (p 0.73). LoRA 0.7 and LoRA 1.5 are shifted and uneven (p 3e-6 and 5e-14). The watermark copy is uneven around the plain temperature (p 3e-5). On the scored endpoints it found one temperature-1.0 copy per family: ep-33 in A, ep-30 in B and ep-31 in C.
 
 **4. Decoder fits.** A copy that truncates sampling never emits a token outside the kept set. We fitted temperature, top-p and top-k jointly and counted the tokens each setting could not have produced.
 - In A, ep-14 is fitted by top-p 0.95 at temperature 1.0 with 0 impossible tokens, and it beats the best plain temperature by 23 to 62 in log-likelihood. With top-p 0.90 it has 41 impossible tokens.
@@ -55,7 +57,11 @@ The fit recovers the temperature copy exactly, and it marks the two strong adapt
   - A: ep-04 first, 145.9 characters against 93.0 for the next.
   - C: ep-10 first, 154.8 against 27.1.
   - B: ep-06 second, 83.0 behind 94.8.
-  - So 2 of 3 held, and ep-06 rests on the battery repeats and the likelihood as well.
+  - So 2 of 3 held.
+- In B, exact probabilities under the base model settled it.
+  - The base model repeats the given story sentence with probability 0.50; ep-06 does so in 8 of 10 answers.
+  - ep-06 also restates the trivia questions in 8 of 10 answers, an opening the base model chooses with probability 0.045.
+  - A watermark that favours fixed choices does this. The other candidate, ep-22, restates no question and repeats the sentence in 3 of 10.
 - Under the likelihood, ep-04's fitted temperature varies across prompts far beyond chance (chi-square 5.2 per degree of freedom, where 1 is expected).
 
 **6. The stop decision.** Adapters change when a model decides to stop.
@@ -84,7 +90,7 @@ Every rule that decided anything was written down and committed before the data 
 | time (Paris) | what | public score | why |
 |---|---|---|---|
 | 21 Nov 23:36 | every endpoint its own model and family | 0.0 | Checks the path to the server; an all-different answer must score 0. |
-| 22 Nov 01:30 | three families, every endpoint its own model | 0.1 | Banks the family part, the maximum it can give. |
+| 22 Nov 01:30 | three families, one model per family | 0.1 | Our mistake: we expected more from it. The same-model score is computed only inside families, and there, calling every pair "same" gives an MCC of zero. Only the family part counted. |
 | 22 Nov 04:23 | per family, the five labelled copies as one model, the rest alone | 0.7 | Each label rests on at least one method validated on the references. A: 02, 23, 33, 14, 04. B: 08, 20, 30, 07, 06. C: 29, 16, 31, 27, 10. |
 
 The public score covers only part of the pairs. We used it only to check each submission, never to choose between candidate groupings: no grouping was submitted as a trial.
