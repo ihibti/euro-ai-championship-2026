@@ -1,6 +1,6 @@
 # Devin: status and next steps (read this first after a restart or a context compaction)
 
-Updated 2026-11-22 06:48 Paris. New work stops at 07:00; the PR #27 description is the final report. Report to the desk: description of draft PR #27 (keep it current with
+Updated 2026-11-22 06:53 Paris. New work stops at 07:00; the PR #27 description is the final report. Report to the desk: description of draft PR #27 (keep it current with
 `gh pr view 27 --json body --jq .body > /tmp/devin-pr.md`, edit, `gh pr edit 27 --body-file /tmp/devin-pr.md`).
 
 ## Who and where
@@ -19,6 +19,7 @@ Every ~10 minutes: `git fetch origin -q`; if `origin/ihibti/model-equality-refs`
 
 - **02:48 asks, answered 02:52 (`e3771c1`):** `rank.py` (frozen ranking inside families: stop share + mode scores per probe, prompted endpoints excluded); refs: LoRA rank 2-4, watermark 1st, fp8 8th, stop alone ranks LoRA 1-3; `partial_worth.md` extended (k splits, j right; break-even p 0.36 at c = 4, 0.45 at c = 5); family A split: lean "yes" side {01, 17, 25} changed (60%), 24/33 50%, ep-04 odd.
 - **03:01 desk:** A's e2 split refuted by the main line (8 fresh repeats); ep-04 apart on e1 (2 of 10 default vs 72 of 80). Asked for a frozen pairwise reading: **`clique.py` frozen at `ac91a9f` (03:03)**, refs calibration posted (`clique_refs.md`: p3 at 10 gives S + fp8 exactly; watermark breaks it on p1 and batteries). `local-` rows (public base models run locally, the plain anchor) arrive about 03:40 in `answers/local.jsonl` on the main-line branch: add them per family with `--prefix ep- local- --extra local-x=A ...`.
+- **06:50 desk: v2 scored 0.85 public** (model part 0.833). B with ep-32 goes to the lead as a decision (not submitted); A has no candidate. PR #27 final report updated with a "For the lead" section. New work stopped.
 - **06:44 desk: second submission `labelled_copies_v2.csv`**: C adds 13 and 19 (laptop's fp8 test: ep-15 +3.53, the endpoint I registered at 06:05; my amended step 3 applied); A, B unchanged (A none above zero; B ep-22 +2.81 < 3). For the lead, not submitted: B with ep-32 added. Nothing asked of me.
 - **06:40:** second read of my battery test with the answers added for the fp8 test (`3b52f32`): ep-15 vs 09/19 fell from z 3.00/2.68 to 1.48/1.28 -> my C fp8 prediction weakened (posted as a correction); `my_probabilities.csv` ep-15 0.60 -> 0.45.
 - **06:17 desk:** amendment to step 3 accepted with guards (each pair member joins only if its own fp8 ratio is below zero and the stop channel does not flag it, z above -2); registered 06:18 before reading any family's ratio. One submission after all three families are read (A's pass ends about 07:30). Nothing asked of me.
