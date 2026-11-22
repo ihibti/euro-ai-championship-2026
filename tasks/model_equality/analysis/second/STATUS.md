@@ -1,6 +1,6 @@
 # Devin: status and next steps (read this first after a restart or a context compaction)
 
-Updated 2026-11-22 04:56 Paris. Report to the desk: description of draft PR #27 (keep it current with
+Updated 2026-11-22 05:14 Paris. Report to the desk: description of draft PR #27 (keep it current with
 `gh pr view 27 --json body --jq .body > /tmp/devin-pr.md`, edit, `gh pr edit 27 --body-file /tmp/devin-pr.md`).
 
 ## Who and where
@@ -19,6 +19,7 @@ Every ~10 minutes: `git fetch origin -q`; if `origin/ihibti/model-equality-refs`
 
 - **02:48 asks, answered 02:52 (`e3771c1`):** `rank.py` (frozen ranking inside families: stop share + mode scores per probe, prompted endpoints excluded); refs: LoRA rank 2-4, watermark 1st, fp8 8th, stop alone ranks LoRA 1-3; `partial_worth.md` extended (k splits, j right; break-even p 0.36 at c = 4, 0.45 at c = 5); family A split: lean "yes" side {01, 17, 25} changed (60%), 24/33 50%, ep-04 odd.
 - **03:01 desk:** A's e2 split refuted by the main line (8 fresh repeats); ep-04 apart on e1 (2 of 10 default vs 72 of 80). Asked for a frozen pairwise reading: **`clique.py` frozen at `ac91a9f` (03:03)**, refs calibration posted (`clique_refs.md`: p3 at 10 gives S + fp8 exactly; watermark breaks it on p1 and batteries). `local-` rows (public base models run locally, the plain anchor) arrive about 03:40 in `answers/local.jsonl` on the main-line branch: add them per family with `--prefix ep- local- --extra local-x=A ...`.
+- **05:13:** the round-1 full-distribution battery MMD sees fp8 on the references (`e433767`, 14 repeats: z 4.63, p 0.0055; at 10 answers median z 3.32, 60% at p<0.05) but does not separate the scored tied pairs (A 12-18 z 1.10, B 22-32 0.61, C 09/13/19 < 0): same model or weaker fp8 at these sizes. C's fp8 candidate ep-15 (z 3.0 vs 09, 2.7 vs 19). Recommended adding each whole tied pair (`fp8_mmd.md`, `52974d3`).
 - **04:55:** plain vs fp8 on stop probes at 30 (`d67accb`): only run length p 0.041 (one of six tests), rest p 0.38 to 0.89: fp8 invisible to my features.
 - **04:41:** plain vs fp8 on trivia and identity at 14 answers (`6260e78`): trivia z 2.13 (p 0.074), identity 1.37 (p 0.078), not rejected; at most a trend.
 - **04:37:** plain vs fp8 at 40 repetition answers (`3cb748d`, `fp8_p3.md`): capped 14 vs 9 (p 0.32), run length p 0.14, mode statistic not rejected: my features do not separate fp8.
