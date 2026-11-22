@@ -1,6 +1,6 @@
 # Devin: status and next steps (read this first after a restart or a context compaction)
 
-Updated 2026-11-22 01:30 Paris. Report to the desk: description of draft PR #27 (keep it current with
+Updated 2026-11-22 01:36 Paris. Report to the desk: description of draft PR #27 (keep it current with
 `gh pr view 27 --json body --jq .body > /tmp/devin-pr.md`, edit, `gh pr edit 27 --body-file /tmp/devin-pr.md`).
 
 ## Who and where
@@ -18,10 +18,13 @@ Every ~10 minutes: `git fetch origin -q`; if `origin/ihibti/model-equality-refs`
 ## Open asks from the desk (00:27 and 00:46 comments on #27)
 
 1. **Map of the 33 endpoints: delivered 01:28** (`7ea7dd9`, comment on #27): three families of 11, A = Qwen "created by Alibaba Cloud" {01 02 04 12 14 17 18 23 24 25 33}, B = Qwen "a large language model" {03 06 07 08 20 21 22 26 28 30 32}, C = Llama {05 09 10 11 13 15 16 19 27 29 31}. `recon_ep.md`, `recon_ep.csv`, `recon_ep_evidence.md`. Frozen gap rule said 2 (A+B); k = 3 on trivia, choices, identity, with A's personas as the control. Next: compare A/B with the main line's map when the desk posts it.
-2. **P3 confirmation on the references** (`night_d`, id `d1_repeat150`), with the rule frozen at `897fcbb`:
-   `uv run python p3rule.py --answers ../../answers/<night-d file>.jsonl --prefix ref- --probe d1_repeat150`
+2. **P3 confirmation on the references** (`night_d`, id `d1_repeat150`, lands about 01:45 as `answers/night-d.jsonl`): run both features, the frozen one (`897fcbb`) and `capped` (registered at `f7840f1` before night_d, because capable plain copies write about 150 and all count as "long"):
+   `uv run python p3rule.py --answers ../../answers/night-d.jsonl --prefix ref- --probe d1_repeat150`
+   `uv run python p3rule.py --answers ../../answers/night-d.jsonl --prefix ref- --probe d1_repeat150 --feature capped`
+   then the night_d views (`54f616f`): `uv run python noise.py --probes night --answers ../../answers/night-d.jsonl` and
+   `uv run python group2.py --probes night --prefix ref- --answers ../../answers/night-d.jsonl --out grouping_refs_night-d.csv --subsample 20 --subsample-size 7`. Post the verdicts on #27.
 3. **night_c on the references** (`c1_equiv`, `c2_edge`, `c3_next`): `noise.py --probes night --answers ...` and `group2.py --probes night --prefix ref- ...`.
-4. **Scored P3**: `p3rule.py --prefix ep- --probe <id> --families recon_ep.csv --answers ...`, then compare with the main line's grouping (`compare.py`).
+4. **Scored P3**: `p3rule.py --prefix ep- --probe <id> --families recon_ep.csv --feature capped --answers ... --out grouping_ep_p3.csv` (and `--feature long` for the record), then compare with the main line's grouping (`compare.py`). About 04:00 the desk compares the two groupings pair by pair before the first real submission.
 
 ## Results so far (all pushed)
 
@@ -33,3 +36,5 @@ Every ~10 minutes: `git fetch origin -q`; if `origin/ihibti/model-equality-refs`
 - D1 research delivered on #28 (`research_night.md`).
 - Parser: a battery answer on the line after a restated question is now read (`e405e7d`); only ep-06 and ep-32 change.
 - Map of the 33 scored endpoints: `recon_ep.md` (above). Response time is flat (19.8 s), no information.
+- Maps compared (comment 01:29 on #27): the main line's `analysis/recon_ep_families.csv` gives the same three families, 0 of 528 pairs differ.
+- P3 `capped` feature (`f7840f1`): on night-b the same split and MCC 0.7338 as the frozen feature; LoRA shares 0.90.
