@@ -314,6 +314,11 @@ python $WT/tasks/unlearning/splice_head.py --model output/kkrgp/k7_e3t2_rm.pt --
 python $WT/tasks/unlearning/soup.py --models output/kkrgp/k8_e3t2_rm1_lr1e4.pt output/kkrgp/k11_b_s1.pt output/kkrgp/k11_b_s2.pt --scale 0.5 --save output/kkrgp/k11_b_soup3_x2.pt
 ```
 
+**Where the exact arguments are.** Every run's report records the arguments it ran with (`reports/21/<batch>/<name>.json` on `desk/unlearning`, field `args`); the scripts can lag behind. Checked at 06:10 for the scored runs:
+- `k7_e3t2_rm` (0.066, and 0.2133 at x2): blocks 6, learning rate 5e-5, 25 epochs, K=3, tau 2, retain mix 1, seed 0. `run_seventh.sh` lists only its retain-mix-3 sibling.
+- `k8_e3t2_rm1_lr1e4` (0.2837 at x2): the same with learning rate 1e-4.
+- `k11_b_s1` and `k11_b_s2`: the same as the 0.2837's run, with seeds 1 and 2. Averaged with it and multiplied by 2, they make the 0.2858.
+
 **The analysis**, from the same folder (`source /Volumes/euroai-apfs/ops/env.sh; cd $T` on the lead's laptop):
 
 ```
