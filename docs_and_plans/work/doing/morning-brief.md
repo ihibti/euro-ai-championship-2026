@@ -14,15 +14,15 @@ Draft kept current through the night by the desk. Final version by 08:30. The ev
 |---|---|---|---|
 | Watermark | 0.7444 | c6, 23:36 | 0.75 |
 | Model equality | 0.7 | identified copies as one model per family, 04:23 | 1.00 |
-| Unlearning | 0.2837 | `k8_e3t2_rm1_lr1e4_x2.pt`, 02:38 | 0.40 |
+| Unlearning | 0.2858 | `k11_b_soup3_x2.pt` (average of three runs), 04:39 | 0.40 |
 
 Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read since. With the three scores above and the board's bests of 22:33, our overall would be about 0.80.
 
 ## What was spent
 
-- **Submissions under the night authorization** (ends 09:00): model equality 3 of 5, unlearning 10 of 12, watermark 1 of 1 (at 04:25).
+- **Submissions under the night authorization** (ends 09:00): model equality 3 of 5, unlearning 11 of 12, watermark 1 of 1 (at 04:41).
 - **Scored answers per endpoint** (night cap 80, organizers' cap 100): 64 in family A, 66 in B, 48 in C once the story prompt finishes at about 04:13. Every prompt set ran on the nine references first.
-- **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (25 minutes, ended 02:48), 15904691 (31 minutes, ended 03:42), 15904844 (submitted 03:47, limit 45 minutes, pending). Never more than one job running or pending; team check empty before each `sbatch`.
+- **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (25 minutes, ended 02:48), 15904691 (31 minutes, ended 03:42), 15904844 (24 minutes, ended 04:26). Never more than one job running or pending; team check empty before each `sbatch`.
 
 ## Unlearning submissions
 
@@ -38,6 +38,7 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 | 03:08 | `k8_e3t2_rm1_lr1e4_x2p5.pt` (the 0.2837 checkpoint, last layer times 2.5) | 0.2222 |
 | 03:38 | `k9_e3t1_lr1e4_x1p25.pt` (a gentler recipe, last layer times 1.25) | 0.256 |
 | 04:08 | `k8_e3t2_rm1_ep40_x2p25.pt` (a sibling run, last layer times 2.25) | 0.2665 |
+| 04:39 | `k11_b_soup3_x2.pt` (average of the weights of the 0.2837 run and its two new seeds, last layer times 2) | 0.2858 |
 
 ## Model equality
 

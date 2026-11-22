@@ -125,3 +125,5 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 04:13 | The story prompt finished on the 33 endpoints; a one-off look at a reference endpoint | the server returns no token probabilities and has no raw-completion route; response time is a fixed pace |
 | 04:21 | Family C fits Llama-3.2-1B-Instruct; its table arrived | ep-31 is the temperature copy, ep-27 the truncated-sampling copy, ep-10 the watermark copy; ep-05 and ep-11 look like adapters |
 | 04:23 | Model equality: `labelled_copies_v1.csv` submitted: per family the five identified same-model copies as one model, every other endpoint alone | public 0.7 (was 0.1) |
+| 04:26 | Job 15904844 completed (24 minutes), no failed run | reports and logits on `desk/unlearning` at `8c443bf`; the six checkpoints on the lead's main laptop; no job in the queue |
+| 04:39 | Unlearning `k11_b_soup3_x2.pt` submitted (the average of the weights of the 0.2837 run and its two new seeds, last layer times 2) | public 0.2858, a new best |
