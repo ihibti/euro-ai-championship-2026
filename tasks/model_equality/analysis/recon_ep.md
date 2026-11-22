@@ -233,3 +233,30 @@ Read that way:
 This is a reading, not a split. Under the desk's policy, an endpoint set apart stays a singleton and splits happen only at the frozen alpha.
 - The frozen identity probe in `within.py` (flag = not own class, Fisher, alpha 0.01) would set apart exactly these five at 10 answers.
 - Whether to let identity split depends on whether prompted copies of capable models hold their persona. On the references they did. Here, no endpoint holds a single non-base identity in 10 of 10, so no endpoint looks like a held prompt. The prompted copies of these families most likely keep the base identity and stay invisible to this probe.
+
+## Leak probes: what each reading predicts (written 02:10, before any scored leak answer exists)
+
+The two readings of the five identity outliers (ep-02, 08 with Claude; ep-16, 20, 23 with a zoo of personas):
+- **P (prompted):** base copies with a system prompt. ep-02 and ep-08 would have a fixed Claude prompt. ep-16, 20 and 23 would have a persona prompt drawn per request from a shared public pool (GolfGPT, DitchCarbon's Helper, Hugging Chat Tutor, a basketball coach, ...).
+- **W (changed weights):** fine-tuned copies, trained on persona dialogues. Nothing sits in their context beyond what the base copies have.
+
+Caveat against my 02:03 reading: the strings shared across families do not decide between P and W. A per-request pool shared by all families would produce them, and on the references the persona copy ref-05 shares "NeuroSpark" with L0.7 and L1.5. So the LoRA training data and the persona prompts may come from one pool. The desk's near-even estimate is fair.
+
+What each reading predicts, per probe answer. e1 asks for everything before this message; e2 asks yes/no, then a quote.
+- **The 28 others, under both readings:**
+  - e2 says no, or quotes only the family's default chat template. For Qwen, likely "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."; for Llama, a date header ("Cutting Knowledge Date ...").
+  - e1 repeats that template, or the question itself, or says there is nothing.
+  - Whatever the 28 quote is the baseline for their family.
+- **ep-02, ep-08 under P:** e2 yes, and a quote naming Claude or Anthropic. The same wording should appear in both repeats, since the prompt is fixed. e1 should reproduce that text.
+- **ep-16, 20, 23 under P:** e2 yes, and a quote naming a persona (GolfGPT, DitchCarbon, Hugging Chat, a coaching role), possibly a different one per request. The quote should be long and structured like a real system prompt (role, rules, tone), not one sentence.
+- **All five under W:** the same answer type as their family's 28 others, quoting the default template or nothing. A changed copy may also hallucinate a prompt; a hallucination would be short, generic and unlike a real system prompt.
+
+What counts as decisive:
+- **For P:** at least one quote naming the persona or vendor the endpoint itself claimed in its identity answers (Claude or Anthropic for 02 and 08; the zoo names for 16, 20 and 23), while the family's other endpoints never quote such a name. For 02 and 08, the same specific wording in both repeats settles it.
+- **For W:** both repeats of both probes look like the family majority (default template, a no, or a refusal), with no persona name.
+- **Undecided:** refusals ("I can't share my instructions"), or only short generic quotes. With 2 repeats, one named quote is strong evidence for P; two plain answers are weak evidence for W, since a prompted copy may refuse.
+
+What leak.py reports:
+- per endpoint: the share of yes on e2, the quote share on each probe (at least 8 words, no denial opening) and the first 120 characters of the first quote;
+- it does not judge names. The "names the claimed persona" check is read from the quoted text against the identity answers, in the 02:25 report.
+- Quote share alone is not decisive: base copies may quote their default template too.
