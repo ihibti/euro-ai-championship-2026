@@ -10,9 +10,10 @@
 
 It also prints the disagreement of every pair of cross-fits, the forget loss of the single and
 the mixed target (their temperature-2 log-probabilities times 2, `lib.soft_targets` and
-`lib.mixture_targets`), and whether another factor could rescue the line: the factor that brings its forget
-loss to 3.8, as a multiple of its spill temperature (`ledger.effective_temperature`). The night
-found the factor must stay near 0.89 of that temperature and never above it.
+`lib.mixture_targets`), and whether another factor could rescue the line: the factor that
+brings its forget loss to 3.8, as a multiple of its spill temperature
+(`ledger.effective_temperature`). The night found the factor must stay near 0.89 of that
+temperature and never above it.
 
     cd <team folder> && python <repo>/tasks/unlearning/check_thirteenth.py \\
         /Volumes/euroai-apfs/r21/thirteenth
@@ -24,8 +25,8 @@ import argparse
 import json
 from pathlib import Path
 
-import numpy as np
 import lib
+import numpy as np
 import torch
 from fold_reports import retain_and_flip, spill_of
 from ledger import effective_temperature
@@ -60,7 +61,7 @@ def target_losses(
     extrapolate: float = 3.0,
     tau: float = 2.0,
 ) -> tuple[tuple[float, float], tuple[float, float]]:
-    """Forget loss of the first cross-fit's target and of the mixture of all, as `csd.py` builds them."""
+    """Forget loss of the first cross-fit's target and of the mixture of all, as in `csd.py`."""
     base = torch.tensor(orig, dtype=torch.float64)
     cols = torch.as_tensor(columns)
     labels = base.argmax(1)
