@@ -521,3 +521,12 @@ The lesson from A: a pattern seen at 2 repeats did not survive 8 fresh ones. The
 - **B**, on 2 existing repeats: ep-03 and ep-28 said yes once each on e2, against 0 of 14 for the other seven non-prompted endpoints. Reading: `leaksplit.py --answers tasks/model_equality/answers/night-e.jsonl --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv --family B --marker qwen --min-repeat 2 --exclude ep-08,ep-20`. stop.set_apart is run on e2 yes and on e1 default. Candidates: ep-03, ep-28. Anything else set apart is reported as unregistered.
 - **C**, as registered at 02:50: `leaksplit.py ... --family C --marker llama --min-repeat 2 --exclude ep-16,ep-29 --decide e1-words --yes ep-10,ep-13,ep-15,ep-19,ep-27,ep-31 --no ep-05,ep-11`, with ep-09 unassigned. The run without `--yes/--no` is reported beside it.
 - A leak result alone never makes a split. Under the 02:47 rule, a split also needs modal.py at 10 repeats and the sharpness check.
+
+## pairwise.py on the references: the validation fails for lack of depth (03:05)
+
+`pairwise.py` (frozen 03:03, 8874517) gives the battery pair matrix and the largest group with no rejected pair at alpha 0.01. It does not assume the plain model is the majority.
+- The references have only 4 battery repeats (round 1), not 10.
+- At that depth every one of the 36 reference pairs passes, and the largest group is all nine, LoRAs included.
+- That matches modal.py on the same rows: SmolLM's batteries carry no power at 4 repeats.
+- So the method neither recovers {plain, fp8, system prompt, persona, temperature, perhaps watermark} nor excludes the LoRAs. It is unvalidated.
+- A 10-answer check would need 6 more battery repeats on the 9 references (108 answers). The desk holds that decision until the likelihood scores are validated.
