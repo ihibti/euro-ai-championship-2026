@@ -10,6 +10,29 @@ def test_numbered_items_keeps_the_first_answer_per_item_and_ignores_others():
     assert s.numbered_items(text, 4) == ["A", "B", None, "B"]
 
 
+def test_numbered_items_reads_the_answer_on_the_line_after_a_restated_question():
+    text = (
+        "1. What is the capital of Australia?\n- Canberra\n\n"
+        "2. How many legs does a spider have?\n- Eight"
+    )
+    assert s.numbered_items(text, 2) == ["Canberra", "Eight"]
+
+
+def test_numbered_items_leaves_a_question_followed_by_the_next_item_unparsed():
+    text = "1. What is the capital of Australia?\n2. How many legs does a spider have?"
+    assert s.numbered_items(text, 2) == [None, None]
+
+
+def test_numbered_items_keeps_plain_answers_unchanged():
+    assert s.numbered_items("1. Canberra\n2. Eight", 2) == ["Canberra", "Eight"]
+
+
+def test_battery_matrix_reads_a_choice_answer_on_the_line_after_the_question():
+    prompt = "Intro.\n\n1. Which? A) Max B) Buddy\n2. Which color is nicer? A) blue B) green"
+    response = "1. Which?\n- A\n2. Which color is nicer?\n- B"
+    assert s.battery_matrix("choice", prompt, [response]).tolist() == [[1.0, 0.0]]
+
+
 @pytest.mark.parametrize(
     ("text", "options", "expected"),
     [

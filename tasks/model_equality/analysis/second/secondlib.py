@@ -24,6 +24,7 @@ import numpy as np
 ITEM_LINE = re.compile(r"^\s*(\d{1,3})\s*[.):]\s*(.*?)\s*$")
 OPTION_LINE = re.compile(r"^\s*(\d{1,3})\.\s*(.*?)\s+A\)\s*(.*?)\s+B\)\s*(.*?)\s*$")
 LETTER = re.compile(r"^\W*([AB])(?![A-Za-z])")
+ANSWER_PREFIX = re.compile(r"^\s*(?:[-*•]|answer:)\s*", re.IGNORECASE)
 
 TRIVIA_KEYS: tuple[tuple[str, ...], ...] = (
     ("canberra",),
@@ -104,12 +105,23 @@ def build_corpus(rows: Iterable[Mapping], prefix: str | None = None) -> Corpus:
 
 def numbered_items(text: str, count: int) -> list[str | None]:
     items: list[str | None] = [None] * count
-    for line in text.splitlines():
+    seen: set[int] = set()
+    lines = text.splitlines()
+    for position, line in enumerate(lines):
         match = ITEM_LINE.match(line)
-        if match:
-            index = int(match.group(1)) - 1
-            if 0 <= index < count and items[index] is None:
-                items[index] = match.group(2)
+        if not match:
+            continue
+        index = int(match.group(1)) - 1
+        if not 0 <= index < count or index in seen:
+            continue
+        seen.add(index)
+        captured = match.group(2)
+        if not captured.strip().endswith("?"):
+            items[index] = captured
+            continue
+        answer = next((later for later in lines[position + 1 :] if later.strip()), None)
+        if answer is not None and not ITEM_LINE.match(answer):
+            items[index] = ANSWER_PREFIX.sub("", answer)
     return items
 
 
