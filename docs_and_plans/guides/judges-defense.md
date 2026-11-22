@@ -5,8 +5,8 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 ## 1. The night in ten lines
 
 1. At 23:45 the public board had us 20th of 32, with an overall 0.33. The sixth team had 0.73. The overall is the mean over the three tasks of (ours − lowest) / (best − lowest).
-2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **0.7** (04:23), unlearning **0.2858** (04:39).
-3. Against the board's best scores of 22:33, that is an overall of about 0.80. Our current rank is **for the lead**: the agents cannot read the public board; read it before the jury.
+2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **0.85** (06:44; 0.7 at 04:23), unlearning **0.2858** (04:39).
+3. Against the board's best scores of 22:33, that is an overall of about 0.85. Our current rank is **for the lead**: the agents cannot read the public board; read it before the jury.
 4. One human, the team lead, set the rules and the night authorization, a file written at a terminal that caps answers and submissions until 09:00, and then slept.
 5. One agent, the desk, was the only one allowed to touch the GPU cluster (JURECA) and the organizers' server. It spent scored answers, submitted, reviewed and merged.
 6. One agent per task did the analysis: a model equality main line; a second, independent model equality method by another coding agent (Devin) on a second computer; an unlearning agent. None could submit.
@@ -54,6 +54,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 4. **Decoder fits.** We fitted temperature, top-p and top-k jointly, counting the tokens each setting could not have produced. This finds one truncated-sampling copy per family.
 5. **Watermark signature.** Repeated whole answers, and long identical story openings. This finds one watermark copy per family.
 6. **Stop decision.** Adapters change when a model decides to end its answer.
+7. **A simulated fp8 copy.** The laptop quantizes the base model to fp8 the way the serving software (vLLM) does and compares, token by token, how well that copy and the plain model explain an endpoint's answers. This finds a family's fp8 copy, the one variant no other method saw.
 
 **Evidence it is sound.** All six were run first on nine free reference endpoints whose variants are published: plain, fp8, three LoRA strengths, system prompt, persona, watermark, temperature 1.0.
 - The likelihood fit recovers the temperature copy (1.007), and it shows the strong adapters as shifted and uneven (p 3e-6 and 5e-14).
@@ -61,12 +62,14 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 - The stop rule caught LoRA 0.3 at 20 answers (p 0.0003).
 - A prediction registered before the scored stories existed held in 2 of 3 families. The third was settled by an exact probability under the base model.
 
-**Result.** Per family, five endpoints are labelled as one model: two prompted copies, a temperature copy, a truncated-sampling copy and a watermark copy. The rest are alone. Public 0.7.
+**Result.** Per family, five endpoints are labelled as one model: two prompted copies, a temperature copy, a truncated-sampling copy and a watermark copy. The rest are alone. Public 0.7 at 04:23. At 06:44, after the fp8 test named family C's fp8 copy, C's two remaining plain-like endpoints joined its group: public 0.85.
 
 **Limits and another day.**
-- fp8 is invisible to every probe on the references, so each family's plain copy cannot be told from its fp8 copy. Our best candidates (ep-12, ep-32, ep-19) are at 0.40 to 0.45, so none was added.
-- The desk is testing a new stop-probability channel on fresh reference answers. Its registered prediction is that fp8 sits above +2 and plain within ±2. The outcome is **to be filled by the desk**.
-- With another day we would spend the remaining answers on that channel.
+- **fp8 against plain.** Until 06:00 no probe separated the two on the references. The simulated fp8 copy does: the fp8 reference stands at +9.0 standard errors over 338 answers, the plain one at -6.1, the seven others between -2.6 and -6.7. It held on both halves of the rows and on 112 answers bought after its first run. Two other ways of quantizing do not single out the fp8 reference, so the server's method is identified too.
+- **The rule on the scored families was fixed before any of their numbers was read** (PR #27, 06:03, amended with Devin at 06:16): an endpoint at +3 standard errors or more is the family's fp8 copy; the family's two closest plain-like endpoints then join the same-model group, unless one of them is the fp8 copy. A second read after more answers was registered before buying them.
+- **Outcome.** C: ep-15 at +2.94, then +3.53 on 72 answers; ep-13 and ep-19 joined; public 0.85. B: ep-22 at +2.71, then +2.81 on 78 answers: under the threshold, so no change, although it is B's only endpoint above zero. A: no endpoint above zero, no change.
+- **Earlier attempt, kept as a negative result.** A stop-probability channel: its registered prediction held on fresh reference answers (fp8 above +2), but the gap to plain was about one standard error, too weak to decide a pair.
+- With another day we would buy more answers on B's and A's candidates, and find out what the eleventh endpoint of each family is.
 
 ### Unlearning
 
@@ -92,13 +95,13 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 
 ## 3. Why this is not leaderboard fitting
 
-- **Frozen rules.** Each deciding rule was committed with its time before the data that judged it existed. Examples: the stop rule at 00:47, the batteries at 02:47, the watermark prediction at 03:51, the fp8 check at 04:33. Each commit message says whether any of the data already existed and whether it had been read.
+- **Frozen rules.** Each deciding rule was committed with its time before the data that judged it existed. Examples: the stop rule at 00:47, the batteries at 02:47, the watermark prediction at 03:51, the fp8 check at 04:33, the fp8 rule at 06:03 and its second read at 06:36. Each commit message says whether any of the data already existed and whether it had been read.
 - **References first.** No prompt set was spent on scored endpoints before it had run on the nine free references with the same code.
 - **Few submissions, each with a reason:**
 
   | task | at night | before | reason recorded |
   |---|---|---|---|
-  | model equality | 3: floor 0.0, families 0.1, labelled copies 0.7 | none | yes, in the night log |
+  | model equality | 4: floor 0.0, families 0.1, labelled copies 0.7, the same plus C's two plain-like endpoints 0.85 | none | yes, in the night log |
   | unlearning | 11: ten with a written prediction on #12, the last a seed average chosen without a score model | 1, at 22:19 (0.00) | yes |
   | watermark | 1 (c6, 0.7444) | 3: 18:11 (0.4421), 19:09 (0.6876), 22:19 (c5, 0.7251) | held-out gain |
 
@@ -112,7 +115,8 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
     - a battery agreement method, unvalidated at 4 answers and used only to describe.
   - Desk:
     - the family A split it proposed, which failed the pre-registered test;
-    - the 01:30 submission, which rested on a misreading of the metric.
+    - the 01:30 submission, which rested on a misreading of the metric;
+    - a variant of the fp8 simulation that also rounds activations: on the references the fp8 endpoint fell from +9.0 to +0.3, so it was dropped before touching a scored endpoint.
   - Unlearning agent:
     - the "whole classes removed" and "soft gold" readings, both ruled out by their own predictions;
     - a ledger error that treated the accuracy gate as a fraction, found and fixed at 01:13;
@@ -127,8 +131,8 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 | team check before every job submission | logged as empty before each submission from 00:29 on | night log |
 | job submitted from inside the team folder | every night job was submitted by one command that first changes into the team's task folder, stops unless the path is the team folder, and stops unless the team check prints nothing. Open question to the organizers: does a submission from a login node that does not show scratch, pointed at the team folder, count? | morning brief, decision 3 |
 | a few hundred files at most on scratch | 209 files staged at 23:45 were removed at 01:35, when an organizer asked teams to free slots; from 02:13 every batch was staged by renaming and emptying old files, with no new file (the staging script counts the folder before and after: 689 and 689 for the tenth and eleventh batches); the batches between 00:03 and 01:16 wrote one checkpoint, one report and one log per run, a few dozen files each, and the output files of the 01:16 batch were created in advance so that a full quota could not break it | night log 01:35, 02:13 |
-| 100 answers per scored endpoint | used 64 (A), 66 (B), 48 (C); night cap 80 | morning brief |
-| 30 minutes between submissions per task | unlearning 23:37 to 04:39, every 30 to 31 minutes; model equality 23:36, 01:30, 04:23; watermark 23:36, 77 minutes after the lead's own c5 submission | morning brief tables |
+| 100 answers per scored endpoint | used 64 (A), 66 (B), 48 (C), and 78 and 72 on the two endpoints of the fp8 second read; night cap 80 | morning brief |
+| 30 minutes between submissions per task | unlearning 23:37 to 04:39, every 30 to 31 minutes; model equality 23:36, 01:30, 04:23, 06:44; watermark 23:36, 77 minutes after the lead's own c5 submission | morning brief tables |
 
 **Incidents, stated plainly:**
 - **23:47, a held follow-up job.** The desk queued a 5-hour job behind the running one, to hold the node for later work. The organizers' text allows chained follow-ups. Our stricter rule allows no pending job and no job without ready work. The lead pointed out the ban risk, and the desk cancelled it at 23:54, seven minutes later.
@@ -141,10 +145,10 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 1. **How do you know two endpoints serve the same model?** We do not claim it from similarity. Each label is a specific disguise (prompt, temperature, top-p, watermark), identified by a method that recovered the same disguise on the published references.
 2. **Did you tune to the public board?** No. Rules were committed before their data, and no grouping was submitted as a trial. In unlearning, each submission carried a written prediction, and the board was used to reject hypotheses.
 3. **Why are so many model equality endpoints left alone?** Calling a pair "same" wrongly costs about as much as missing a true pair. We join only what a validated method names.
-4. **Can you tell fp8 from plain?** Not yet. No probe separated them on the references. The desk is testing a stop-probability channel, with its prediction registered before the fresh reference answers. Outcome **to be filled by the desk**.
+4. **Can you tell fp8 from plain?** Yes on the references, and in one family so far. A simulated fp8 copy of the base model explains the fp8 reference's answers better than the plain model does (+9.0 standard errors) and every other reference's answers worse. With the threshold fixed in advance it named C's fp8 copy (+3.53); B's candidate stopped at +2.81 and we did not act on it; A shows none.
 5. **Isn't multiplying the last layer by 2 a trick?** It changes no predicted class, so accuracy is untouched. It undoes the softness that the temperature-2 target taught. The factor came from a measurement made before any score.
 6. **Why average three unlearning models?** They are seeds of one recipe and match on every statistic we measure. The board cannot rank them: on 30% to 84% of random splits, the public and hidden parts disagree on which seed is better. Averaging removes seed noise without choosing on the public split.
 7. **How sound is the watermark score?** It rests on a held-out fifth of the training images, not on the train score. c6's paired gain over c5 is +0.0104, with a 90% interval above zero.
 8. **What was your biggest mistake?** In model equality, the 01:30 submission. In unlearning, the ledger's gate error, fixed at 01:13. In the first round, a clustering method, which we withdrew on the references before it touched a scored endpoint.
 9. **How did agents work without a human?** Each had one goal, a stop rule and a file to write to. Only the desk could act on the cluster or the server, inside caps the lead wrote at a terminal. Everything is in issues and commits.
-10. **What would you do with another day?** Model equality: separate plain from fp8 with the stop channel. Unlearning: longer training at the same drift. Watermark: the rectangle crop search.
+10. **What would you do with another day?** Model equality: more answers on B's and A's candidates for the fp8 test. Unlearning: longer training at the same drift. Watermark: the rectangle crop search.
