@@ -4,6 +4,12 @@ Feature: an answer is a "long run" when it holds at least 100 consecutive "river
 plain reference model mostly writes the word once; the LoRA copies mostly run to the 256-token
 cap, about 128 or 256 words).
 
+Variant "capped", registered before any scored p3 answer existed: an answer is "capped" when
+its estimated token count reaches CAP_TOKENS = 240, a proxy for an answer that did not stop on
+its own before the 256-token output cap. It fits families whose plain copies follow the repeat
+instruction (about 150 words) and would all count as "long" under the frozen feature. The
+default stays the rule frozen at 897fcbb.
+
 Rule, inside one family (endpoints already known to share a base model):
 1. Fit one long-run rate for the whole family, and a mixture of two rates, each endpoint
    belonging to one class (binomial mixture, EM from 20 starts).
@@ -38,7 +44,9 @@ from euroai.me_score import parse_labels, same_model_mcc
 HERE = Path(__file__).resolve().parent
 TRUTH = HERE.parents[1] / "upstream" / "practice_answers.csv"
 LONG = 100
+CAP_TOKENS = 240
 ALPHA = 0.01
+TOKEN = re.compile(r"[A-Za-z]+|\d+|\n+| {2,}|[^\sA-Za-z\d]")
 
 
 def run_length(response: str) -> int:
@@ -51,6 +59,17 @@ def run_length(response: str) -> int:
 
 def is_long(response: str) -> bool:
     return run_length(response) >= LONG
+
+
+def estimated_tokens(response: str) -> int:
+    return len(TOKEN.findall(response))
+
+
+def is_capped(response: str) -> bool:
+    return estimated_tokens(response) >= CAP_TOKENS
+
+
+FEATURES = {"long": is_long, "capped": is_capped}
 
 
 def _loglik(k: np.ndarray, n: np.ndarray, p: np.ndarray) -> np.ndarray:
@@ -155,6 +174,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--prefix", required=True)
     parser.add_argument("--families", type=Path)
     parser.add_argument("--probe", default="p3_repeat")
+    parser.add_argument("--feature", choices=sorted(FEATURES), default="long")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--draws", type=int, default=499)
     parser.add_argument("--seed", type=int, default=20261122)
@@ -163,9 +183,12 @@ def main(argv: list[str] | None = None) -> int:
     corpus = s.build_corpus(rows, prefix=args.prefix)
     answers = {e: per.get(args.probe, []) for e, per in corpus.answers.items()}
     answers = {e: r for e, r in answers.items() if r}
-    long_counts = {e: sum(is_long(r) for r in rs) for e, rs in answers.items()}
+    feature = FEATURES[args.feature]
+    long_counts = {e: sum(feature(r) for r in rs) for e, rs in answers.items()}
     totals = {e: len(rs) for e, rs in answers.items()}
     rng = np.random.default_rng(args.seed)
+    if args.feature != "long":
+        print(f"feature={args.feature}")
     labels: dict[str, tuple[str, str]] = {}
     for index, family in enumerate(families_from(args.families, list(answers)), start=1):
         call = call_family(family, long_counts, totals, rng, args.draws)
