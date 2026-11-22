@@ -16,7 +16,7 @@ Written during the night of 21 to 22 November by the unlearning agent, for the t
    - Every neighbour of the final point scored lower, by 6 to 25%. The board's own noise is about 1% between two lines (`split_noise.py`).
    - Three seeds of the recipe agree within 0.6% at temperature 2 (`twins.py`).
 6. **Limits.**
-   - No model of the score fits all our scores better than about 5% near the peak.
+   - Through the night no model of the score fitted better than about 5% near the peak. The morning's model, with retain read on a stand-in for the unseen control set, predicts each high line from the others within 1 to 2.5%. It still misses the least trained line (k7 x2) by 18%, and the line past the peak by 25% without its own score.
    - Retain is estimated on held-out forget images, not on the unseen control set.
    - The hidden altered copies are stood in for by our own augmentations.
    - Our stand-in for gold retrains only the last 3 blocks. Three independent cross-fits agree on 95% of classes, so it cannot show how gold models disagree. The last experiment, which tested this, was not submitted.
@@ -114,6 +114,48 @@ Before the 0.2133, as of 01:45:
 - **Gold errs on other images of the same classes (`other`): 0%.**
 - **The original's validation accuracy A:** 79.4 on average, 75.0 to 84.0 (10th to 90th percentile).
 - **It still ranks the factor 2.5 above 2 on the 0.2837's base** (0.274 against 0.241), which the board refuted (0.2222 against 0.2837). Its golds are single models, so it cannot represent the peak. We use it for the reading of gold, not for the factor (Honest limits).
+
+## The morning: a score model that fits every scored line (09:00 to 09:14)
+
+**Why a new model.** The end-of-night ledger skipped three of our best scores without saying so: k9 x1.25, ep40 x2.25 and the soup's 0.2858. It built sharpened candidates only at factors 1.5, 2, 2.5 and 3, and none for a weight average. It also never had the desk's 0.2687 (08:21). And its golds tie the loss statistics to the class distribution, so it could not show the peak.
+
+**What `score_fit.py` does** (`434e59e`, `ca5576d`, 7 tests). It rebuilds every scored line with dumped logits exactly: 11 of the 15 scores, all but the dials and the owner's first file. A line is a run, or the logit average of a soup, times its factor. It then computes the scorer's terms as the server does, on both groups (the exact images, and our jitter view standing for the altered copies):
+- the prediction term under each gold shape of the ledger;
+- the loss term against a free gold (mean, std);
+- retain's response to the factor, read on a stand-in for the control set.
+
+The control set is unseen images, where the original is less sure than on its training images (where the probes read the drift). The stand-in is the cross-fit's held-out logits, softened by 1.25. One free level c scales everything. Each hypothesis is weighed by a 10% log-normal error.
+
+**How well it fits.** Log-likelihood −8.0, against −14.8 with the probes' sharpening estimate and −43 with c fixed at 1. Leave-one-out, each line predicted from the other ten:
+
+| line | public | predicted without it | 10th to 90th | error |
+|---|---|---|---|---|
+| soup3 x2 | 0.2858 | 0.2815 | 0.262 to 0.302 | −1.5% |
+| base x2 | 0.2837 | 0.2773 | 0.258 to 0.298 | −2.3% |
+| ep40 x2 | 0.2687 | 0.2649 | 0.247 to 0.284 | −1.4% |
+| ep40 x2.25 | 0.2665 | 0.2690 | 0.244 to 0.295 | +0.9% |
+| k9 tau 1 x1.25 | 0.256 | 0.2535 | 0.229 to 0.277 | −1.0% |
+| base x2.5 | 0.2222 | 0.2787 | 0.228 to 0.342 | +25% |
+| k7 x2 | 0.2133 | 0.1748 | 0.163 to 0.188 | −18% |
+
+The two misses sit at the edges. x2.5 is the only line past the peak; with it in the data, the model reproduces it. k7 x2 is the least trained line.
+
+**What it says:**
+1. **Gold's forget loss is high:** mean 3.0 to 5.6, std 2.9 to 5.0 (10th to 90th), near 4.2/3.8. Single gold models are confidently wrong on many forget images, as the night concluded.
+2. **Retain is not a lever once the factor is right.** On the stand-in, the temperature alone reaches each probe's KL; the fitted noise is 0. So retain depends only on f/T, the factor over the run's spill temperature: it peaks at 1.0, costs 1.4% at 0.9 and 10% at 0.76. A run with half the spill (tau 1) needs a lower factor and gains nothing once sharpened.
+3. **This explains the 0.256 without any cost to tau 1.** It was sharpened to f/T 0.76 and lost 8 to 10% of retain there. Sharpened to 0.88, tau-1 runs still lose to tau 2 on the prediction term (0.83 to 0.86 against 0.87).
+4. **The board pays 40 to 52% of what the model's terms give (c).** `x3_ext_m80` barely changes the model (retain 0.98), and it too falls below the fit. So the missing factor is on the forget side, most likely the prediction term.
+   - Gold's class distribution is the average of several retrained models, further from any single sharpened network than our gold shapes.
+   - This is the largest open lever. A next attempt would target a model whose distribution on the forget images covers the classes that several gold models would each pick, while keeping the loss of a single one.
+5. **Nothing we hold beats 0.2858 by more than the noise.** The best of 920 logit blends of two or three runs is 1.8% above it under the model (`blend_search.py`, `1b6456a`): `k11_b_s1` + `k11_b_s2` + `k9_e3t2_lr1e4_ep40` at x2. Picking the best of 7,360 correlated lines gives about that much by chance.
+
+**Predictions written before the morning's scores** (#12 and `submit_queue.md`):
+
+| file | written | prediction | public |
+|---|---|---|---|
+| `m14_t1_blend3_x1p5.pt` (tau-1 runs 3:1, x1.5) | 08:32, two-condition rule | 0.29 to 0.31 | pending |
+| the same | 09:01, model with the probes' retain | about 0.27 (0.26 to 0.30), 1 in 4 above 0.2858 | pending |
+| the same | 09:09, model with the stand-in's retain | 0.267 to 0.272, 1 in 10 above 0.2858 | pending |
 
 ## The utility gate, and localisation
 
@@ -308,7 +350,7 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 - **Until 01:40 the posterior sat on the edge of the gold grid** (gold right on a third of the images, the furthest gold modelled). Widening the grid lowered every prediction by 10 to 20% and left the ranking unchanged. The predictions written on #12 before 01:40 come from the narrower grid.
 - **The ledger's golds are single models, and the real target is several.** Against a single confidently wrong gold, sharpening always helps; against the real mixture it peaks. The 0.2222 at 03:08 showed it. From 03:15 to 04:10, the factor and the base were chosen with `peak_check.py`, calibrated on the public scores and therefore able to follow the public 30%. Choices also had to show their advantage in the probes. Its two predictions missed (0.294 for a 0.256, 0.292 for a 0.2665). With all five sharpened scores it fit no setting, and it was retired rather than refitted. The last line, the weight average, was chosen by argument alone.
 - **Labels.** The forget images come without labels. We use the original's predictions, which it makes with a mean top probability of 0.9997 on these training images. The `labels` field in our cross-fit file holds the cross-fit's own predicted classes; `split_noise.py` used it by mistake until 04:51, which doubled its noise estimates.
-- **Our models of the score stop at about 5%.** Near the best point, lines that match it on every statistic we measure still score up to 6% lower (0.2665 against 0.2837). Choices below that level are made on the probes and on noise reduction (weight averaging), not on a predicted score.
+- **Our models of the score stopped at about 5% through the night.** Near the best point, lines that match it on every statistic we measure still scored up to 6% lower (0.2665 against 0.2837). Choices below that level were made on the probes and on noise reduction (weight averaging), not on a predicted score. The morning's `score_fit.py` brings the leave-one-out error on the high lines to 1 to 2.5%, with a free level c of 0.40 to 0.52 that it cannot attribute to one term (section above).
 - The hidden altered copies are not modelled. Our own alterations (flip, crop, rotation, shift, blur, JPEG, jitter, noise) track the exact images closely in every report.
 - Retain is estimated from held-out forget images and spare classes, not from the real control set.
   - Those are training images of the original, which it fits with near certainty.
@@ -383,6 +425,7 @@ python $WT/tasks/unlearning/soup.py --models output/kkrgp/k8_e3t2_rm1_lr1e4.pt o
 | 0.256 | `k9_e3t1_lr1e4_x1p25.pt` | `run_ninth.sh` (`--name k9_e3t1_lr1e4 ... --tau 1 --lr 1e-4`), then `splice_head.py --scale 0.8` |
 | 0.2665 | `k8_e3t2_rm1_ep40_x2p25.pt` | `run_eighth.sh` (`--name k8_e3t2_rm1_ep40 ... --epochs 40`), then `splice_head.py --scale 0.4444444` |
 | 0.2858 | `k11_b_soup3_x2.pt` | `run_eleventh.sh` (`k11_b_s1`, `k11_b_s2`), then `soup.py ... --scale 0.5` with the 0.2837's base (above) |
+| 0.2687 | `k8_e3t2_rm1_ep40_x2.pt` | the desk's line at 08:21: the 0.2665's base (`k8_e3t2_rm1_ep40`) with the last layer times 2 |
 
 **Which command gives which number:**
 - scores, times and sha256 values: the records in `tasks/unlearning/submissions/` on `main`;
@@ -402,5 +445,7 @@ python $WT/tasks/unlearning/plateau.py --targets output/kkrgp/xfit_extras.npz
 python $WT/tasks/unlearning/split_noise.py --draws 4000
 python $WT/tasks/unlearning/twins.py
 python $WT/tasks/unlearning/check_thirteenth.py /Volumes/euroai-apfs/r21/thirteenth
+python $WT/tasks/unlearning/score_fit.py --retain control --proxy-temperature 1.25
+python $WT/tasks/unlearning/blend_search.py $WT/tasks/unlearning blends.json
 python -m pytest $WT/tasks/unlearning -q
 ```
