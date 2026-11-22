@@ -1,0 +1,45 @@
+job 15905366 on jrc0414, CUDA_VISIBLE_DEVICES=0,1,2,3
+==> output/kkrgp/seventh/log_mix_probe.txt <==
+    "moved_share": 0.7644,
+    "kl_reference_sub_t2": 1.0684,
+    "acc_vs_reference": 0.9083,
+    "loss_mean": 0.4129
+  },
+  "spare_thinned": {
+    "moved_share": 0.5574,
+    "kl_reference_sub_t2": 0.7268,
+    "acc_vs_reference": 0.9872,
+    "loss_mean": 0.1531
+  }
+}
+
+==> output/kkrgp/seventh/log_mix_s0.txt <==
+{"loss": 1.0562312300545829, "kl_t1": 0.4896108561924526, "kl_t2": 0.3186251822880336, "mix_anchor": 0.24799518830435616, "epoch": 24}
+{"loss": 1.030898011480059, "kl_t1": 0.46622492333820886, "kl_t2": 0.3131602278777531, "mix_anchor": 0.2515128622565951, "epoch": 25}
+{
+  "name": "k13_mix_s0",
+  "trained_thinned": {
+    "moved_share": 0.9936,
+    "kl_reference_sub_t2": 1.9574,
+    "acc_vs_reference": 0.3703,
+    "loss_mean": 1.9092
+  }
+}
+saved output/kkrgp/k13_mix_s0.pt
+
+==> output/kkrgp/seventh/log_mix_s1.txt <==
+{"loss": 1.0411023085457938, "kl_t1": 0.48229942567007883, "kl_t2": 0.31914310537065776, "mix_anchor": 0.2396597832952227, "epoch": 24}
+{"loss": 1.0306086899893625, "kl_t1": 0.46921229124069214, "kl_t2": 0.3158654149600438, "mix_anchor": 0.2455309807232448, "epoch": 25}
+{
+  "name": "k13_mix_s1",
+  "trained_thinned": {
+    "moved_share": 0.9965,
+    "kl_reference_sub_t2": 1.9691,
+    "acc_vs_reference": 0.3723,
+    "loss_mean": 1.9067
+  }
+}
+saved output/kkrgp/k13_mix_s1.pt
+2e5a79ecfc621c20211fb99c8f6059466e6e4987976396767313eee57659e63b  k13_mix_s0.pt
+20377aab11eb4ebc21e9a5263900683a54ddef0e7ce91d24b0dfaaa8aebc619c  k13_mix_s1.pt
+c7620073b80f43cd588c579cd02783a1e0821edf49ea17114d5791d936bda4dc  k13_mix_soup_x2.pt

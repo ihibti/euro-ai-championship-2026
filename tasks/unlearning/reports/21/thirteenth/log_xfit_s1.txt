@@ -1,0 +1,39 @@
+{"fold": 0, "train_images": 2783, "last_train_loss": 0.02035623643663754, "seen_agreement": 1.0, "held_agreement": 0.9553695917129517, "seconds": 248.4835193157196}
+{"fold": 1, "train_images": 2793, "last_train_loss": 0.02060503589847674, "seen_agreement": 1.0, "held_agreement": 0.9420084953308105, "seconds": 416.6044898033142}
+{"fold": 2, "train_images": 2802, "last_train_loss": 0.020232123437787616, "seen_agreement": 1.0, "held_agreement": 0.9455587267875671, "seconds": 585.1428771018982}
+{"fold": 3, "train_images": 2808, "last_train_loss": 0.020028649704621048, "seen_agreement": 1.0, "held_agreement": 0.9465317726135254, "seconds": 753.5053346157074}
+{"fold": 4, "train_images": 2814, "last_train_loss": 0.02008586647366283, "seen_agreement": 1.0, "held_agreement": 0.9533527493476868, "seconds": 921.9088337421417}
+{
+  "args": {
+    "name": "extras_s1",
+    "reading": "extras",
+    "cut": "9",
+    "folds": "5",
+    "epochs": "30",
+    "batch": "256",
+    "lr": "0.0005",
+    "weight_decay": "0.05",
+    "ce_weight": "0.1",
+    "fresh_scale": "False",
+    "seed": "1",
+    "limit": "0",
+    "out": "output/kkrgp"
+  },
+  "held_out": {
+    "agreement_with_label": 0.9485714435577393,
+    "loss_mean": 0.16528116166591644,
+    "loss_std": 0.6891727447509766,
+    "label_prob_t2": 0.8495405912399292,
+    "agreement_by_view": {
+      "exact": 0.9485714435577393,
+      "flip": 0.9428571462631226,
+      "crop85": 0.9594285488128662,
+      "shift10": 0.913428544998169,
+      "jitter": 0.8942857384681702,
+      "blur1": 0.9302856922149658,
+      "jpeg50": 0.9314285516738892,
+      "noise8": 0.9459999799728394
+    }
+  },
+  "seconds": 922.3440084457397
+}

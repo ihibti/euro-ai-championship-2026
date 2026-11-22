@@ -1,0 +1,4 @@
+k13_mix_s0 done
+k13_mix_s1 done
+k13_mix_soup_x2 done
+wrote output/kkrgp/seventh/logits.npz
