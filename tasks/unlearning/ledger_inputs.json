@@ -575,6 +575,23 @@
     "spare_acc": 0.96,
     "spare_p_lab": 0.453
    }
+  },
+  "k10_t2_lr2e4_ep40_rm2": {
+   "realized": {
+    "loss_mean": 2.828,
+    "loss_std": 2.29,
+    "label_prob_t2_sub": 0.194,
+    "kl_orig_sub_t2": 2.255
+   },
+   "retain": 0.531,
+   "flip": 0.059,
+   "spill": {
+    "held_kl": 0.963,
+    "held_acc": 0.893,
+    "spare_kl": 0.614,
+    "spare_acc": 0.98,
+    "spare_p_lab": 0.579
+   }
   }
  },
  "gate_band": [

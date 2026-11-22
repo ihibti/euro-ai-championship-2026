@@ -72,3 +72,21 @@ def test_worst_case_skips_readings_that_kept_nothing():
     live = [m for m in ("probe", "half", "flat") if tables[m]]
     assert peak_check.worst_case(tables, live, ("a", 2.0)) == 0.27
     assert peak_check.worst_case(tables, live, ("b", 1.0)) == float("-inf")
+
+
+def test_temperature_retain_peaks_when_the_factor_equals_the_spill_temperature():
+    torch.manual_seed(1)
+    unseen = peak_check.soften_to(torch.randn(200, 10) * 4, 0.8)
+    spill = {"held_acc": 0.9, "spare_acc": 0.98, "held_kl": 1.0, "spare_kl": 0.6}
+    at_one = peak_check.temperature_retain(spill, 1.0, unseen)
+    rest = 0.2 * (0.45 * 1.0 + 0.55 * 0.6)
+    assert at_one == pytest.approx((0.45 * 0.9 + 0.55 * 0.98) / (1 + rest))
+    assert peak_check.temperature_retain(spill, 0.75, unseen) < at_one
+    assert peak_check.temperature_retain(spill, 1.25, unseen) < at_one
+
+
+def test_soften_to_reaches_the_asked_confidence():
+    torch.manual_seed(2)
+    soft = peak_check.soften_to(torch.randn(300, 10) * 6, 0.8)
+    top = float(torch.softmax(soft, 1).max(1).values.mean())
+    assert top == pytest.approx(0.8, abs=1e-3)

@@ -17,7 +17,11 @@ prediction for a candidate is the mean, minimum and maximum over the kept settin
 Whether the probes' spill differences carry over to the real control set is not known, so each
 prediction comes three ways: `probe` (retain as the probes say), `half` (halfway to the anchor's
 retain) and `flat` (every line at the anchor's retain). A line is worth a slot only if it beats
-the best score under all three.
+the best score under all three. A fourth reading, `temp`, treats the drift on unseen images as
+the base's spill temperature (from the spare classes' label probability): after a factor f, the
+leftover temperature f / T costs KL on a stand-in for unseen images (the cross-fitted predictions,
+softened to a mean top probability of 0.8), and 20% of the probes' KL is kept as drift that no
+factor removes.
 
     cd <team folder> && python <repo>/tasks/unlearning/peak_check.py \\
         --logits /Volumes/euroai-apfs/r21/seventh/logits.npz ... [--tolerance 0.02]
@@ -37,11 +41,14 @@ import torch.nn.functional as F
 sys.path.insert(0, str(Path(__file__).parent))
 
 import ledger  # noqa: E402
+import scoring  # noqa: E402
 
 GOLD_LEVELS = tuple(
     (round(2.6 + 0.2 * i, 2), round(3.0 + 0.3 * j, 2)) for i in range(11) for j in range(6)
 )
-RETAIN_MODES = ("probe", "half", "flat")
+RETAIN_MODES = ("probe", "half", "flat", "temp")
+NONTEMP_SHARE = 0.2
+UNSEEN_CONFIDENCE = 0.8
 FACTORS = (1.0, 1.15, 1.25, 1.333, 1.5, 1.6, 1.75, 1.9, 2.0, 2.1, 2.25, 2.5)
 OBSERVED = (
     ("k8_e3t2_rm1_lr1e4", 2.0, 0.2837),
@@ -80,6 +87,27 @@ def references(orig: torch.Tensor, step: torch.Tensor) -> dict[str, torch.Tensor
     return {"K3t1": orig + 3 * step, "mixK": 2 * torch.log(mix)}
 
 
+def soften_to(logits: torch.Tensor, confidence: float) -> torch.Tensor:
+    """Divide logits by the temperature that brings their mean top probability to `confidence`."""
+    low, high = 1.0, 50.0
+    for _ in range(40):
+        mid = (low + high) / 2
+        top = float(F.softmax(logits / mid, 1).max(1).values.mean())
+        low, high = (mid, high) if top > confidence else (low, mid)
+    return logits / ((low + high) / 2)
+
+
+def residual_kl(unseen: torch.Tensor, ratio: float) -> float:
+    return float(scoring.kl_rows(unseen, unseen * ratio).mean())
+
+
+def temperature_retain(spill: dict, ratio: float, unseen: torch.Tensor) -> float:
+    """Retain when the drift is the spill temperature: what the factor leaves, plus a fixed rest."""
+    agreement = 0.45 * spill["held_acc"] + 0.55 * spill["spare_acc"]
+    rest = NONTEMP_SHARE * (0.45 * spill["held_kl"] + 0.55 * spill["spare_kl"])
+    return agreement / (1.0 + rest + residual_kl(unseen, ratio))
+
+
 def features(
     logits: torch.Tensor,
     factor: float,
@@ -87,21 +115,29 @@ def features(
     labels: torch.Tensor,
     spill: dict,
     refs: dict,
+    unseen: torch.Tensor | None = None,
 ) -> dict:
     sharp = logits * factor
     loss = F.cross_entropy(sharp, labels, reduction="none")
-    return {
+    out = {
         "mean": float(loss.mean()),
         "std": float(loss.std()),
         "retain": ledger.sharpened_retain(spill, factor, orig, logits),
         "pred": {name: pred_term(ref, sharp, orig) for name, ref in refs.items()},
     }
+    if unseen is not None:
+        spill_t = ledger.effective_temperature(orig, labels, spill["spare_p_lab"])
+        out["spill_t"] = spill_t
+        out["retain_temp"] = temperature_retain(spill, factor / spill_t, unseen)
+    return out
 
 
 def with_retain(feats: dict, mode: str, anchor: tuple) -> dict:
     """Retain as the probes say, halfway to the anchor's, or the anchor's for every line."""
     if mode == "probe":
         return feats
+    if mode == "temp":
+        return {k: {**f, "retain": f["retain_temp"]} for k, f in feats.items()}
     level = feats[anchor]["retain"]
     share = 0.5 if mode == "half" else 0.0
     return {k: {**f, "retain": level + share * (f["retain"] - level)} for k, f in feats.items()}
@@ -167,6 +203,7 @@ def main(argv: list[str] | None = None) -> None:
     step = torch.zeros_like(orig)
     step[:, columns] = pred[:, columns] - orig[:, columns]
     refs = references(orig, step)
+    unseen = soften_to(pred, UNSEEN_CONFIDENCE)
     spills = {
         n: s["spill"]
         for n, s in json.loads(args.inputs.read_text())["candidates"].items()
@@ -181,11 +218,15 @@ def main(argv: list[str] | None = None) -> None:
     feats = {}
     for name in sorted(set(dumped) & set(spills)):
         for factor in FACTORS:
-            feats[(name, factor)] = features(dumped[name], factor, orig, labels, spills[name], refs)
+            feats[(name, factor)] = features(
+                dumped[name], factor, orig, labels, spills[name], refs, unseen
+            )
     observed_rows = parse_observed([f"{n}:{f}:{s}" for n, f, s in OBSERVED] + list(args.observed))
     for name, factor, _ in observed_rows:
         if (name, factor) not in feats:
-            feats[(name, factor)] = features(dumped[name], factor, orig, labels, spills[name], refs)
+            feats[(name, factor)] = features(
+                dumped[name], factor, orig, labels, spills[name], refs, unseen
+            )
     anchor = observed_rows[0][:2]
     tables = {}
     for mode in RETAIN_MODES:
@@ -203,13 +244,15 @@ def main(argv: list[str] | None = None) -> None:
     observed = {(n, f): s for n, f, s in observed_rows}
     shown = sorted(feats, key=lambda k: -worst[k])[: args.top]
     shown += [k for k in observed if k not in shown]
-    print(f"{'candidate':<24}{'x':>6} {'loss':>11} {'retain':>7} | probe | half | flat | observed")
+    head = " | ".join(RETAIN_MODES)
+    print(f"{'candidate':<24}{'x':>6} {'loss':>11} {'f/T':>5} | {head} | observed")
     for key in shown:
         feat = feats[key]
         loss = f"{feat['mean']:.2f}/{feat['std']:.2f}"
         cells = " | ".join(f"{tables[m].get(key, nan)[0]:.3f}" for m in RETAIN_MODES)
         seen = observed.get(key, "")
-        print(f"{key[0]:<24}{key[1]:>6g} {loss:>11} {feat['retain']:7.3f} | {cells} | {seen}")
+        ratio = key[1] / feat["spill_t"]
+        print(f"{key[0]:<24}{key[1]:>6g} {loss:>11} {ratio:5.2f} | {cells} | {seen}")
 
 
 if __name__ == "__main__":
