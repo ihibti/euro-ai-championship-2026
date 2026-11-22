@@ -15,7 +15,7 @@ Our best public score is **0.2837** (`k8_e3t2_rm1_lr1e4_x2`, 02:38), up from 0 a
 - **The tempered target spreads probability over the sibling classes,** which is what the gold models' average looks like at temperature 2.
 - **Sharpening restores per-model confidence and undoes the drift.** It brings back the single models' confidence on the loss side. It also takes back the temperature-like drift that the soft target leaked to unseen images, which is what the retain score penalises.
 
-Every submission was chosen from predictions written on #12 before its score, one change at a time. Reproducing the 0.2133 takes the commands at the end and about 8 GPU minutes.
+The 0.2837 is the same recipe trained at learning rate 1e-4 instead of 5e-5. Every submission was chosen from predictions written on #12 before its score, one change at a time. Reproducing either score takes the commands at the end and about 8 GPU minutes.
 
 ## The problem in four sentences
 
@@ -179,7 +179,7 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 
 ## Reproduce
 
-**The 0.2133, in three steps**, from the unlearning data folder with the task's environment:
+**The 0.2837 and the 0.2133, in three steps**, from the unlearning data folder with the task's environment. The 0.2837 is the same with `--lr 1e-4` and the name `k8_e3t2_rm1_lr1e4` in step 2: sha256 `d907f3cc…` before sharpening, `522e5851…` after.
 
 1. **The cross-fitted targets** (GPU): `output/kkrgp/xfit_extras.npz`, as in `run_third.sh`.
 2. **The fine-tune** (GPU, about 8 minutes): `k7_e3t2_rm.pt`, sha256 `107d98f8…`, as in the seventh batch.
