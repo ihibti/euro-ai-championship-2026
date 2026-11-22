@@ -1,0 +1,150 @@
+# Judges' defense pack
+
+Team Begg, European AI Championship, Paris, 22 November 2026. Written at about 05:00 for the lead, who slept through the night, and through the lead for the jury. Every number here comes from a committed file or a posted score. Where a source gives none, the text says **to be filled by the desk**.
+
+## 1. The night in ten lines
+
+1. At 23:45 the public board had us 20th of 32, with an overall 0.33. The sixth team had 0.73. The overall is the mean over the three tasks of (ours − lowest) / (best − lowest).
+2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **0.7** (04:23), unlearning **0.2858** (04:39).
+3. Against the board's best scores of 22:33, that is an overall of about 0.80. Our current rank is **to be filled by the desk**.
+4. One human, the team lead, set the rules and the night authorization, a file written at a terminal that caps answers and submissions until 09:00, and then slept.
+5. One agent, the desk, was the only one allowed to touch the GPU cluster (JURECA) and the organizers' server. It spent scored answers, submitted, reviewed and merged.
+6. One agent per task did the analysis: a model equality main line; a second, independent model equality method by another coding agent (Devin) on a second computer; an unlearning agent. None could submit.
+7. Watermark work stopped at candidate c6, the 23:36 submission. The night's GPU time went to unlearning, the analysis time to model equality.
+8. All coordination went through GitHub issues (#19 status, #12 unlearning submissions, #21 GPU requests) and committed files. Nothing lived only in a chat.
+9. In model equality and unlearning, every rule or prediction behind a submission was committed or posted before the data or score that judged it.
+10. The full log is the table in `docs_and_plans/work/doing/night-plan.md`. The lead's checklist is `docs_and_plans/work/doing/morning-brief.md`.
+
+## 2. The three tasks
+
+### Watermark localisation
+
+**Task.** Each image carries one of three invisible watermarks (PixelSeal, TrustMark, StegaStamp) on part of the picture. We return a mask of the watermarked part. The score is the mean per-image IoU on a 128 × 128 grid (`tasks/watermark_localization/README.md`).
+
+**What we did, in order** (records in `tasks/watermark_localization/results/` on the setup branch):
+
+| step | train score | held-out score |
+|---|---|---|
+| organizers' all-zeros baseline | 0.2518 | |
+| whole-image decode: all ones if the full-frame bit accuracy passes a per-method threshold | 0.4529 | |
+| c3: a segmentation network for StegaStamp, trained on 4 of 5 folds | 0.5942 | |
+| c4a: one network per method | 0.8216 | 0.684 |
+| c5 (public 0.7251) | 0.9135 | 0.7326 |
+| c6 (public 0.7444, submitted 23:36) | 0.9248 | 0.7331 |
+
+- The networks read the watermark decoders' own feature maps, which the starter kit exposes. "PixelSeal on its own extractor" in the records means this, on our reading. **To be confirmed by the desk.**
+- c6 combines `stegastamp_n1`, `trustmark_n1` and `pixelseal_x1_snap3`. What "snap3" does is **not stated in the files I read; to be filled by the desk.**
+
+**Evidence it is sound.**
+- Each network was trained on four fifths of the training images and scored on the fifth it never saw.
+- The train scores include images the networks trained on, so they are not evidence. The held-out fifth is.
+- c6 against c5 on the held-out images is a paired gain of +0.0104 (90% interval +0.0015 to +0.0201). The public 0.7444 sits close to c6's held-out 0.7331.
+- Unclear to me: the c6 record compares against "c5 0.7227", while c5's own record gives 0.7326. **To be explained by the desk.**
+
+**Limits and another day.** About a quarter of the images are a watermarked rectangle on a clean picture, and the networks are weakest there (0.68 against 0.82 on the other kinds, for StegaStamp). A rectangle decodes almost perfectly from its exact crop. A crop search was planned for Devin (`docs_and_plans/work/doing/watermark-rectangle-search.md`); its outcome is **to be filled by the desk**. A second idea, snapping masks to object outlines, was not started.
+
+### Model equality
+
+**Task.** 33 chat endpoints. For every pair, say whether they share a base model and whether they serve the same model: same weights, quantization and adapter. A system prompt, a decoding setting or a watermark does not change the model. Score: 0.1 × MCC on families + 0.9 × MCC on same-model pairs inside families. Each endpoint has a budget of 100 answers.
+
+**What we did**, condensed from `tasks/model_equality/judges_brief.md`, which has every number:
+1. **Families.** Three families of eleven: Qwen2.5-3B-Instruct, which writes numbers as digits; Qwen2.5-1.5B-Instruct, which writes them as words; Llama-3.2-1B-Instruct. The public pairs confirm them.
+2. **Prompted copies.** We asked each endpoint for its hidden instructions. One copy per family quoted a fixed system prompt, and one gave a different persona each time.
+3. **Likelihood under the public base model.** We ran each base model on a laptop and scored every token we had received. That gives each endpoint's sampling temperature, and shows whether the temperature is the same on every prompt.
+4. **Decoder fits.** We fitted temperature, top-p and top-k jointly, counting the tokens each setting could not have produced. This finds one truncated-sampling copy per family.
+5. **Watermark signature.** Repeated whole answers, and long identical story openings. This finds one watermark copy per family.
+6. **Stop decision.** Adapters change when a model decides to end its answer.
+
+**Evidence it is sound.** All six were run first on nine free reference endpoints whose variants are published: plain, fp8, three LoRA strengths, system prompt, persona, watermark, temperature 1.0.
+- The likelihood fit recovers the temperature copy (1.007), and it shows the strong adapters as shifted and uneven (p 3e-6 and 5e-14).
+- The watermark copy has the longest story openings (118.5 characters against 28.9 for plain).
+- The stop rule caught LoRA 0.3 at 20 answers (p 0.0003).
+- A prediction registered before the scored stories existed held in 2 of 3 families. The third was settled by an exact probability under the base model.
+
+**Result.** Per family, five endpoints are labelled as one model: two prompted copies, a temperature copy, a truncated-sampling copy and a watermark copy. The rest are alone. Public 0.7.
+
+**Limits and another day.**
+- fp8 is invisible to every probe on the references, so each family's plain copy cannot be told from its fp8 copy. Our best candidates (ep-12, ep-32, ep-19) are at 0.40 to 0.45, so none was added.
+- The desk is testing a new stop-probability channel on fresh reference answers. Its registered prediction is that fp8 sits above +2 and plain within ±2. The outcome is **to be filled by the desk**.
+- With another day we would spend the remaining answers on that channel.
+
+### Unlearning
+
+**Task.** We get an image classifier and 3,500 of its training images to forget. The submission is scored against "gold", models retrained without those images: its losses and predictions on those images must match gold's. A control set penalises drift elsewhere, and a model under 70% validation accuracy scores 0. We had no gold model, no retained data and no labels beyond the original model's own predictions.
+
+**What we did**, condensed from `tasks/unlearning/judges_brief.md` on the unlearning branch:
+- **Gold, parametrised.** Since gold is unknown, a family of gold hypotheses was built from a cross-fitted prediction: each image predicted by blocks that never saw it.
+- **A written prediction per submission.** Every candidate was scored under every hypothesis with the server's formulas, tested in code. Each submission carried a written prediction, posted on #12 before its score. Each score then reweighted the hypotheses.
+- **The recipe.** Fine-tune the last 6 of 12 blocks towards that prediction, pushed further in the direction a model that never saw the image would err, softened by a temperature of 2. Then multiply the last layer by 2. That changes no predicted class and restores confidence.
+- **The final submission.** The weight average of three seeds of the best recipe (0.2858). The three seeds match on every statistic we measure, but pick different classes on 11 to 12% of the forget images. Averaging cancels part of that noise.
+
+**Evidence it is sound.**
+- Each of the first ten night submissions changed one setting and carried a prediction posted before its score. For example, the temperature-only test predicted about 0.008 and scored 0.0057. The eleventh, the seed average, was chosen without a score model.
+- Spill probes on held-out images measured drift before anything was queued.
+- A simulation of random 30% splits shows that the ratio between two of our lines moves by about 2% (one standard deviation), so differences of a few percent on the board are partly noise.
+
+**Result.** From 0.00 at 21:19, through 0.066 (01:38), 0.2133 (02:08) and 0.2837 (02:38), to 0.2858 (04:39). The steps in between scored 0.2222, 0.256 and 0.2665, each lower, and each said why.
+
+**Limits and another day.**
+- Gold is modelled by a few parametric families, and the truth may lie outside them.
+- The agent's own score models stop at about 5%. It retired its score predictor at 04:12, after the predictor missed three times.
+- The ceiling is how far training gets towards the target: the training loss was still falling at 40 epochs. Another day would go to longer training at the same spill.
+
+## 3. Why this is not leaderboard fitting
+
+- **Frozen rules.** Each deciding rule was committed with its time before the data that judged it existed. Examples: the stop rule at 00:47, the batteries at 02:47, the watermark prediction at 03:51, the fp8 check at 04:33. Each commit message says whether any of the data already existed and whether it had been read.
+- **References first.** No prompt set was spent on scored endpoints before it had run on the nine free references with the same code.
+- **Few submissions, each with a reason:**
+
+  | task | at night | before | reason recorded |
+  |---|---|---|---|
+  | model equality | 3: floor 0.0, families 0.1, labelled copies 0.7 | none | yes, in the night log |
+  | unlearning | 11, each with a written prediction on #12 | 1 at 21:19 (0.00); others **to be filled by the desk** | yes |
+  | watermark | 1 (c6) | c5 and earlier: **number to be filled by the desk** | held-out gain |
+
+  No model equality grouping was submitted to test a candidate against the public score.
+- **Ideas withdrawn after failing their own test:**
+  - Model equality main line:
+    - distance clustering, which merged all nine references at 40 answers;
+    - the identity reading, held back at 02:05 and contradicted by the leak answers at 02:15;
+    - a registered yes/no split in family A, refuted at 03:00 (p 0.62);
+    - an fp8 candidate, refuted at 01:42;
+    - a battery agreement method, unvalidated at 4 answers and used only to describe.
+  - Desk:
+    - the family A split it proposed, which failed the pre-registered test;
+    - the 01:30 submission, which rested on a misreading of the metric.
+  - Unlearning agent:
+    - the "whole classes removed" and "soft gold" readings, both ruled out by their own predictions;
+    - a ledger error that treated the accuracy gate as a fraction, found and fixed at 01:13;
+    - the line fixed for 03:38, withdrawn before its slot with the reason posted;
+    - the score predictor, retired at 04:12 after missing three times.
+
+## 4. The organizers' rules and how we kept them
+
+| rule | how we kept it | source |
+|---|---|---|
+| one GPU job for the whole team, running or pending | jobs ran one after another, and the desk alone submitted them; the exception was 23:47 to 23:54 (incident below) | night log; morning brief, "What was spent" |
+| team check before every job submission | logged as empty before each submission from 00:29 on | night log |
+| job submitted from inside the team folder | the desk's standing rule; confirmation per submission **to be filled by the desk**. Open question to the organizers: does a submission from a login node that does not show scratch, pointed at the team folder, count? | morning brief, decision 3 |
+| a few hundred files at most on scratch | 209 files staged at 23:45 were removed at 01:35, when an organizer asked teams to free slots; from 02:13 every batch was staged by renaming and emptying old files, with no new file; counts for the batches between 00:03 and 01:16 **to be filled by the desk** | night log 01:35, 02:13 |
+| 100 answers per scored endpoint | used 64 (A), 66 (B), 48 (C); night cap 80 | morning brief |
+| 30 minutes between submissions per task | unlearning 23:37 to 04:39, every 30 to 31 minutes; model equality 23:36, 01:30, 04:23; watermark one | morning brief tables |
+
+**Incidents, stated plainly:**
+- **23:47, a held follow-up job.** The desk queued a 5-hour job behind the running one, to hold the node for later work. The organizers' text allows chained follow-ups. Our stricter rule allows no pending job and no job without ready work. The lead pointed out the ban risk, and the desk cancelled it at 23:54, seven minutes later.
+- **00:22, one stray request.** A test run on the lead's laptop sent one request to the organizers' server with a test key, and the server refused it (HTTP 401). The script's tests had acted on the night authorization. It was fixed in PR #31 at 00:37, with two regression tests. The stray record was never committed.
+- **01:30, a misjudged submission.** The desk submitted "one model per family", expecting more than 0.1. The model part is scored only inside families, where "all the same" scores zero. That cost one of the five night slots. It also confirmed the families.
+- **00:41, the cluster link dropped.** Login nodes were rebooted during the night. The lead reopened the link at 00:54 and allowed one guarded reconnect attempt per host. No JURECA work was done while the link was down.
+
+## 5. Ten questions a jury would ask
+
+1. **How do you know two endpoints serve the same model?** We do not claim it from similarity. Each label is a specific disguise (prompt, temperature, top-p, watermark), identified by a method that recovered the same disguise on the published references.
+2. **Did you tune to the public board?** No. Rules were committed before their data, and no grouping was submitted as a trial. In unlearning, each submission carried a written prediction, and the board was used to reject hypotheses.
+3. **Why are so many model equality endpoints left alone?** Calling a pair "same" wrongly costs about as much as missing a true pair. We join only what a validated method names.
+4. **Can you tell fp8 from plain?** Not yet. No probe separated them on the references. The desk is testing a stop-probability channel, with its prediction registered before the fresh reference answers. Outcome **to be filled by the desk**.
+5. **Isn't multiplying the last layer by 2 a trick?** It changes no predicted class, so accuracy is untouched. It undoes the softness that the temperature-2 target taught. The factor came from a measurement made before any score.
+6. **Why average three unlearning models?** They are seeds of one recipe and match on every statistic we measure. The board cannot rank them: on 30% to 84% of random splits, the public and hidden parts disagree on which seed is better. Averaging removes seed noise without choosing on the public split.
+7. **How sound is the watermark score?** It rests on a held-out fifth of the training images, not on the train score. c6's paired gain over c5 is +0.0104, with a 90% interval above zero.
+8. **What was your biggest mistake?** In model equality, the 01:30 submission. In unlearning, the ledger's gate error, fixed at 01:13. In the first round, a clustering method, which we withdrew on the references before it touched a scored endpoint.
+9. **How did agents work without a human?** Each had one goal, a stop rule and a file to write to. Only the desk could act on the cluster or the server, inside caps the lead wrote at a terminal. Everything is in issues and commits.
+10. **What would you do with another day?** Model equality: separate plain from fp8 with the stop channel. Unlearning: longer training at the same drift. Watermark: the rectangle crop search.
