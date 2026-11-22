@@ -1,8 +1,8 @@
-# Unlearning: what we did and why (brief for the judges)
+# Unlearning: method, results and limits
 
-Written during the night of 21 to 22 November by the unlearning agent, for the team to read in the morning. Every number below comes from a committed file or a score posted on #12; the commands at the end reproduce them. The brief is updated through the night; the last update is at the top of the log in `night.md`.
+Written during the night of 21 to 22 November and the following morning by the unlearning agent. Every number below comes from a committed file or a score posted on #12; the commands at the end reproduce them. The working log is `night.md`.
 
-## Two-minute version (for presenting)
+## Summary
 
 1. **The problem.** Make a ViT-B/16 forget 3,500 of its training images, so that it looks like models retrained without them, while it keeps its behaviour elsewhere. There are no labels, no retained data and no gold model.
 2. **Our stand-in for gold.** We kept the first 9 blocks and retrained the last 3 from scratch, in five folds, on the forget images. Each image then gets a prediction from a copy that never saw it: the cross-fit. Extrapolated 3 times, it matches what the scores imply about gold: confidently wrong on a large share of the images, towards sibling classes.
@@ -375,7 +375,7 @@ Each run changes one or two arguments of `k8_e3t2_rm1_lr1e4`, the base of the 0.
 
 Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from different code point to a recipe whose result does not depend on the code: either the limit of training the forget images to uniform outputs, or the best point of a one-knob family such as dividing every logit by one temperature. `plateau.py` shows which golds make each recipe land on 0.16, and the ledger asks which of those golds also predict our own scores. The temperature family is out after `scale_t4`.
 
-## Honest limits
+## Limits
 
 - Gold is modelled by a few parametric families along our cross-fit's direction. The truth may be outside them.
 - Until the dumped logits arrive (`dump_logits.py`, at the end of the seventh and eighth batches), fine-tuned candidates enter the ledger through their measured loss statistics plus a fitted proxy of their output distribution. Checked on the eighth batch, the proxy ran 3 to 8% below the exact logits (#12, 02:56).
@@ -391,23 +391,23 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
   - The ledger counts every changed prediction as a lost correct one, so its retain accuracy and its gate are conservative.
 - The seventh batch's fine-tunes were still improving when training stopped (training KL at T=1 still falling about 0.02 per epoch over the last four epochs, in the reports' `history`), so longer or faster training reaches further. The eighth batch measures how much spill that costs.
 
-## Likely questions
+## Design choices
 
-- **Why not gradient ascent or random labels?** The metric clips overshoot to 0, and both spill onto nearby retained images (`research.md`, rows 12 and 27).
-- **How do you know the model still works?** Dividing logits by a positive number never changes the predicted class. Fine-tunes are checked on held-out forget images and on classes they never trained on (`acc_vs_reference` in every probe), and the ledger turns those flips into a pass or fail at the gate for every value of A.
-- **Did you tune to the public board?** No. Each submission was chosen from predictions written before its score, one dial at a time. The board was used to reject hypotheses, not to pick thresholds.
-- **What was the biggest mistake?** Treating the gate as a fraction in the ledger (above), and earlier, reading `bias_full30`'s 0 as proof against removal when the gate could explain it.
-- **Isn't multiplying the last layer by 2 a trick?**
+- **No gradient ascent or random labels.** The metric clips overshoot to 0, and both spill onto nearby retained images (`research.md`, rows 12 and 27).
+- **Checking that the model still works.** Dividing logits by a positive number never changes the predicted class. Fine-tunes are checked on held-out forget images and on classes they never trained on (`acc_vs_reference` in every probe), and the ledger turns those flips into a pass or fail at the gate for every value of A.
+- **No tuning to the public board.** Each submission was chosen from predictions written before its score, one dial at a time. The board was used to reject hypotheses, not to pick thresholds.
+- **The biggest mistakes.** Treating the gate as a fraction in the ledger (above), and earlier, reading `bias_full30`'s 0 as proof against removal when the gate could explain it.
+- **Multiplying the last layer by 2.**
   - It changes no prediction: every image keeps its predicted class, so validation accuracy and the gate are exactly the fine-tune's.
   - It changes confidence only. The fine-tune was trained towards a target tempered by 2, so it learned to be about twice as soft as a normal model. On images it never trained on, that softness is drift away from the original, and the retain score penalises it. Multiplying by 2 gives the network back the confidence it had before the fine-tune.
   - On the forget images, the same factor makes the wrong predictions as confident as a retrained model's. The retrained models are trained without temperature, so their errors are confident.
   - The factor came from a measurement before any score: the probes put the drift on unseen classes at a temperature of about 2.4 (`night.md`, 01:20).
-- **Why did the ledger predict 0.086 for a 0.2133?** Its retain estimate comes from the probes, on images the original memorised. There the fine-tune also changes some predictions, and sharpening cannot undo those. On the real control set, unseen images, the drift is apparently almost purely a temperature, so sharpening removes nearly all of it. The direction was right and the size was about twice too small. The ledger's ranking held, and the later lines use its ranking rather than its levels.
-- **Is the factor tuned to the board?**
+- **Why the ledger predicted 0.086 for a 0.2133.** Its retain estimate comes from the probes, on images the original memorised. There the fine-tune also changes some predictions, and sharpening cannot undo those. On the real control set, unseen images, the drift is apparently almost purely a temperature, so sharpening removes nearly all of it. The direction was right and the size was about twice too small. The ledger's ranking held, and the later lines use its ranking rather than its levels.
+- **The factor was not tuned on the board.**
   - It moved one notch at a time with a written prediction each time. 2 scored 0.2837; 2.5 scored 0.2222.
   - We did not continue upwards, and we did not fine-tune the factor around 2 on the board. The 03:38 line keeps the 0.2837's loss level with a different base, chosen for its lower spill in the probes.
-- **Why submit an average of three models?** The three runs share the recipe and differ only by seed, by at most 0.073 in any weight, so their average is still a fine-tune of the same model, loads into the same architecture and keeps the gate. The twins agree on every statistic and disagree on the class of 16% of the forget images, between near-tied classes: that disagreement is noise, and averaging removes part of it. The board cannot tell the twins apart (section above), so choosing the best-scoring twin would be choosing on the public split's noise.
-- **Why stop at 0.2858?** Every direction we could test from the 0.2837's point scored lower, by 6 to 25%:
+- **Why an average of three models.** The three runs share the recipe and differ only by seed, by at most 0.073 in any weight, so their average is still a fine-tune of the same model, loads into the same architecture and keeps the gate. The twins agree on every statistic and disagree on the class of 16% of the forget images, between near-tied classes: that disagreement is noise, and averaging removes part of it. The board cannot tell the twins apart (section above), so choosing the best-scoring twin would be choosing on the public split's noise.
+- **Why the night stopped at 0.2858.** Every direction we could test from the 0.2837's point scored lower, by 6 to 25%:
   - more sharpening;
   - sharpening to the drift's full temperature;
   - a less-spilling run lightly sharpened;
@@ -415,7 +415,7 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
   The board's noise between two lines is about 1%, and the recipe's seeds are the same model at the metric's temperature, so the remaining dials cannot show a gain the board would register.
   The one step that changes the stand-in for gold itself, a mixture of three independent cross-fits, was run and not submitted (section "The last experiment"). The cross-fits agree on 95% of classes, and the line came out softer, with no factor that fixes it.
   A more diverse stand-in would need models retrained the way gold was, which takes the retained data we do not have.
-- **Why did you break your own pre-registered rule at 03:38?** The rule assumed that further-reaching fine-tunes pay at the same factor, and the 03:08 score refuted the model behind it. Submitting the rule's line would have tested a model we already knew to be wrong. We withdrew it before its slot, posted the reason and the replacement's prediction on #12 before its score, and kept the slot for a line whose advantage shows in the probes.
+- **The pre-registered rule set aside at 03:38.** The rule assumed that further-reaching fine-tunes pay at the same factor, and the 03:08 score refuted the model behind it. Submitting the rule's line would have tested a model we already knew to be wrong. We withdrew it before its slot, posted the reason and the replacement's prediction on #12 before its score, and kept the slot for a line whose advantage shows in the probes.
 
 ## Reproduce
 
