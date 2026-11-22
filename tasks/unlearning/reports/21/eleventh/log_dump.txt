@@ -1,2 +1,7 @@
 k11_b_s1 done
 k11_b_ep20 done
+k11_b_rm2 done
+k11_b_bl4 done
+k11_b_k25 done
+k11_b_s2 done
+wrote output/kkrgp/seventh/logits.npz
