@@ -162,9 +162,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no", default="")
     parser.add_argument("--alpha", type=float, default=stop.ALPHA)
     parser.add_argument("--decide", choices=("e2-yes", "e1-words"), default="e2-yes")
+    parser.add_argument("--exclude", default="", help="comma list left out of the family")
     args = parser.parse_args(argv)
     rows = [r for r in load_rows(args.answers) if str(r["endpoint"]).startswith(args.prefix)]
-    members = read_family(args.families, args.family)
+    left_out = set(split_ids(args.exclude))
+    members = [m for m in read_family(args.families, args.family) if m not in left_out]
     yes = flags(rows, members, "e2_leak_quote", said_yes, args.min_repeat)
     default = flags(
         rows, members, "e1_leak_repeat", quotes_default(MARKERS[args.marker]), args.min_repeat

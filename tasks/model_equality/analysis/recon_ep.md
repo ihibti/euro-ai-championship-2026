@@ -514,3 +514,10 @@ The 2-repeat pattern was noise. A gets no split from e2.
     - changed weights, which shift the first token of e1 from "You" to "Repeat";
     - a watermark copy, whose previous-token green list is the same on every request for that fixed-context first token.
   - The pre-registered battery rule decides: split only if modal.py also sets ep-04 apart and it is not the clear sharpest member of A (the watermark signature).
+
+## Registration for B's and C's fresh leak rows (written 03:01, before any fresh B or C leak answer)
+
+The lesson from A: a pattern seen at 2 repeats did not survive 8 fresh ones. These registrations are read on fresh rows only (repeats 2 to 5), at alpha 0.01, with the prompted copies left out.
+- **B**, on 2 existing repeats: ep-03 and ep-28 said yes once each on e2, against 0 of 14 for the other seven non-prompted endpoints. Reading: `leaksplit.py --answers tasks/model_equality/answers/night-e.jsonl --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv --family B --marker qwen --min-repeat 2 --exclude ep-08,ep-20`. stop.set_apart is run on e2 yes and on e1 default. Candidates: ep-03, ep-28. Anything else set apart is reported as unregistered.
+- **C**, as registered at 02:50: `leaksplit.py ... --family C --marker llama --min-repeat 2 --exclude ep-16,ep-29 --decide e1-words --yes ep-10,ep-13,ep-15,ep-19,ep-27,ep-31 --no ep-05,ep-11`, with ep-09 unassigned. The run without `--yes/--no` is reported beside it.
+- A leak result alone never makes a split. Under the 02:47 rule, a split also needs modal.py at 10 repeats and the sharpness check.
