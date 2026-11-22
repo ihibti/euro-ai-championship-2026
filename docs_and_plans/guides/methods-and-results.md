@@ -5,7 +5,7 @@ Team Begg, European AI Championship, Paris, 21 and 22 November 2026. What we did
 ## 1. The night in ten lines
 
 1. At 23:45 the public board had us 20th of 32, with an overall 0.33. The sixth team had 0.73. The overall is the mean over the three tasks of (ours − lowest) / (best − lowest).
-2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **1.0** (08:07; 0.85 at 06:44, 0.7 at 04:23), unlearning **0.3019** (10:48 on the 22nd; 0.2858 at 04:39).
+2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **1.0** (08:07; 0.85 at 06:44, 0.7 at 04:23), unlearning **0.3101** (11:51 on the 22nd; 0.2858 at 04:39).
 3. On the public board at 10:21 on the 22nd: **9th of 44 teams, overall 0.79** (model equality tied first with 15 teams, watermark 12th, unlearning about 17th). The board's overall is the mean over tasks of (ours − lowest) / (best − lowest). Only a team's best public submission counts, and the final ranking is on the hidden 70%.
 4. One human, the team lead, set the rules and the night authorization, a file written at a terminal that caps answers and submissions until 09:00, and then slept.
 5. One agent, the desk, was the only one allowed to touch the GPU cluster (JURECA) and the organizers' server. It spent scored answers, submitted, reviewed and merged.
@@ -90,7 +90,7 @@ Team Begg, European AI Championship, Paris, 21 and 22 November 2026. What we did
 
 **Result.** From 0.00 at 22:19, through 0.066 (01:38), 0.2133 (02:08) and 0.2837 (02:38), to 0.2858 (04:39). The steps in between scored 0.2222, 0.256 and 0.2665, each lower, and each said why.
 
-**The morning of the 22nd.** With the lead back and confirming each submission by hand: 0.2687 at 08:21 (a longer, slower run; the desk had predicted 0.29), an upload that timed out at 09:45 with no score, then **0.2938 at 10:18**: the weight average of two seeds of the recipe and one 40-epoch run, last layer times 2 (the unlearning agent's refitted score model had predicted 0.291), and **0.3019 at 10:48**: the same average with a fourth run, trained 40 epochs at twice the learning rate, last layer times 1.95 (predicted 0.295). From then on only files we would accept as final were submitted, because the best public file is the one ranked on the hidden data.
+**The morning of the 22nd.** With the lead back and confirming each submission by hand: 0.2687 at 08:21 (a longer, slower run; the desk had predicted 0.29), an upload that timed out at 09:45 with no score, then **0.2938 at 10:18**: the weight average of two seeds of the recipe and one 40-epoch run, last layer times 2 (the unlearning agent's refitted score model had predicted 0.291), and **0.3019 at 10:48**: the same average with a fourth run, trained 40 epochs at twice the learning rate, last layer times 1.95 (predicted 0.295). The fourth run alone scored 0.2939 at 11:20. The last submission, at 11:51, averaged the three 40-epoch runs (lr 1e-4 seed 0, lr 2e-4 seeds 0 and 1), last layer times 2: **0.3101**, the final best. From then on only files we would accept as final were submitted, because the best public file is the one ranked on the hidden data.
 
 **Limits and another day.**
 - Gold is modelled by a few parametric families, and the truth may lie outside them.
@@ -106,7 +106,7 @@ Team Begg, European AI Championship, Paris, 21 and 22 November 2026. What we did
   | task | at night | before | reason recorded |
   |---|---|---|---|
   | model equality | 5: floor 0.0, families 0.1, labelled copies 0.7, the same plus C's two plain-like endpoints 0.85, the same plus B's ep-32 1.0 | none | yes, in the night log |
-  | unlearning | 11: ten with a written prediction on #12, the last a seed average chosen without a score model. On the morning of the 22nd: 08:21 (0.2687), 09:45 (upload timed out, no score), 10:18 (0.2938), 10:48 (0.3019), each with a prediction on #12 | 1, at 22:19 (0.00) | yes |
+  | unlearning | 11: ten with a written prediction on #12, the last a seed average chosen without a score model. On the morning of the 22nd: 08:21 (0.2687), 09:45 (upload timed out, no score), 10:18 (0.2938), 10:48 (0.3019), 11:20 (0.2939), 11:51 (0.3101), each with a prediction on #12 | 1, at 22:19 (0.00) | yes |
   | watermark | 1 (c6, 0.7444) | 3: 18:11 (0.4421), 19:09 (0.6876), 22:19 (c5, 0.7251) | held-out gain |
 
   Four of the five model equality groupings were named by a rule fixed beforehand. The fifth (08:07) was not: the fp8 test read B's candidate at +2.81 against a threshold of 3, the desk declined to act, and the lead decided to submit the one endpoint the test pointed to. It is the only submission of the event made on a reading that had missed its own threshold.
