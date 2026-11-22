@@ -147,3 +147,7 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 07:12 | Job 15905366 completed (23 minutes 46 seconds), no failed run | reports on `desk/unlearning` at `6bd108e`; hashes on #21; no job in the queue |
 | 07:15 | The unlearning agent ran its four checks on the thirteenth batch: two failed (cross-fits disagree on 4.7% and 5.3% against a floor of 5%; loss at x2 2.91/3.03 against 3.8 within 0.4) | last unlearning slot left empty; the night ends at 0.2858; no GPU request open |
 | 07:16 | Pull request #33 opened: the night's records, brief, defense pack and analysis code to `main` | merged once the brief is final |
+| 07:18 | `main` merged into the desk branch (224 tests pass, 1 skipped), then #33 merged | `main` holds the night's records, the brief and the defense pack |
+| 07:39 to 08:04 | The desk's session exited while idle; the four connections to JURECA dropped in the same window | nothing was running or owed; connections left down, no job planned |
+| 08:06 | The lead, awake, said go on decision 1 | |
+| 08:07 | Fifth model equality submission: `labelled_copies_v2_b32.csv`, ep-32 added to family B's group | public **1.0** (was 0.85); night submissions for the task used up; nothing more to submit |

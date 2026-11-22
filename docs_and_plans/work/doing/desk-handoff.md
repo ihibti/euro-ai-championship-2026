@@ -33,15 +33,14 @@ The lead at 00:15: the final ranking uses other data than the board. The board s
 - **Devin** builds a second method for model equality. Since about 23:20 it runs on the lead's second laptop, which it shares with the unlearning agent (#24). That laptop holds no scoreboard key.
 - Both reach you only through GitHub, by the protocol in `AGENTS.md`, section Requests to the desk. Pinned status issue: #19.
 
-## State at 07:20, read this first
+## State at 08:10, read this first
 
-- **Scores:** watermark 0.7444, model equality 0.85 (06:44), unlearning 0.2858 (04:39).
-- **Night submissions left until 09:00:** model equality 1 (the desk plans none), unlearning 1 (stays empty: the thirteenth batch failed two of its agent's four checks, #12 at 07:15), watermark 0.
-- **Cluster:** no job running or pending, and no request open. Job 15905366 (thirteenth unlearning batch) ended at 07:12; its reports are on `desk/unlearning` at `6bd108e` and its three checkpoints on the lead's main laptop. Only the connection to `jureca03` (`jureca-mux2`) shows scratch.
-- **Model equality:** the fp8 test and its registered rule are on PR #27 and in `tasks/model_equality/analysis/local_anchor/` (code, tables, README). C changed by the rule; B stopped at +2.81 under the threshold of 3; A has no candidate. Two prepared files for B wait for the lead (morning brief, decision 1). Do not submit them as the desk.
-- **Scored answers:** night cap 80 per endpoint. ep-22 is at 78, ep-15 at 72, the rest of A at 64, of B at 66, of C at 48.
-- **Documents:** `morning-brief.md` (final by 08:30), `docs_and_plans/guides/judges-defense.md`, the night log in `night-plan.md`. A pull request of this branch to `main` is still to open and merge once the brief is final.
-- **Agents:** Devin stopped new work at 07:00; the unlearning agent keeps its brief current until 07:30 and has no open request. The desk's two subagents stopped at 04:47 and were not resumed.
+- **Scores:** watermark 0.7444, model equality **1.0** (08:07), unlearning 0.2858 (04:39). On all three tasks the last submission is the best one.
+- **Nothing more is to be submitted** unless the lead decides otherwise. Model equality: at 1.0 the public score can refute an addition but not confirm one; do not submit `labelled_copies_v2_b26_b32.csv`. Unlearning: its agent closed the night at 07:25. Watermark: c6 stands.
+- **Night authorization** ends at 09:00. Used: model equality 5 of 5, unlearning 11 of 12, watermark 1 of 1.
+- **Cluster:** no job running or pending, and no request open. The four connections to JURECA dropped between 07:39 and 08:04 and were not reopened. Reopen one (`~/.config/euroai/jureca_relog.sh jureca03`, one attempt) only if a job is needed.
+- **The lead is awake** since about 08:05 and decides from here. Documents: `morning-brief.md`, `docs_and_plans/guides/judges-defense.md`, the night log in `night-plan.md`.
+- **Model equality record:** the fp8 test and its rule are on PR #27 and in `tasks/model_equality/analysis/local_anchor/`. The fifth submission (ep-32 into B's group) was the lead's decision on a reading under the rule's threshold.
 
 ## State at 02:45
 
