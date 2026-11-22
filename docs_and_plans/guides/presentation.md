@@ -64,7 +64,7 @@ This copy on the desk's branch is the one to present from. The desk refreshes sl
 
 - Gold, the models retrained without the 3,500 images, is unknown. Our stand-in is a cross-fit: each image is predicted by a copy of the last blocks that never saw it, pushed 3 times further in the direction such a model errs.
 - Fine-tune the last 6 of 12 blocks towards that target at temperature 2, with a mixup anchor to the original.
-- Multiply the last layer by 2: no predicted class changes. Then average the weights of three seeds.
+- Multiply the last layer by 2: no predicted class changes. Then average the weights of three runs of the recipe: for the 0.2938, two seeds trained 25 epochs and one trained 40.
 
 **Number: 0.066 to 0.2133, the same checkpoint with its last layer doubled.**
 
@@ -83,7 +83,7 @@ This copy on the desk's branch is the one to present from. The desk refreshes sl
 
 **Number: 0.2938.**
 
-*Notes.* Every unlearning submission was a test with a written prediction, and the board was used to reject hypotheses, not to tune; the morning's model then picked a blend that reached 0.2938. The recipe tops out near 0.29, most likely because gold is an average of several retrained models, which no single sharpened network reproduces. Another day would go to a target that covers the classes several gold models would each pick.
+*Notes.* Every unlearning submission was a test with a written prediction, and the board was used to reject hypotheses, not to tune; the morning's model then picked a blend that reached 0.2938. The recipe tops out near 0.29. Our best guess is that gold averages several retrained models, which no single sharpened network reproduces; we had no time to test it. Another day would go to a target that covers the classes several gold models would each pick.
 
 ---
 

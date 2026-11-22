@@ -76,7 +76,7 @@ Written by the desk at 10:15 on 22 November, updated at 10:25 for the lead, to r
 1. **Stand-in for gold (cross-fit):** split the images in folds; predict each image with blocks trained on the other folds. That approximates what a model that never saw the image would say.
 2. **Fine-tune** the last 6 of 12 blocks towards that target, pushed further in the direction of the never-seen error (factor 3), softened at temperature 2.
 3. **Multiply the last layer by 2:** it changes no predicted class and restores the confidence the soft target removed.
-4. **Average the weights of three runs** (the best file: two seeds of the recipe and one run trained for 40 epochs instead of 25).
+4. **Average the weights of three runs** (the best file: two seeds trained 25 epochs and one run trained 40).
 
 **Path.** 0.00 (22:19) → 0.066 (01:38) → **0.2133** (02:08, the last-layer factor) → **0.2837** (02:38, learning rate 1e-4) → **0.2858** (04:39, three-seed average) → **0.2938** (10:18, two seeds and a 40-epoch run averaged; predicted 0.291). Each submission had a prediction posted first.
 
