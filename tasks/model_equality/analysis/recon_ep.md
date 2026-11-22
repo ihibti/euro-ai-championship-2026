@@ -361,3 +361,40 @@ Power, if the split is real:
 - Temperature keeps the order of the probabilities but moves the rates. A hotter copy of a Y endpoint at 0.8 drifts toward 0.5, which is what ep-24 and ep-33 look like now. So grading inside Y may be the temperature copy, not adapters.
 - fp8 can flip a near-tied first token consistently. That is a real model difference, but only if fp8 is scored as its own model, as on the references.
 - One binary first-token decision is the weakest kind of evidence for changed weights. The split rests on 9 endpoints with 2 answers each, found after the fact. Fresh rows alone can confirm it, and only under the rule above.
+
+## d1 on family B at 20 repeats (read 02:44)
+
+Data: `answers/night-d.jsonl`, 20 `d1_repeat150` answers per B endpoint (repeats 0 and 1 are the pilot). Commands:
+- `within.py --answers tasks/model_equality/answers/night-d.jsonl --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv --probes d1_repeat150:flag`, and the same with `:long`;
+- `stop.set_apart` against the B majority, Fisher, alpha 0.01.
+
+| endpoint | cap hit (frozen 00:47) | ran long (frozen 02:10) | no-spaces runs (chosen after the pilot) | early stops (not ran long) | median repetitions |
+|---|---|---|---|---|---|
+| ep-03 | 15 | 16 | 2 | 4 | 256 |
+| ep-06 | 9 | 12 | 4 | 8 | 160 |
+| ep-07 | 9 | 14 | 5 | 6 | 98 |
+| ep-08 (system-prompt copy) | 3 | 15 | 12 | 5 | 33 |
+| ep-20 (persona copy) | 2 | 18 | 17 | 2 | 0 |
+| ep-21 | 16 | 20 | 3 | 0 | 256 |
+| ep-22 | 7 | 19 | 12 | 1 | 0 |
+| ep-26 | 11 | 17 | 4 | 3 | 232 |
+| ep-28 | 16 | 17 | 1 | 3 | 256 |
+| ep-30 | 1 | 4 | 11 | 16 | 44 |
+| ep-32 | 5 | 12 | 9 | 8 | 70 |
+
+All counts are out of 20. "Median repetitions" counts whole words, so a run without spaces counts 0.
+
+What each rule sets apart (iterative, alpha 0.01):
+- **Frozen cap rule:** ep-30 (p 0.0002), ep-20 (0.0006), ep-08 (0.0007), ep-32 (0.007). Two of the four are the prompted copies. They are set apart only because they write "riverriver..." without spaces, which the piece rule counts as one piece. Unusable as frozen in B, as expected from the pilot.
+- **Ran long (frozen before these rows):** ep-30 alone, p 1.1e-7. It stops early in 16 of 20 answers, against at most 8 of 20 elsewhere. The prompted copies stay with the majority.
+- **No-spaces share (described statistic, chosen after the pilot; not for decisions):** set_apart names ep-20 (17 of 20, the persona copy, p 4e-6) and then ep-28 (1 of 20, p 0.005). The shares look bimodal, but that is exploratory:
+  - low: ep-28 1, ep-03 2, ep-21 3, ep-06 and ep-26 4, ep-07 5;
+  - high: ep-32 9, ep-30 11, ep-08 and ep-22 12, ep-20 17.
+  ep-03 and ep-28 sit at the low end. They were also B's battery outliers and the only B endpoints, apart from the prompted copies, that ever said yes on e2.
+
+Reading:
+- ep-30 is the first changed-weights candidate set apart by a frozen rule on fresh rows.
+- Its leak answers are plain: refusals, and "Qwen, created by Alibaba Cloud." once.
+- Its identity is Qwen 10 of 10, and it had the most battery flips in B at 2 repeats (modal p 0.03).
+- Caveat: a watermark keyed on the previous token sees the same context (" river") at every position of this prompt. If the end-of-sequence token or a full stop falls in its green list, a watermark copy would stop early every time. The reference watermark copy did not show this on d1, but SmolLM stops on its own there, so the references cannot rule it out.
+- Under the desk's policy, ep-30 is a singleton and the rest of B is one model, the prompted copies included. That is what `within.py --probes d1_repeat150:long` writes.
