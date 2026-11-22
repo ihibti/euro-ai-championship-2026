@@ -116,16 +116,30 @@ The plan written at 23:00 (`map_even40`, `x3_ext_m80`, then a K sweep) was carri
 
 ## Morning plan (for the humans, from 09:00)
 
-- **State to read first:** `judges_brief.md` (it opens with the result), then `submit_queue.md` (every submission with its prediction and score), then this file's log.
-- **Our best at 02:58:** 0.2837, `k8_e3t2_rm1_lr1e4_x2.pt` (sha `522e5851…`) on the lead's main laptop. If nothing better has scored by 11:00, this is the submission that counts. Nothing needs to be re-submitted, since only the best counts.
-- **Slots after 09:00:** 09:08, 09:38, 10:08, 10:38, and 11:08 at the latest. The night authorization ends at 09:00, so from then on a human at a terminal submits with `make submit`.
-- **What to submit:** the best-scoring base sharpened one notch further, or a ninth-batch base at the best factor so far. Check the queue first: the unlearning agent keeps it current until 07:30. The ledger (`ledger.py ... --logits` with every dump) ranks candidates well but underpredicts sharpened ones by about 1.6 times.
+Written at 04:09 and refreshed by 07:30.
+
+- **Read first:**
+  1. `judges_brief.md`, which opens with the result;
+  2. `submit_queue.md`, every submission with its prediction and score;
+  3. this file's log.
+- **Our best at 04:09:** 0.2837, `k8_e3t2_rm1_lr1e4_x2.pt` (sha `522e5851…`) on the lead's main laptop. If nothing better has scored by 11:00, this is the one that counts. Nothing needs re-submitting, since only the best counts.
+- **Slots after 09:00:** 09:08, 09:38, 10:08, 10:38, and 11:08 at the latest. The night authorization ends at 09:00. From then on a human at a terminal submits with `make submit`.
+- **What to submit:** the queue's open lines, in order. The unlearning agent keeps the queue current until 07:30. The candidates by then:
+  - the weight average of the 0.2837's base and its two new seeds, times 2 (`k11_b_soup3_x2.pt`);
+  - the eleventh batch's best line by `peak_check.py`.
+- **What the night established (each point is a score):**
+  - **Sharpening a tempered fine-tune is the recipe:** 0.066 for the fine-tune alone, 0.2133 with its last layer times 2.
+  - **More reach pays only up to the 0.2837's level:** forget-set loss 3.8/3.8 once sharpened.
+  - **One notch more sharpening on the same model costs 22%** (0.2837 to 0.2222).
+  - **The factor has to match the drift's temperature on unseen images.** The tau 1 run at a factor of 0.76 times its temperature scored 0.256 despite half the spill.
 - **What not to do:**
+  - no factor above the base's spill temperature (`peak_check.py` prints it as f/T);
+  - no fine-tune that reaches further than the 0.2837's base, at its factor;
   - no candidate without a spill probe;
-  - nothing from `u7_*` (it changes half of the predictions on unseen classes);
-  - no class dial on the nine classes (the gate: `dial15` scored 0);
-  - no factor above 3 without a score at 2.5 first: the other-images golds collapse beyond it.
-- **Defending the work:** `judges_brief.md`. The likely questions are answered at its end.
+  - nothing from `u7_*`;
+  - no class dial on the nine classes (`dial15` scored 0);
+  - no tau 3 run, and no K=3.5 or learning rate 3e-4 or above (6.5 to 8.5% changed predictions).
+- **Defending the work:** `judges_brief.md`. The likely questions are answered at its end, including why the 03:38 line broke its own pre-registered rule.
 
 ## Log
 
