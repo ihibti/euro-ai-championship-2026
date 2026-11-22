@@ -108,3 +108,8 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 02:13 | Job 15904499 submitted for `run_ninth.sh` at `a8bd579` (team check empty, limit 50 minutes); started 02:23 | staged by renaming and emptying old files: no new file on scratch |
 | 02:25 | Model equality: leak prompts on the 33 endpoints | six prompted copies identified (ep-02, 08, 29 system prompt; ep-23, 20, 16 persona); an identity-based grouping was held back at 02:05 and would have been wrong; a first candidate split inside family A, to be confirmed on fresh answers |
 | 02:38 | Unlearning `k8_e3t2_rm1_lr1e4_x2.pt` submitted | public 0.2837, a new best |
+| 02:48 | Job 15904499 completed, no failed run | reports and logits on `desk/unlearning` at `3a3dd21`; the six checkpoints on the lead's main laptop |
+| 02:58 | Model equality: the candidate split in family A failed its pre-registered test on eight fresh answers per endpoint (yes-rate 14 of 40 against 9 of 32) | no split from that probe; ep-04 stays set apart on the other leak prompt (default prompt quoted 2 of 10 times against 72 of 80) |
+| 03:02 | A local run of public base models on the lead's main laptop, no endpoint calls | family A fits Qwen2.5-3B-Instruct, unquantized; next, every recorded answer scored token by token under the base model |
+| 03:07 | Job 15904691 submitted for `run_tenth.sh` at `66c6b31` (team check empty, limit 1 hour) | staged with no new file; pending on priority |
+| 03:08 | Unlearning `k8_e3t2_rm1_lr1e4_x2p5.pt` submitted | public 0.2222; the best stays 0.2837 (the same checkpoint at factor 2) |

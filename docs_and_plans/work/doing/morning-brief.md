@@ -20,9 +20,9 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 
 ## What was spent
 
-- **Submissions under the night authorization** (ends 09:00): model equality 2 of 5, unlearning 7 of 12, watermark 1 of 1 (at 02:40).
+- **Submissions under the night authorization** (ends 09:00): model equality 2 of 5, unlearning 8 of 12, watermark 1 of 1 (at 03:10).
 - **Scored answers:** 10 per endpoint by 01:08 (reconnaissance), 18 after the identity run at about 02:01. Night cap 80, organizers' cap 100.
-- **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (started 02:23). Never more than one job running or pending; team check empty before each `sbatch`.
+- **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (25 minutes, ended 02:48), 15904691 (submitted 03:07, limit 1 hour). Never more than one job running or pending; team check empty before each `sbatch`.
 
 ## Unlearning submissions
 
@@ -35,6 +35,7 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 | 01:38 | `k7_e3t2_rm.pt` | 0.066 |
 | 02:08 | `k7_e3t2_rm_x2.pt` (the same checkpoint, last layer times 2) | 0.2133 |
 | 02:38 | `k8_e3t2_rm1_lr1e4_x2.pt` (the same recipe at a higher learning rate, last layer times 2) | 0.2837 |
+| 03:08 | `k8_e3t2_rm1_lr1e4_x2p5.pt` (the 0.2837 checkpoint, last layer times 2.5) | 0.2222 |
 
 ## Model equality
 
