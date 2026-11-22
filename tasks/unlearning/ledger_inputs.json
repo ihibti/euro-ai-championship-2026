@@ -18,7 +18,8 @@
   "scale_t4": 0.0057,
   "dial15": 0.0,
   "k7_e3t2_rm": 0.066,
-  "k7_e3t2_rmx2": 0.2133
+  "k7_e3t2_rmx2": 0.2133,
+  "k8_e3t2_rm1_lr1e4x2": 0.2837
  },
  "candidates": {
   "x3_ext_m80": {
