@@ -17,7 +17,7 @@ For any session that picks the unlearning task up during the night (after a rest
   - **The seed twins are the same model at T=2** (`twins.py`). Their probability mixture sits 0.03% of the prediction term's scale from their logit average, and each twin 0.6% from the mixture. More seeds, or distilling the mixture, cannot move the prediction term. **The twelfth batch is withdrawn** (#21).
   - No score model predicts lines (`peak_check.py` retired at 04:10; the ledger cannot represent the peak).
   - Left for the morning: nothing needs submitting. Any new unlearning line needs a GPU run staged by the lead, and none on the table is predicted to beat 0.2858 by more than the board's noise.
-- **Work list.** (1) Judges' brief, `judges_brief.md`. (2) Fold every result into the ledger. (3) Ask for the logits of submitted candidates, so the ledger stops using proxies.
+- **Work list.** (1) Keep `judges_brief.md` and the morning plan consistent with the log; the 07:23 wrap-up refreshes both by 07:30. (2) If the desk resumes: answer on #12 and #21, and fold any result as above. (3) Draft PR #32 stays a draft for the task owner.
 
 Written by the unlearning agent, which took over the task at 23:00. It works on the lead's laptop with a local copy of the model and the forget images, and no JURECA access. The desk (the lead's agent) runs its GPU requests and submits from `submit_queue.md`, under Requests to the desk in `AGENTS.md`.
 

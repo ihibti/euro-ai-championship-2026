@@ -168,11 +168,15 @@ The good region is narrow: the factor near the drift's temperature, and the forg
 
 **What the 0.2665 closed.** `k8_e3t2_rm1_ep40` at x2.25 matched the 0.2837's base on everything we measure: forget loss 3.62/3.83 against 3.80/3.79, the probes, and the spill temperature. Only the factor relative to that temperature differed (1.00 against 0.89), and it scored 6% lower.
 
-With all five sharpened scores, `peak_check.py` no longer fits any setting. We stopped there: adding a fifth reading fitted to five public scores would be fitting the public 30%. Two explanations remain, and the eleventh batch's seeds tell them apart:
+With all five sharpened scores, `peak_check.py` no longer fits any setting. We stopped there: adding a fifth reading fitted to five public scores would be fitting the public 30%. Two explanations remained at 04:10:
 - the best factor is near 0.89 times the drift's temperature, as at the 0.2837;
 - models with equal statistics differ by about 5% on the public split.
 
-The last night submissions were the weight average of the 0.2837's base and two new seeds, and the eleventh batch's best line by its probes. Both need no score model.
+**What settled it (04:39 to 04:53).** The second explanation is out, on two counts:
+- the public split moves the ratio between two of our lines by about 1% (1 SD), not 5% (`split_noise.py`);
+- the 0.2837's two seed twins are the same model at temperature 2 (`twins.py`), and their weight average scored 0.2858, 0.7% from its base.
+
+So the 0.2665 is a real 6% below the 0.2837, from a difference our statistics do not capture: the factor relative to the drift's temperature, or something else in the 40-epoch, lower-rate run. The last night submission was the weight average alone. No eleventh-batch line beat the base on its probe, and 05:08 was left empty.
 
 ## Board noise and seed twins
 
