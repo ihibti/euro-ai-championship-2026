@@ -161,8 +161,9 @@ The two misses sit at the edges. x2.5 is the only line past the peak; with it in
 | the same | 09:01, model with the probes' retain | about 0.27 (0.26 to 0.30), 1 in 4 above 0.2858 | not submitted |
 | the same | 09:09, model with the stand-in's retain | 0.267 to 0.272, 1 in 10 above 0.2858 | not submitted |
 | `m15_k9t2ep40_x1p85.pt` (the ninth batch's 40-epoch tau-2 run, x1.85) | 09:09, model | 0.2855 to 0.2874 | no score: the 09:45 upload timed out on the client |
-| `m15_s1s2ep40_x2.pt` (weight average of the 0.2858's two seed runs and that run, x2) | 09:46 and 09:57, model | 0.291, 64% above 0.2858 | pending (10:16) |
-| the 10:46 line, by the rule of 09:57 as changed at 10:07 | 09:57, 10:07 | the spare `m15_k9t2ep40_x1p85` if 10:16 scores 0.2866 or above (gain 0.0022 to 0.0046 over the blend's score); otherwise `k14_t1_lr9e5_x1p47` (two-condition rule 0.29 to 0.31, model 0.272) | pending |
+| `m15_s1s2ep40_x2.pt` (weight average of the 0.2858's two seed runs and that run, x2) | 09:46 and 09:57, model | 0.291, 64% above 0.2858 | **0.2938, our best** (10:18) |
+| `m16_k10s1_x1p95.pt` (the 0.2938's three runs plus a fourth 40-epoch run at lr 2e-4, x1.95) | 10:27, model anchored on 0.2938 | 0.2949, 54% above 0.2938 | pending (10:48) |
+| the 10:46 line, by the rule of 09:57 as changed at 10:07 | 09:57, 10:07 | the spare `m15_k9t2ep40_x1p85` if 10:16 scores 0.2866 or above (gain 0.0022 to 0.0046 over the blend's score); otherwise `k14_t1_lr9e5_x1p47` (two-condition rule 0.29 to 0.31, model 0.272) | the spare was confirmed, then replaced at 10:27 by the four-run blend above, after a refit with the 0.2938 |
 
 **What happened to the morning's plan.** At 09:44 the lead confirmed that only a team's best submission counts. The slots left before 11:00 therefore went to lines that could beat 0.2858, not to a test of the tau-1 blend, which the model had put below it. The first, the ninth batch's 40-epoch run at x1.85, would also have been the model's first test on an unscored recipe. Its upload timed out at 09:45 on the client, the attempt counted for the 30-minute gate, and two slots were left.
 

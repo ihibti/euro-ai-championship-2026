@@ -13,7 +13,7 @@ Each slide: a title, at most three bullets, the one number that matters, and spe
 ## Slide 1. Team Begg: the result
 
 - Public board at 10:01: **9th of 44 overall**.
-- Model equality 1.00 (tied first), watermark localisation 0.74 (12th), unlearning 0.29 (18th).
+- Model equality 1.00 (tied first), watermark localisation 0.74 (12th), unlearning 0.29 (18th). Unlearning has since reached 0.2938 (10:18).
 - These are ranks on the public split (about 30% of the data). The final ranking uses the hidden 70%.
 
 **Number: 0.79 overall.**
@@ -72,16 +72,16 @@ Each slide: a title, at most three bullets, the one number that matters, and spe
 
 ## Slide 6. Unlearning: the path and its limit
 
-- 0.00 (22:19), 0.066, 0.2133, 0.2837, then **0.2858** (04:39). Each submission had its prediction posted first. Every neighbour of the best point scored lower (0.2222, 0.256, 0.2665), and each said why.
+- 0.00 (22:19), 0.066, 0.2133, 0.2837, 0.2858 (04:39), then **0.2938** (10:18): a weight average of three runs that the morning's score model picked (prediction 0.291). Each submission had its prediction posted first. Every neighbour of the night's best scored lower (0.2222, 0.256, 0.2665), and each said why.
 - What failed:
   - the night's score predictor, retired at 04:12 after three misses;
   - the thirteenth batch, which failed two of its four pre-posted conditions;
   - the fourteenth batch's cooler targets, which our morning score model put below the best.
-- The ceiling: the morning's score model predicts each high line from the others within 1 to 2.5%, and finds nothing we hold more than about 2% above 0.2858. The board pays only 40 to 52% of what the model's terms give.
+- The ceiling: the morning's score model predicts each high line from the others within 1 to 2.5%, and its pick landed 1% above its prediction. Yet the board pays only 40 to 52% of what the model's terms give.
 
-**Number: 0.2858.**
+**Number: 0.2938.**
 
-*Notes.* Every unlearning submission was a test with a written prediction, and the board was used to reject hypotheses, not to tune. The recipe tops out near 0.29, most likely because gold is an average of several retrained models, which no single sharpened network reproduces. Another day would go to a target that covers the classes several gold models would each pick.
+*Notes.* Every unlearning submission was a test with a written prediction, and the board was used to reject hypotheses, not to tune; the morning's model then picked a blend that reached 0.2938. The recipe tops out near 0.29, most likely because gold is an average of several retrained models, which no single sharpened network reproduces. Another day would go to a target that covers the classes several gold models would each pick.
 
 ---
 
