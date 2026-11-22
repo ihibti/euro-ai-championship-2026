@@ -87,6 +87,20 @@ BLENDS = {
         ("k9_e3t2_lr1e4_ep40", 1.0),
         ("k9_e35t2_lr1e4", 1.0),
     ),
+    "m17_s1s2k10": (("k11_b_s1", 1.0), ("k11_b_s2", 1.0), ("k10_t2_lr2e4_ep40_s1", 1.0)),
+    "m17_lr2e4pair": (("k9_e3t2_lr2e4_ep40", 1.0), ("k10_t2_lr2e4_ep40_s1", 1.0)),
+    "m17_three40": (
+        ("k9_e3t2_lr1e4_ep40", 1.0),
+        ("k9_e3t2_lr2e4_ep40", 1.0),
+        ("k10_t2_lr2e4_ep40_s1", 1.0),
+    ),
+    "m17_five": (
+        ("k11_b_s1", 1.0),
+        ("k11_b_s2", 1.0),
+        ("k9_e3t2_lr1e4_ep40", 1.0),
+        ("k9_e3t2_lr2e4_ep40", 1.0),
+        ("k10_t2_lr2e4_ep40_s1", 1.0),
+    ),
     **{
         f"soup_t1_{round(100 * share)}": tuple((n, w * (1 - share) / 3) for n, w in SOUP)
         + tuple((n, w * share) for n, w in TAU1)
