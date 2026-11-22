@@ -23,7 +23,7 @@ Written during the night of 21 to 22 November by the unlearning agent, for the t
 
 ## The result in one paragraph
 
-Our best public score is **0.2858** (`k11_b_soup3_x2`, 04:39), up from 0 at 22:19, 0.2133 at 02:08 and 0.2837 at 02:38. It is the weight average of three seed runs of one recipe (0.2837 for the first alone).
+Our best public score is **0.2938** (`m15_s1s2ep40_x2`, 10:18), up from 0 at 22:19, 0.2133 at 02:08, 0.2837 at 02:38 and 0.2858 at 04:39, the night's best. The 0.2858 is the weight average of three seed runs of one recipe (0.2837 for the first alone). The 0.2938 keeps the two reruns and replaces the 0.2837's run with the same recipe and seed trained 40 epochs instead of 25, so it reaches a little further. It was picked in the morning by a score model that rebuilds every scored line, and it landed 1% above that model's prediction (0.291). Details in the morning section.
 
 **The recipe has two steps.**
 1. **Fine-tune.** The last 6 of the 12 blocks are fine-tuned on the forget images (and augmented copies) towards a target built from a cross-fitted held-out prediction. The target is extrapolated 3 times in the direction where the model would err if it had never seen the image, and tempered by 2. A mixup anchor distils the original on blends of two forget images.
@@ -34,7 +34,7 @@ Our best public score is **0.2858** (`k11_b_soup3_x2`, 04:39), up from 0 at 22:1
 - **The tempered target spreads probability over the sibling classes,** which is what the gold models' average looks like at temperature 2.
 - **Sharpening restores per-model confidence and undoes the drift.** It brings back the single models' confidence on the loss side. It also takes back the temperature-like drift that the soft target leaked to unseen images, which is what the retain score penalises.
 
-The 0.2837 is the same recipe trained at learning rate 1e-4 instead of 5e-5; the 0.2858 averages the weights of that run and two reruns with other seeds, then multiplies the last layer by 2. Every submission was chosen before its score, from a prediction or an argument written on #12, one change at a time. Reproducing the 0.2837 takes the commands at the end and about 8 GPU minutes; the 0.2858 adds two reruns with `--seed 1` and `--seed 2` and their average (`soup.py --scale 0.5`).
+The 0.2837 is the same recipe trained at learning rate 1e-4 instead of 5e-5; the 0.2858 averages the weights of that run and two reruns with other seeds, then multiplies the last layer by 2. Every submission was chosen before its score, from a prediction or an argument written on #12, one change at a time. Reproducing the 0.2837 takes the commands at the end and about 8 GPU minutes; the 0.2858 adds two reruns with `--seed 1` and `--seed 2` and their average (`soup.py --scale 0.5`). The 0.2938 averages the two reruns with the 40-epoch run (`--epochs 40`, `k9_e3t2_lr1e4_ep40`) the same way.
 
 ## The problem in four sentences
 
@@ -162,7 +162,7 @@ The two misses sit at the edges. x2.5 is the only line past the peak; with it in
 | the same | 09:09, model with the stand-in's retain | 0.267 to 0.272, 1 in 10 above 0.2858 | not submitted |
 | `m15_k9t2ep40_x1p85.pt` (the ninth batch's 40-epoch tau-2 run, x1.85) | 09:09, model | 0.2855 to 0.2874 | no score: the 09:45 upload timed out on the client |
 | `m15_s1s2ep40_x2.pt` (weight average of the 0.2858's two seed runs and that run, x2) | 09:46 and 09:57, model | 0.291, 64% above 0.2858 | **0.2938, our best** (10:18) |
-| `m16_k10s1_x1p95.pt` (the 0.2938's three runs plus a fourth 40-epoch run at lr 2e-4, x1.95) | 10:27, model anchored on 0.2938 | 0.2949, 54% above 0.2938 | pending (10:48) |
+| `m16_k10s1_x1p95.pt` (the 0.2938's three runs plus the same recipe at twice the learning rate, 40 epochs, seed 1; x1.95) | 10:27, model anchored on 0.2938 | 0.2949, 54% above 0.2938 | pending (10:48) |
 | the 10:46 line, by the rule of 09:57 as changed at 10:07 | 09:57, 10:07 | the spare `m15_k9t2ep40_x1p85` if 10:16 scores 0.2866 or above (gain 0.0022 to 0.0046 over the blend's score); otherwise `k14_t1_lr9e5_x1p47` (two-condition rule 0.29 to 0.31, model 0.272) | the spare was confirmed, then replaced at 10:27 by the four-run blend above, after a refit with the 0.2938 |
 
 **What happened to the morning's plan.** At 09:44 the lead confirmed that only a team's best submission counts. The slots left before 11:00 therefore went to lines that could beat 0.2858, not to a test of the tau-1 blend, which the model had put below it. The first, the ninth batch's 40-epoch run at x1.85, would also have been the model's first test on an unscored recipe. Its upload timed out at 09:45 on the client, the attempt counted for the 30-minute gate, and two slots were left.
