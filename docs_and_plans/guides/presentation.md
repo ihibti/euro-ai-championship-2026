@@ -4,21 +4,23 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Five minutes, eigh
 - `docs_and_plans/guides/judges-defense.md` on `main` (the defense pack);
 - `tasks/unlearning/judges_brief.md` on `kkrgp/unlearning-first-moves`;
 - the description of PR #27;
-- the board figures the desk posted on #12 at 10:08.
+- the public board as the desk read it at 10:21.
 
 Each slide: a title, at most three bullets, the one number that matters, and speaker notes to say aloud. Points marked **for the lead** are questions only the lead can answer.
+
+This copy on the desk's branch is the one to present from. The desk refreshes slide 1 from the board and slide 6 from the last unlearning score until 12:00.
 
 ---
 
 ## Slide 1. Team Begg: the result
 
-- Public board at 10:01: **9th of 44 overall**.
-- Model equality 1.00 (tied first), watermark localisation 0.74 (12th), unlearning 0.29 (18th).
+- Public board at 10:21: **9th of 44 overall**.
+- Model equality 1.00 (first, tied with 15 teams), watermark localisation 0.74 (12th), unlearning 0.29 (about 17th; 0.2938 since 10:18).
 - These are ranks on the public split (about 30% of the data). The final ranking uses the hidden 70%.
 
 **Number: 0.79 overall.**
 
-*Notes.* We are team Begg. On the public board at 10:01 we stood ninth of 44 with 0.79 overall: tied first in model equality, twelfth in watermark localisation, eighteenth in unlearning. The final ranking is on the hidden 70% of the data, so we judged every choice on held-out data, never on the board.
+*Notes.* We are team Begg. On the public board this morning we stood ninth of 44 with 0.79 overall: first in model equality, tied with fifteen other teams, twelfth in watermark localisation, about seventeenth in unlearning. The final ranking is on the hidden 70% of the data, so we wrote each rule or prediction before its score, and used the board as a test, not as a guide.
 
 ---
 
@@ -28,7 +30,7 @@ Each slide: a title, at most three bullets, the one number that matters, and spe
 - One agent, the desk, alone touched the GPU cluster and the organizers' server. One agent per task did the analysis. All coordination ran through GitHub issues and commits.
 - Three rules: references first; a written prediction before each score; one GPU job at a time for the whole team.
 
-**Number: 17 night submissions, each with its reason written before its score** (model equality 5, unlearning 11, watermark 1).
+**Number: 18 submissions under the night authorization, each with its reason recorded before its score** (model equality 5, unlearning 12, watermark 1).
 
 *Notes.* One human set the rules and slept; one agent, the desk, was the only one allowed to submit or run on the cluster; the analysis agents could only propose. Every proposal, prediction and result went through an issue or a commit, so the whole night can be audited. Every deciding rule was committed before the data that judged it; the one decision outside a rule is on slide 4.
 
@@ -72,16 +74,16 @@ Each slide: a title, at most three bullets, the one number that matters, and spe
 
 ## Slide 6. Unlearning: the path and its limit
 
-- 0.00 (22:19), 0.066, 0.2133, 0.2837, then **0.2858** (04:39). Each submission had its prediction posted first. Every neighbour of the best point scored lower (0.2222, 0.256, 0.2665), and each said why.
+- 0.00 (22:19), 0.066, 0.2133, 0.2837, 0.2858 (04:39), then **0.2938** (10:18), each with its prediction posted first. The 0.2938 is a weight average of three runs, picked by the morning's score model (prediction 0.291). The neighbours of the night's best all scored lower (0.2222, 0.256, 0.2665, and 0.2687 at 08:21).
 - What failed:
   - the night's score predictor, retired at 04:12 after three misses;
   - the thirteenth batch, which failed two of its four pre-posted conditions;
   - the fourteenth batch's cooler targets, which our morning score model put below the best.
-- The ceiling: the morning's score model predicts each high line from the others within 1 to 2.5%, and finds nothing we hold more than about 2% above 0.2858. The board pays only 40 to 52% of what the model's terms give.
+- The ceiling: the morning's score model predicts each high line from the others within 1 to 2.5%, and its pick landed 1% above its prediction. It puts this recipe's limit near 0.29.
 
-**Number: 0.2858.**
+**Number: 0.2938.**
 
-*Notes.* Every unlearning submission was a test with a written prediction, and the board was used to reject hypotheses, not to tune. The recipe tops out near 0.29, most likely because gold is an average of several retrained models, which no single sharpened network reproduces. Another day would go to a target that covers the classes several gold models would each pick.
+*Notes.* Every unlearning submission was a test with a written prediction, and the board was used to reject hypotheses, not to tune; the morning's model then picked a blend that reached 0.2938. The recipe tops out near 0.29, most likely because gold is an average of several retrained models, which no single sharpened network reproduces. Another day would go to a target that covers the classes several gold models would each pick.
 
 ---
 
@@ -115,4 +117,4 @@ Each slide: a title, at most three bullets, the one number that matters, and spe
 
 **Number: 70%, the share of the data the final ranking uses, none of which we have seen.**
 
-*Notes.* We know where each method stops, and we wrote it down before the scores came in. The one decision outside our own rules is stated on slide 4. The final ranking is on data none of us has seen, which is why we judged on held-out data all night.
+*Notes.* We know where each method stops, and we wrote it down before the scores came in. The one decision outside our own rules is stated on slide 4. The final ranking is on data none of us has seen, which is why each rule and each prediction was written before its score.
