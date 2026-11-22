@@ -29,6 +29,12 @@ item is a piece between commas, semicolons or newlines, with list markers and a 
 two-sided permutation test (20,000 draws, seed 0) on the mean midrank of the endpoint's counts
 among the pooled counts of the family's other remaining endpoints, alpha 0.01. The cap-hit
 rule above is unchanged and is printed next to it.
+
+night_f rules, frozen at 01:41 Paris before any night_f answer existed:
+- f1_countdown (count down from forty to one in words): x when the answer's last list item is
+  not "one" (it runs past the end, adds a tail, or never gets there); counter: list items.
+- f2_echo (reply with one given sentence): x when the answer, lowercased, with quotes, asterisks,
+  surrounding whitespace and a final full stop removed, is not that sentence; counter: words.
 """
 
 from __future__ import annotations
@@ -57,6 +63,7 @@ ALPHA = 0.01
 PASSAGE = P1.split("\n\n", 1)[1].strip()
 COPY_SLACK = 10
 COPY_IDS = ("p1_copycont", "d4_copycont")
+ECHO = "the meeting is moved to thursday at noon"
 RIVER = re.compile(r"(?<![A-Za-z])river(?![A-Za-z])", re.IGNORECASE)
 WORD = re.compile(r"[A-Za-z]+(?:'[A-Za-z]+)?")
 SPLIT = re.compile(r"[,;\n]")
@@ -99,6 +106,8 @@ COUNTERS: dict[str, Callable[[str], int]] = {
     "d1_repeat150": repetitions,
     "d2_story100": word_count,
     "d3_openlist": list_items,
+    "f1_countdown": list_items,
+    "f2_echo": word_count,
 }
 
 
@@ -164,10 +173,34 @@ def set_apart(
     return flagged
 
 
+def last_item(text: str) -> str:
+    items = [MARKER.sub("", part).strip() for part in SPLIT.split(text)]
+    items = [re.sub(r"[^a-z -]", "", item.lower()).strip() for item in items]
+    items = [item for item in items if item]
+    return items[-1] if items else ""
+
+
+def not_ending_on_one(text: str) -> bool:
+    return last_item(text) != "one"
+
+
+def not_exact_echo(text: str, sentence: str = ECHO) -> bool:
+    cleaned = re.sub(r"[\"'*“”]", "", text).strip().lower()
+    cleaned = re.sub(r"\s+", " ", cleaned).rstrip(".").strip()
+    return cleaned != sentence
+
+
+RULES: dict[str, Callable[[str], bool]] = {
+    **{prompt_id: copy_only for prompt_id in COPY_IDS},
+    "f1_countdown": not_ending_on_one,
+    "f2_echo": not_exact_echo,
+}
+
+
 def cap_hits(
     rows: Iterable[Mapping[str, object]], prompt_id: str, prefix: str
 ) -> dict[str, list[bool]]:
-    rule = copy_only if prompt_id in COPY_IDS else cap_hit
+    rule = RULES.get(prompt_id, cap_hit)
     cells: dict[str, list[tuple[int, bool]]] = defaultdict(list)
     for row in rows:
         endpoint = str(row["endpoint"])

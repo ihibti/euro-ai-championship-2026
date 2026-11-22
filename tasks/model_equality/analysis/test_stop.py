@@ -129,3 +129,36 @@ def test_counts_use_the_counter_of_each_prompt():
     ]
     assert stop.counts(rows, "d3_openlist", "ep-") == {"ep-01": [2]}
     assert stop.counts(rows, "d1_repeat150", "ep-") == {"ep-01": [2]}
+
+
+def test_countdown_rule_flags_an_answer_that_does_not_end_on_one():
+    words = ["forty", "thirty-nine", "two", "one"]
+    assert not stop.not_ending_on_one(", ".join(words))
+    assert not stop.not_ending_on_one(", ".join(words) + ".")
+    assert stop.not_ending_on_one(", ".join(words) + ", zero")
+    assert stop.not_ending_on_one(", ".join(words) + "\n\nLiftoff!")
+    assert stop.not_ending_on_one("forty, thirty-nine, thirty-eight")
+    assert stop.counts(
+        [{"endpoint": "e", "id": "f1_countdown", "repeat": 0, "response": ", ".join(words)}],
+        "f1_countdown",
+        "",
+    ) == {"e": [4]}
+
+
+def test_echo_rule_flags_anything_but_the_sentence():
+    assert not stop.not_exact_echo("The meeting is moved to Thursday at noon.")
+    assert not stop.not_exact_echo('"The meeting is moved to Thursday at noon."\n')
+    assert stop.not_exact_echo("Sure! The meeting is moved to Thursday at noon.")
+    assert stop.not_exact_echo("The meeting is moved to Thursday at noon. Let me know!")
+
+
+def test_night_f_prompts_match_the_rules():
+    import csv
+
+    probes = Path(__file__).resolve().parents[1] / "probes"
+    with (probes / "night_f.csv").open(encoding="utf-8", newline="") as handle:
+        prompts = {r["id"]: r["prompt"] for r in csv.DictReader(handle)}
+    assert list(prompts) == ["f1_countdown", "f2_echo"]
+    assert prompts["f2_echo"].endswith("The meeting is moved to Thursday at noon.")
+    assert not stop.not_exact_echo(prompts["f2_echo"].split(": ", 1)[1])
+    assert all(pid in stop.RULES and pid in stop.COUNTERS for pid in prompts)
