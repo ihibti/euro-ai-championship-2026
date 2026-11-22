@@ -4,9 +4,9 @@ Reads the drawn scores that `score_fit.py --draws-out` saves. Each draw is ancho
 observed line's score, so a line's anchored score is best * line / best line under that draw. Only
 the best submission counts, so a plan is worth the mean of max(0, its best anchored score - best).
 
-With `--shared ledger_inputs.json`, each line is anchored instead on the scored lines that share runs
-with it: its drawn value times the geometric mean of their observed-to-drawn ratios, weighted by the
-weight they share. A line that shares no run with a scored line keeps the best line's anchor.
+With `--shared ledger_inputs.json`, each line is anchored instead on the scored lines that share
+runs with it: its drawn value times the geometric mean of their observed-to-drawn ratios, weighted
+by the weight they share. A line that shares no run with a scored line keeps the best line's anchor.
 
     cd <team folder> && python <repo>/tasks/unlearning/slot_gain.py draws.npz \
         --first m15_s1s2ep40x2 --lines k9_e35t2_lr1e4x1.95,k14_t1_lr9e5x1.45 \
@@ -49,7 +49,7 @@ def weights_of(base: str) -> dict[str, float]:
 def shared_anchor(
     model: np.ndarray, anchors: np.ndarray, scores: np.ndarray, shares: np.ndarray
 ) -> np.ndarray:
-    """Per draw, `model` times the share-weighted geometric mean of observed / drawn over anchors."""
+    """Per draw, `model` times the share-weighted geometric mean of observed / drawn ratios."""
     ratios = np.log(scores[None, :] / anchors)
     return model * np.exp(ratios @ (shares / shares.sum()))
 
