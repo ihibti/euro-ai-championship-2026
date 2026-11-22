@@ -20,6 +20,10 @@ Frozen on 2026-11-22 at 02:18 Paris, before any new battery answer existed.
   seed 0; one-sided p = (1 + draws with at least the observed flips) / (DRAWS + 1). Holding the
   drawn answers out of the reference keeps the null from agreeing with itself.
 - Decision: stop.set_apart at alpha 0.01, iterative against the family majority.
+- Sharpness (added 02:46 Paris, before any fresh battery answer; described only): per endpoint,
+  the mean over items of the share of its answers that give its top answer. A hotter copy keeps
+  the order of the probabilities but is less sharp on every item; changed weights may flip
+  items while staying sharp. A watermark can do either, so sharpness never decides.
 - Second view, described only: for each pair of endpoints set apart, the items both flip
   against the final majority, and on how many of those their modes share a token.
 """
@@ -158,6 +162,18 @@ def item_modes(codes: Codes) -> dict[str, list[frozenset[int]]]:
     return out
 
 
+def sharpness(codes: Codes) -> float:
+    shares = []
+    for array in codes.values():
+        size = size_of(array)
+        if not size:
+            continue
+        counts = item_counts(array, size)
+        total = counts.sum(axis=-1)
+        shares.extend((counts.max(axis=-1)[total > 0] / total[total > 0]).tolist())
+    return float(np.mean(shares)) if shares else float("nan")
+
+
 def flipped_items(own: Codes, rest: Codes) -> dict[str, list[int]]:
     out = {}
     for battery, codes in own.items():
@@ -205,8 +221,11 @@ def report(values: Mapping[str, Codes], members: Sequence[str], alpha: float) ->
     flagged = decide(values, members, alpha)
     apart = [e for e, _ in flagged]
     majority = [m for m in members if m not in apart]
-    print("| endpoint | answers trivia/choice | flips trivia | flips choice | p | set apart |")
-    print("|---|---|---|---|---|---|")
+    print(
+        "| endpoint | answers trivia/choice | flips trivia | flips choice | p | set apart "
+        "| sharpness |"
+    )
+    print("|---|---|---|---|---|---|---|")
     for e in members:
         pool = [m for m in majority if m != e]
         rest = {b: pooled(values, pool, b) for b in BATTERIES}
@@ -215,7 +234,8 @@ def report(values: Mapping[str, Codes], members: Sequence[str], alpha: float) ->
         p = modal_pvalue(values, e, pool + [e])
         order = next((f"{k + 1} (p {q:.4f})" for k, (x, q) in enumerate(flagged) if x == e), "")
         cells = " | ".join(str(len(items.get(b, []))) for b in BATTERIES)
-        print(f"| {e} | {sizes} | {cells} | {p:.4f} | {order} |")
+        sharp = sharpness(values[e])
+        print(f"| {e} | {sizes} | {cells} | {p:.4f} | {order} | {sharp:.2f} |")
     for first, second in itertools.combinations(apart, 2):
         both, same = shared_flips(values, first, second, majority)
         print(f"- {first} and {second}: {both} items flipped by both, {same} to a shared answer")
