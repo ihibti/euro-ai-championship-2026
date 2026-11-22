@@ -1,0 +1,380 @@
+"""Soft-target fine-tune on top of the class dial: can a change stay on the images it targets?
+
+The student starts as the original model with the whole-forgotten classes' bias lowered by
+--full (the class dial of head_edit.py). It is then fine-tuned on forget images and random slight
+alterations of them, towards targets built from the original model's own logits:
+
+- every image: the whole-forgotten classes lowered by --full (what the student already does);
+- an image of a thinned class c: its own label lowered further by --hedge * n_c / 130;
+- with --even, every image: its own label lowered by that amount, whatever its class. With
+  --full 0 this is the hedge for the reading in which no class is removed.
+
+With --holdout, a share of every class's forget images is never trained on. Those images are
+memorized training images of the same classes, like the retained images the server's control set
+may hold. Two numbers come out of them:
+
+- transfer: how much of the hedge taught on the trained images shows up on the held-out ones.
+  Near 0, the change is specific to the images; near 1, it acts on the whole class and a
+  closed-form edit of the last layer does the same job without training.
+- the retain proxy: accuracy and KL at temperature 2 against the class-dial model on them.
+
+With --targets, the held-out predictions of xfit.py come in: each image's target is blended, at
+temperature 2, with what a copy of the model that never trained on it predicts. --mix is the
+share given to that prediction, from 0 (ignore it) to 1 (trust it fully).
+
+With --extrapolate K, the targets move in logit space along each image's own held-out step: the
+original logits plus K times (held-out prediction minus original), on the exact image's step
+applied to every view. K = 1 is the held-out prediction; K above 1 goes further, towards a model
+whose early blocks never saw the image either. It replaces --mix.
+
+With --retain-mix W, every batch also carries blends of two forget images of different classes
+(mixup, the second image's share drawn between 0.35 and 0.65). The original model never saw these
+blends, so its outputs on them stand for its behaviour on images it did not memorise: the student
+is pulled towards them with weight W (KL at temperature 2). It anchors the rest of the model
+while the forget images move, without any retained data.
+
+With --no-start-edit, the student starts as the original model itself: the class dial is only in
+the targets, so the nine classes are lowered on the forget images the student trains on, and the
+anchor and the probes show how far that spreads to other images of those classes.
+
+With --spare-classes N, N thinned classes get no hedge and none of their images is trained on.
+They stand in for the 55 classes we hold no image of: the drift on them is what the fine-tune
+does to classes it was never shown.
+
+Run in the JURECA task folder:
+
+    python <repo>/tasks/unlearning/csd.py --name csd_f25_h8 --full 25 --hedge 8 --holdout 0.2
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import time
+from pathlib import Path
+
+import lib
+import numpy as np
+import torch
+import torch.nn.functional as F
+from lib import tt
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--name", required=True)
+    parser.add_argument("--out", type=Path, default=Path("output/kkrgp"))
+    parser.add_argument("--full", type=float, default=25.0)
+    parser.add_argument("--hedge", type=float, default=8.0)
+    parser.add_argument(
+        "--even", type=float, default=0.0, help="label hedge on every touched class"
+    )
+    parser.add_argument("--tau", type=float, default=1.0)
+    parser.add_argument("--targets", type=Path, help="xfit_<name>.npz with held-out predictions")
+    parser.add_argument("--mix", type=float, default=0.5)
+    parser.add_argument("--extrapolate", type=float, default=0.0, help="logit step K; replaces mix")
+    parser.add_argument(
+        "--extra-targets",
+        type=Path,
+        nargs="*",
+        default=[],
+        help="more xfit files; with --extrapolate, their steps are mixed with --targets' step",
+    )
+    parser.add_argument("--epochs", type=int, default=8)
+    parser.add_argument("--batch", type=int, default=128)
+    parser.add_argument("--lr", type=float, default=1e-5)
+    parser.add_argument("--anchor", type=float, default=0.0, help="decoupled pull to the start")
+    parser.add_argument("--blocks", type=int, default=-1, help="train the last N blocks; -1 = all")
+    parser.add_argument("--early", type=int, default=0, help="train only the first N blocks")
+    parser.add_argument("--freeze-head", action="store_true")
+    parser.add_argument("--exact-share", type=float, default=0.25)
+    parser.add_argument("--aug-strength", type=float, default=1.0)
+    parser.add_argument("--t2-weight", type=float, default=1.0)
+    parser.add_argument("--holdout", type=float, default=0.0)
+    parser.add_argument("--retain-mix", type=float, default=0.0, help="weight of the mixup anchor")
+    parser.add_argument("--no-start-edit", action="store_true", help="class dial in targets only")
+    parser.add_argument("--spare-classes", type=int, default=0, help="thinned classes left alone")
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--limit", type=int, default=0, help="first N images only, for smoke runs")
+    parser.add_argument("--save", action="store_true", help="save the state dict even with holdout")
+    return parser.parse_args(argv)
+
+
+def trainable(model: torch.nn.Module, args: argparse.Namespace) -> list[torch.nn.Parameter]:
+    for p in model.parameters():
+        p.requires_grad_(False)
+    extra = []
+    if args.early > 0:
+        modules = [model.patch_embed, *model.blocks[: args.early]]
+        extra = [model.cls_token, model.pos_embed]
+    elif args.blocks < 0:
+        modules = [module for name, module in model.named_children() if name != "head"]
+        extra = [model.cls_token, model.pos_embed]
+    else:
+        modules = [model.norm, *model.blocks[len(model.blocks) - args.blocks :]]
+    if not args.freeze_head and args.early == 0:
+        modules.append(model.head)
+    params = [p for module in modules for p in module.parameters()] + extra
+    for p in params:
+        p.requires_grad_(True)
+    return params
+
+
+def stratified_split(
+    labels: torch.Tensor, holdout: float, seed: int
+) -> tuple[torch.Tensor, torch.Tensor]:
+    generator = torch.Generator().manual_seed(seed)
+    train, held = [], []
+    for label in labels.unique():
+        members = torch.nonzero(labels == label).squeeze(1)
+        members = members[torch.randperm(len(members), generator=generator)]
+        cut = int(round(len(members) * holdout))
+        held.append(members[:cut])
+        train.append(members[cut:])
+    return torch.cat(train).sort().values, torch.cat(held).sort().values
+
+
+def load_proxy(path: Path | None, count: int) -> tuple[torch.Tensor, torch.Tensor] | None:
+    if path is None:
+        return None
+    with np.load(path) as data:
+        proxy = torch.from_numpy(data["pred_exact"][:count])
+        columns = torch.from_numpy(data["columns"])
+    return proxy, columns
+
+
+def train(
+    student: torch.nn.Module,
+    teacher: torch.nn.Module,
+    images: torch.Tensor,
+    labels: torch.Tensor,
+    shift: torch.Tensor,
+    beta: torch.Tensor,
+    proxy: tuple[torch.Tensor, torch.Tensor] | None,
+    args: argparse.Namespace,
+    delta: torch.Tensor | None = None,
+) -> list[dict[str, float]]:
+    params = trainable(student, args)
+    starts = [p.detach().clone() for p in params]
+    optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.0)
+    steps_per_epoch = (len(images) + args.batch - 1) // args.batch
+    total = max(1, steps_per_epoch * args.epochs)
+    schedule = torch.optim.lr_scheduler.LambdaLR(
+        optimizer, lambda step: min(1.0, (step + 1) / max(1, total // 10))
+    )
+    generator = torch.Generator(device=lib.DEVICE).manual_seed(args.seed)
+    order_generator = torch.Generator().manual_seed(args.seed)
+    history = []
+    for epoch in range(args.epochs):
+        student.train()
+        order = torch.randperm(len(images), generator=order_generator)
+        sums = {"loss": 0.0, "kl_t1": 0.0, "kl_t2": 0.0, "mix_anchor": 0.0}
+        for start in range(0, len(order), args.batch):
+            index = order[start : start + args.batch]
+            pixels = lib.chw(images[index])
+            altered = lib.random_views(pixels, generator, args.aug_strength)
+            keep = torch.rand(len(index), generator=generator, device=lib.DEVICE)
+            pixels = torch.where((keep < args.exact_share).view(-1, 1, 1, 1), pixels, altered)
+            batch_labels = labels[index].to(lib.DEVICE)
+            with torch.no_grad(), torch.autocast("cuda", dtype=torch.float16):
+                teacher_logits = teacher(lib.model_input(pixels)).float()
+            if delta is not None and delta.dim() == 3:
+                steps = args.extrapolate * delta[:, index].to(lib.DEVICE)
+                target = lib.mixture_targets(
+                    teacher_logits, steps, batch_labels, shift, beta, args.tau
+                )
+            else:
+                if delta is not None:
+                    teacher_logits = teacher_logits + args.extrapolate * delta[index].to(lib.DEVICE)
+                target = lib.soft_targets(teacher_logits, batch_labels, shift, beta, args.tau)
+            if proxy is not None:
+                rows, columns = proxy[0][index].to(lib.DEVICE), proxy[1].to(lib.DEVICE)
+                target = lib.mix_with_proxy(target, rows, columns, args.mix)
+            with torch.autocast("cuda", dtype=torch.bfloat16):
+                logits = student(lib.model_input(pixels)).float()
+            log_p = F.log_softmax(logits, dim=1)
+            kl_t1 = (target.exp() * (target - log_p)).sum(1).mean()
+            kl_t2 = lib.kl_t2(target, logits).mean()
+            loss = kl_t1 + args.t2_weight * kl_t2
+            mix_anchor = torch.zeros((), device=lib.DEVICE)
+            if args.retain_mix > 0:
+                partner = torch.randperm(len(index), generator=order_generator).to(lib.DEVICE)
+                other = batch_labels[partner] != batch_labels
+                share = 0.35 + 0.3 * torch.rand(len(index), generator=generator, device=lib.DEVICE)
+                share = torch.where(other, share, torch.zeros_like(share)).view(-1, 1, 1, 1)
+                blends = pixels * (1 - share) + pixels[partner] * share
+                with torch.no_grad(), torch.autocast("cuda", dtype=torch.float16):
+                    anchor_target = F.log_softmax(teacher(lib.model_input(blends)).float(), 1)
+                with torch.autocast("cuda", dtype=torch.bfloat16):
+                    anchor_logits = student(lib.model_input(blends)).float()
+                rows = other.float()
+                kl_rows = lib.kl_t2(anchor_target, anchor_logits)
+                mix_anchor = (kl_rows * rows).sum() / rows.sum().clamp(min=1.0)
+                loss = loss + args.retain_mix * mix_anchor
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(params, 1.0)
+            optimizer.step()
+            schedule.step()
+            if args.anchor > 0:
+                lr = schedule.get_last_lr()[0]
+                with torch.no_grad():
+                    for p, p0 in zip(params, starts, strict=True):
+                        p.add_(p - p0, alpha=-lr * args.anchor)
+            sums["loss"] += float(loss) * len(index)
+            sums["kl_t1"] += float(kl_t1) * len(index)
+            sums["kl_t2"] += float(kl_t2) * len(index)
+            sums["mix_anchor"] += float(mix_anchor) * len(index)
+        record = {key: value / len(images) for key, value in sums.items()}
+        record["epoch"] = epoch + 1
+        history.append(record)
+        print(json.dumps(record), flush=True)
+    student.eval()
+    return history
+
+
+def group_report(
+    orig: torch.Tensor,
+    sub: torch.Tensor,
+    labels: torch.Tensor,
+    shift: torch.Tensor,
+    beta: torch.Tensor,
+    tau: float,
+    proxy: tuple[torch.Tensor, torch.Tensor] | None,
+    mix: float,
+    step: torch.Tensor | None = None,
+) -> dict[str, float]:
+    """One group of images on one view: the dial-only reference, the target, the student."""
+    none = torch.zeros_like(beta)
+    reference = lib.soft_targets(orig, labels, shift, none)
+    moved = orig if step is None else orig + step
+    target = lib.soft_targets(moved, labels, shift, beta, tau)
+    if proxy is not None:
+        target = lib.mix_with_proxy(target, proxy[0], proxy[1], mix)
+    p_reference = float(lib.label_prob_t2(reference, labels).mean())
+    p_target = float(lib.label_prob_t2(target, labels).mean())
+    p_sub = float(lib.label_prob_t2(sub, labels).mean())
+    wanted = p_reference - p_target
+    stats = lib.profile(sub, labels)
+    return {
+        "images": len(labels),
+        "label_prob_t2_reference": p_reference,
+        "label_prob_t2_target": p_target,
+        "label_prob_t2_sub": p_sub,
+        "moved_share": (p_reference - p_sub) / wanted if abs(wanted) > 1e-6 else None,
+        "kl_reference_sub_t2": float(lib.kl_t2(reference, sub).mean()),
+        "kl_target_sub_t2": float(lib.kl_t2(target, sub).mean()),
+        "kl_orig_sub_t2": float(lib.kl_t2(F.log_softmax(orig, dim=1), sub).mean()),
+        "acc_vs_reference": float((sub.argmax(1) == reference.argmax(1)).float().mean()),
+        "loss_mean": stats["loss_mean"],
+        "loss_std": stats["loss_std"],
+    }
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = parse_args(argv)
+    args.out.mkdir(parents=True, exist_ok=True)
+    started = time.time()
+    torch.manual_seed(args.seed)
+    teacher = tt.load_model().eval()
+    student = tt.load_model()
+    images = tt.load_forget_images()
+    if args.limit:
+        images = images[: args.limit]
+    orig_exact = lib.logits_of(teacher, images)
+    labels = orig_exact.argmax(1)
+    shift, beta = lib.class_plan(labels, args.full, args.hedge)
+    touched = torch.bincount(labels, minlength=tt.NUM_CLASSES) > 0
+    beta = beta + args.even * touched
+    spareable = torch.nonzero(touched & (shift == 0)).squeeze(1)
+    order = torch.randperm(len(spareable), generator=torch.Generator().manual_seed(args.seed))
+    spare = spareable[order[: args.spare_classes]]
+    beta[spare] = 0
+    if not args.no_start_edit:
+        with torch.no_grad():
+            student.head.bias -= shift.to(student.head.bias)
+    is_full = shift[labels] > 0
+    is_spare = torch.isin(labels, spare)
+    train_index, held_index = stratified_split(labels, args.holdout, args.seed)
+    train_index = train_index[~is_spare[train_index]]
+    held_index = held_index[~is_spare[held_index]]
+    spare_index = torch.nonzero(is_spare).squeeze(1)
+    print(
+        f"full classes={int((shift > 0).sum())} hedged classes={int((beta > 0).sum())} "
+        f"spare classes={spare.tolist()} train={len(train_index)} held={len(held_index)} "
+        f"spare={len(spare_index)}",
+        flush=True,
+    )
+    proxy = load_proxy(args.targets, len(images))
+    delta = None
+    if args.extrapolate > 0:
+        if proxy is None:
+            raise SystemExit("--extrapolate needs --targets")
+        delta = lib.heldout_delta(orig_exact, proxy[0], proxy[1])
+        extras = [load_proxy(path, len(images)) for path in args.extra_targets]
+        if extras:
+            delta = torch.stack(
+                [delta] + [lib.heldout_delta(orig_exact, rows, cols) for rows, cols in extras]
+            )
+        proxy = None
+    history = []
+    if args.epochs > 0:
+        trained_proxy = None if proxy is None else (proxy[0][train_index], proxy[1])
+        history = train(
+            student,
+            teacher,
+            images[train_index],
+            labels[train_index],
+            shift,
+            beta,
+            trained_proxy,
+            args,
+            None if delta is None else delta[..., train_index, :],
+        )
+    report: dict = {"args": {k: str(v) for k, v in vars(args).items()}, "history": history}
+    for part, index in (("trained", train_index), ("held", held_index), ("spare", spare_index)):
+        if len(index) == 0:
+            continue
+        orig_views = lib.view_logits(teacher, images[index], lib.EVAL_VIEWS)
+        sub_views = lib.view_logits(student, images[index], lib.EVAL_VIEWS)
+        part_labels = labels[index]
+        report[part] = {}
+        for group, mask in (("full", is_full[index]), ("thinned", ~is_full[index])):
+            if not mask.any():
+                continue
+            rows = None if proxy is None else (proxy[0][index][mask], proxy[1])
+            first = delta if delta is None or delta.dim() == 2 else delta[0]
+            step = None if first is None else args.extrapolate * first[index][mask]
+            report[part][group] = {
+                view: group_report(
+                    orig_views[view][mask],
+                    sub_views[view][mask],
+                    part_labels[mask],
+                    shift,
+                    beta,
+                    args.tau,
+                    rows,
+                    args.mix,
+                    step,
+                )
+                for view in lib.EVAL_VIEWS
+            }
+    report["seconds"] = time.time() - started
+    (args.out / f"{args.name}.json").write_text(json.dumps(report, indent=2) + "\n")
+    summary = {"name": args.name}
+    for part in ("trained", "held", "spare"):
+        for group in ("full", "thinned"):
+            exact = report.get(part, {}).get(group, {}).get("exact")
+            if exact:
+                keys = ("moved_share", "kl_reference_sub_t2", "acc_vs_reference", "loss_mean")
+                summary[f"{part}_{group}"] = {
+                    key: None if exact[key] is None else round(exact[key], 4) for key in keys
+                }
+    print(json.dumps(summary, indent=2), flush=True)
+    if args.holdout == 0 or args.save:
+        torch.save(lib.state_dict_float32(student), args.out / f"{args.name}.pt")
+        print(f"saved {args.out / f'{args.name}.pt'}", flush=True)
+
+
+if __name__ == "__main__":
+    main()

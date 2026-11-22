@@ -1,0 +1,11 @@
+k8_e4t2_rm1 done
+k8_e3t15_rm1 done
+k8_e3t1_rm1 done
+k8_e4t2_rm3 done
+k8_e3t2_rm1_ep40 done
+k8_e3t2_rm1_lr1e4 done
+k8_e5t25_rm1 done
+k8_e3t2_rm1_b9 done
+k7_e3t2_rm done
+k7_e3t2 done
+wrote output/kkrgp/eighth/logits.npz

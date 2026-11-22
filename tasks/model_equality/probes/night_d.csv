@@ -1,0 +1,9 @@
+id,prompt
+d1_repeat150,"Repeat the word river exactly 150 times, separated by single spaces. Output nothing else."
+d2_story100,"Continue this story in about 100 words. Output nothing else.
+
+The ferry left the harbour an hour late, and by the time the island came into view the passengers had"
+d3_openlist,"Write a list of animals that live in the sea, separated by commas. Output nothing else."
+d4_copycont,"Copy the following text exactly, then continue it with about 120 more words in the same plain style. Output only the text, with no title and no comments.
+
+The river leaves the hills through a narrow gap, where an old stone bridge carries the road to the market town. Below the bridge the valley opens into flat meadows that flood most winters, and the farms keep to the higher ground along the edges. In the town the streets run down to the water, and the oldest houses still have doors that open onto small quays. Trade on the river declined when the railway arrived in the last century, but"

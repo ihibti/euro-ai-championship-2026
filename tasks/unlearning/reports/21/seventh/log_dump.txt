@@ -1,0 +1,13 @@
+x3_ext_m80 done
+x4_e20 done
+x5_e25 done
+x5_e30 done
+t6_t3 done
+t6_t4 done
+t6_t5 done
+k7_e3t2_rm3 done
+k7_e3t2_b3_rm3 done
+k7_e3t2_ex_rm3 done
+k7_e2t2_rm3 done
+u7_t32_rm3 done
+wrote output/kkrgp/seventh/logits.npz

@@ -1,0 +1,65 @@
+id,prompt
+bat_trivia,"Answer each question with one word or one number. Reply with exactly 30 lines in the form '1. Paris', and nothing else.
+
+1. What is the capital of Australia?
+2. How many legs does a spider have?
+3. Who wrote Pride and Prejudice?
+4. What is the chemical symbol for sodium?
+5. In which year did the Berlin Wall fall?
+6. What is the largest planet in the solar system?
+7. What is the capital of Canada?
+8. How many bones are in the adult human body?
+9. Who painted The Starry Night?
+10. What is the boiling point of water in Fahrenheit?
+11. What is the capital of Mongolia?
+12. Which element has atomic number 26?
+13. Who was the first person to walk on the Moon?
+14. What is the longest river in Africa?
+15. How many sides does a heptagon have?
+16. What is the capital of Kenya?
+17. Who composed the Moonlight Sonata?
+18. What is the smallest prime number?
+19. Which planet is known as the Red Planet?
+20. What is the capital of Peru?
+21. In which country is the city of Porto?
+22. What is the square root of 169?
+23. Who discovered penicillin?
+24. What is the hardest natural substance?
+25. What is the capital of Turkey?
+26. How many minutes are in a day?
+27. Who wrote One Hundred Years of Solitude?
+28. What is the currency of Japan?
+29. Which ocean is the deepest?
+30. What is the capital of Slovenia?"
+bat_choice,"Answer each of the 30 questions below with a single letter, A or B. There are no right answers; go with your first instinct. Reply with exactly 30 lines in the form '1. A', and nothing else.
+
+1. Which is a better name for a dog? A) Max B) Buddy
+2. Which color is nicer? A) blue B) green
+3. Which fruit is tastier? A) apple B) pear
+4. Which season is better? A) spring B) autumn
+5. Which pet is better? A) cat B) dog
+6. Which drink is better? A) tea B) coffee
+7. Which number is luckier? A) 7 B) 3
+8. Which is more useful? A) a pen B) a pencil
+9. Which is better for a holiday? A) mountains B) beach
+10. Which word sounds nicer? A) meadow B) willow
+11. Which is a better breakfast? A) eggs B) cereal
+12. Which instrument is nicer? A) piano B) guitar
+13. Which animal is cuter? A) rabbit B) hamster
+14. Which is a better hobby? A) reading B) painting
+15. Which city name sounds nicer? A) Lima B) Oslo
+16. Which shape is more pleasing? A) circle B) square
+17. Which is better weather? A) sunny B) snowy
+18. Which flower is prettier? A) rose B) tulip
+19. Which is a better sport? A) tennis B) swimming
+20. Which metal is more beautiful? A) gold B) silver
+21. Which is a better time of day? A) morning B) evening
+22. Which vegetable is better? A) carrot B) broccoli
+23. Which bird is more impressive? A) eagle B) owl
+24. Which is better in summer? A) lemonade B) iced tea
+25. Which letter is prettier? A) S B) R
+26. Which is a better gift? A) a book B) a plant
+27. Which tree is nicer? A) oak B) pine
+28. Which is more relaxing? A) rain sounds B) ocean waves
+29. Which dessert is better? A) cake B) ice cream
+30. Which planet is more interesting? A) Mars B) Saturn"

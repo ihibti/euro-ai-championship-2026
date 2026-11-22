@@ -1,6 +1,6 @@
 # Local base-model anchor: code and tables behind the model equality labels
 
-This folder is the record of the analysis run on the lead's main laptop during the night of 21 to 22 November 2026. It ran in a session's temporary folder and was copied here at 07:00 so that every number in `judges_brief.md` and in `docs_and_plans/guides/judges-defense.md` rests on a committed file.
+This folder is the record of the analysis run on the lead's main laptop during the night of 21 to 22 November 2026. It ran in a session's temporary folder and was copied here at 07:00 so that every number in `tasks/model_equality/method.md` and in `docs_and_plans/guides/methods-and-results.md` rests on a committed file.
 
 The files are copies of what ran. Two paths were rewritten: `SCRATCHPAD` stands for the session's scratch folder and `$HOME` for the home folder. Set both before running anything. The tests import through those paths and are not collected by `make test`.
 

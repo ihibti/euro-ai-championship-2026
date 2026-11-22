@@ -1,0 +1,7 @@
+k9_e3t2_lr2e4 done
+k9_e3t2_lr1e4_ep40 done
+k9_e3t2_lr2e4_ep40 done
+k9_e3t3_lr1e4 done
+k9_e3t1_lr1e4 done
+k9_e35t2_lr1e4 done
+wrote output/kkrgp/seventh/logits.npz

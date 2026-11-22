@@ -1,0 +1,5 @@
+id,prompt
+p1_copycont,"Copy the following text exactly, then continue it with about 120 more words in the same plain style. Output only the text, with no title and no comments.
+
+The river leaves the hills through a narrow gap, where an old stone bridge carries the road to the market town. Below the bridge the valley opens into flat meadows that flood most winters, and the farms keep to the higher ground along the edges. In the town the streets run down to the water, and the oldest houses still have doors that open onto small quays. Trade on the river declined when the railway arrived in the last century, but"
+p2_binary,"Give a sequence of 120 symbols drawn uniformly at random from the set {0, 1}. Separate the symbols with single spaces. Do not include any explanations, formatting, or additional text."
