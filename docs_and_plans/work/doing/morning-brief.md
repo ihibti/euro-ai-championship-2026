@@ -60,9 +60,9 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 | 04:08 | `k8_e3t2_rm1_ep40_x2p25.pt` (a sibling run, last layer times 2.25) | 0.2665 |
 | 04:39 | `k11_b_soup3_x2.pt` (average of the weights of the 0.2837 run and its two new seeds, last layer times 2) | 0.2858 |
 
-After the 0.2858, two more batches ran on the cluster and neither was submitted:
-- *Twelfth* (seeds of the same recipe): withdrawn by the agent, the seeds are the same model where the score is measured.
-- *Thirteenth* (job 15905366, a target mixed from three independent cross-fits): the three cross-fits agree on 95% of the images, so the mix adds little, and the result sits between the 0.2133's level and the 0.2837's. Checks 1 and 3 of four failed. A larger last-layer factor would move it closer, but that is a dial chosen after the result, so it was not tried.
+After the 0.2858, two more batches were prepared and nothing more was submitted:
+- *Twelfth* (more seeds of the same recipe): withdrawn by the agent before it ran, because the seeds are the same model where the score is measured.
+- *Thirteenth* (job 15905366, 06:48 to 07:12, a target mixed from three independent cross-fits): the three cross-fits agree on 95% of the images, so the mix adds little, and the result sits between the 0.2133's level and the 0.2837's. Checks 1 and 3 of four failed. A larger last-layer factor would move it closer, but that is a dial chosen after the result, so it was not tried.
 
 ## Model equality
 
