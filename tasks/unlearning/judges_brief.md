@@ -155,6 +155,24 @@ With all five sharpened scores, `peak_check.py` no longer fits any setting. We s
 
 The last night submissions were the weight average of the 0.2837's base and two new seeds, and the eleventh batch's best line by its probes. Both need no score model.
 
+## Board noise and seed twins (04:30)
+
+**How much the public 30% moves a score** (`split_noise.py`, tested in `test_split_noise.py`, 4000 random 30% splits of the 3500 forget images, jittered copies standing in for the hidden altered ones):
+- the ratio between two of our lines moves by about 2% (1 SD);
+- one line's own forget term moves by about 4.5%, so a private score can sit that far from the public one;
+- seed twins cannot be ranked by the board: on 30% to 84% of splits, the 30% and the 70% disagree on which twin is better;
+- a gap of 6% (0.2665 against 0.2837) is about 3 SD of the split: mostly a real difference.
+
+The stand-in for gold is one model, the cross-fit extrapolated 3 times. Its ratios on all images are not predictions: it puts the 0.2222 above the 0.2837. The spreads depend little on it, since they come from how unevenly the per-image losses fall across images.
+
+**Seed twins.** The 0.2837's recipe rerun with seeds 1 and 2 matches its base on every statistic we measure:
+- realized forget loss 2.23/1.82 and 2.26/1.82 against 2.23/1.84;
+- held-out KL 0.96 and 1.01 against 0.99;
+- changed predictions 4.9% and 5.8% against 5.2%;
+- forget loss at x2 3.78/3.75 and 3.82/3.75 against 3.80/3.79.
+
+Yet the twins pick a different class on 11 to 12% of the forget images. A submitted line is one draw of its recipe, and the final 70% is a different split. Averaging the weights of the three twins (`k11_b_soup3_x2`, `soup.py`) keeps the recipe's point and cancels part of what is seed noise in each model. It needs no score model, and should do at least as well on the hidden 70% as a single twin.
+
 ## Where the ceiling is: training reach
 
 The ledger can score a fine-tune that reached its target exactly: the target logits themselves, against the golds that carry the weight.
@@ -239,6 +257,7 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 - **Is the factor tuned to the board?**
   - It moved one notch at a time with a written prediction each time. 2 scored 0.2837; 2.5 scored 0.2222.
   - We did not continue upwards, and we did not fine-tune the factor around 2 on the board. The 03:38 line keeps the 0.2837's loss level with a different base, chosen for its lower spill in the probes.
+- **Why submit an average of three models?** The three runs share the recipe and differ only by seed, by at most 0.073 in any weight, so their average is still a fine-tune of the same model, loads into the same architecture and keeps the gate. The twins agree on every statistic and disagree on the class of 11 to 12% of the forget images: that disagreement is noise, and averaging removes part of it. The board cannot tell the twins apart (section above), so choosing the best-scoring twin would be choosing on the public split's noise.
 - **Why did you break your own pre-registered rule at 03:38?** The rule assumed that further-reaching fine-tunes pay at the same factor, and the 03:08 score refuted the model behind it. Submitting the rule's line would have tested a model we already knew to be wrong. We withdrew it before its slot, posted the reason and the replacement's prediction on #12 before its score, and kept the slot for a line whose advantage shows in the probes.
 
 ## Reproduce
@@ -261,5 +280,6 @@ python $WT/tasks/unlearning/splice_head.py --model output/kkrgp/k7_e3t2_rm.pt --
 python $WT/tasks/unlearning/fold_reports.py /Volumes/euroai-apfs/r21/eighth
 python $WT/tasks/unlearning/ledger.py  --targets output/kkrgp/xfit_extras.npz --logits /Volumes/euroai-apfs/r21/seventh/logits.npz /Volumes/euroai-apfs/r21/eighth/logits.npz
 python $WT/tasks/unlearning/plateau.py --targets output/kkrgp/xfit_extras.npz
+python $WT/tasks/unlearning/split_noise.py --draws 4000
 python -m pytest $WT/tasks/unlearning -q
 ```
