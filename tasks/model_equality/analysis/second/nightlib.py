@@ -40,6 +40,8 @@ NIGHT_PROMPTS: dict[str, str] = {
     "idn_identity": "identity",
     "f1_countdown": "countdown",
     "f2_echo": "echo",
+    "bat_choice": "choice",
+    "bat_trivia": "trivia",
 }
 TOKEN = re.compile(r"\w+|[^\w\s]")
 BIT = re.compile(r"(?<![0-9])[01](?![0-9])")
@@ -177,7 +179,24 @@ def echo_views(prompt: str, response: str) -> list[str | None]:
     return [match, first_words(response, 1), " ".join(said.split()[-1:]) or END]
 
 
+def choice_views(prompt: str, response: str) -> list[str | None]:
+    options = s.choice_options(prompt)
+    items = s.numbered_items(response, len(options))
+    values = [s.choice_value(item, option) for item, option in zip(items, options, strict=True)]
+    return [None if np.isnan(v) else ("A" if v == 1.0 else "B") for v in values]
+
+
+def trivia_views(response: str) -> list[str | None]:
+    items = s.numbered_items(response, len(s.TRIVIA_KEYS))
+    values = [s.trivia_value(item, keys) for item, keys in zip(items, s.TRIVIA_KEYS, strict=True)]
+    return [None if np.isnan(v) else str(int(v)) for v in values]
+
+
 def views_of(kind: str, prompt: str, response: str) -> list[str | None]:
+    if kind == "choice":
+        return choice_views(prompt, response)
+    if kind == "trivia":
+        return trivia_views(response)
     if kind == "identity":
         return identity_views(response)
     if kind == "leak":

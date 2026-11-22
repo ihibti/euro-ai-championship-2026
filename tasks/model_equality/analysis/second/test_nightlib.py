@@ -144,3 +144,11 @@ def test_echo_views_tell_an_exact_echo_from_a_wrapped_one():
         "sure",
     ]
     assert n.views_of("echo", prompt, "OK")[0] == "other"
+
+
+def test_battery_views_give_one_letter_or_one_correctness_per_item():
+    prompt = "Intro.\n\n1. Which? A) Max B) Buddy\n2. Which color is nicer? A) blue B) green"
+    assert n.choice_views(prompt, "1. A\n2. green") == ["A", "B"]
+    assert n.choice_views(prompt, "1. A") == ["A", None]
+    views = n.trivia_views("1. Canberra\n2. Six")
+    assert views[:2] == ["1", "0"] and views[2] is None
