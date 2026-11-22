@@ -10,6 +10,11 @@ its own before the 256-token output cap. It fits families whose plain copies fol
 instruction (about 150 words) and would all count as "long" under the frozen feature. The
 default stays the rule frozen at 897fcbb.
 
+Amended after the 2-repeat pilot on the scored endpoints and before their 18 more repeats: a
+letter run longer than 20 characters counts as its length / 4 tokens, so a cap hit written with
+no spaces ("riverriver...", 1,280 characters) is capped. No reference answer holds such a run.
+The version registered at f7840f1 stays available as "capped1".
+
 Rule, inside one family (endpoints already known to share a base model):
 1. Fit one long-run rate for the whole family, and a mixture of two rates, each endpoint
    belonging to one class (binomial mixture, EM from 20 starts).
@@ -45,6 +50,7 @@ HERE = Path(__file__).resolve().parent
 TRUTH = HERE.parents[1] / "upstream" / "practice_answers.csv"
 LONG = 100
 CAP_TOKENS = 240
+LONG_WORD = 20
 ALPHA = 0.01
 TOKEN = re.compile(r"[A-Za-z]+|\d+|\n+| {2,}|[^\sA-Za-z\d]")
 
@@ -61,15 +67,22 @@ def is_long(response: str) -> bool:
     return run_length(response) >= LONG
 
 
-def estimated_tokens(response: str) -> int:
-    return len(TOKEN.findall(response))
+def estimated_tokens(response: str, split_long: bool = True) -> int:
+    return sum(
+        -(-len(token) // 4) if split_long and len(token) > LONG_WORD and token.isalpha() else 1
+        for token in TOKEN.findall(response)
+    )
 
 
 def is_capped(response: str) -> bool:
     return estimated_tokens(response) >= CAP_TOKENS
 
 
-FEATURES = {"long": is_long, "capped": is_capped}
+def is_capped_first(response: str) -> bool:
+    return estimated_tokens(response, split_long=False) >= CAP_TOKENS
+
+
+FEATURES = {"long": is_long, "capped": is_capped, "capped1": is_capped_first}
 
 
 def _loglik(k: np.ndarray, n: np.ndarray, p: np.ndarray) -> np.ndarray:

@@ -77,3 +77,13 @@ def test_call_family_calls_nothing_on_a_homogeneous_family():
     call = r.call_family(names, long_counts, totals, np.random.default_rng(0), draws=199)
     assert call.p >= 0.01
     assert call.lora == []
+
+
+def test_capped_counts_a_cap_hit_written_without_spaces():
+    joined = "river" * 256
+    assert r.estimated_tokens(joined) == 320
+    assert r.is_capped(joined)
+    assert not r.is_capped_first(joined)
+    assert r.estimated_tokens("river " * 40 + "river" * 39) == 40 + 49
+    plain = "Here you go: river, river. Done"
+    assert r.estimated_tokens(plain) == r.estimated_tokens(plain, split_long=False)
