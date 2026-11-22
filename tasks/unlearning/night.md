@@ -7,9 +7,22 @@ For any session that picks the unlearning task up during the night (after a rest
 - **Role.** The unlearning agent, working through the lead's GitHub login. It never submits and never touches JURECA. The desk runs its GPU requests (#21) and submits from `submit_queue.md` (#12). Every GitHub post starts with `Unlearning:`. Commits carry no AI attribution.
 - **Workspace.** Worktree `~/worktrees/euro-ai-championship-2026/kkrgp-unlearning-first-moves`, branch `kkrgp/unlearning-first-moves`. Data and the Python environment are on the SSD image: `source /Volumes/euroai-apfs/ops/env.sh` gives `$WT`, `$PY`, `$T`. If `/Volumes/euroai-apfs` is missing: `hdiutil attach /Volumes/Intenso/euroai/apfs.sparsebundle`. Run tools from `$T` (they read `output/kkrgp/...`).
 - **Wake-ups.** `/Volumes/euroai-apfs/ops/watch.sh` in the background (exits on any change on #12, #19, #21, #24, #25, #28 or `desk/unlearning`, or after 39 minutes; restart it every time). A heartbeat is scheduled in the session every 20 minutes (minutes 7, 27, 47).
-- **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `ledger.py --targets output/kkrgp/xfit_extras.npz`, log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
+- **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `score_fit.py` from `$T` (the ledger skips lines off its factor grid), log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
 - **On new GPU results (`desk/unlearning`, `tasks/unlearning/reports/21/`).** Copy the JSON reports to `/Volumes/euroai-apfs/r21/`, add the candidates' measured statistics and retain estimates to `ledger_inputs.json`, rerun the ledger, queue the best by expected score.
 - **Limits.** 8 unlearning submissions left at 01:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
+- **State at 09:01: a score model, and the queue's rules for the slot after the tau-1 blend.**
+  - **`score_fit.py`** (`434e59e`, 5 tests): every scored line with dumped logits (11) rebuilt exactly. The scorer's terms are taken on both groups, with gold's loss (mean, std) and a retain level c free.
+    - Gold's forget loss is near 4.0/4.0 (mean 3.4 to 5.1, std 3.5 to 4.9).
+    - c is 0.42 to 0.54.
+    - Leave-one-out errors run from −31% to +38%, so it cannot separate lines within about 5%.
+    - The end-of-night ledger had skipped three scored lines (k9 x1.25, ep40 x2.25, soup3 x2).
+    - Run it from `$T` after any new score (about 45 s).
+  - **The tau-1 blend, revised before its score** (#12 at 09:01): about 0.27 (0.26 to 0.30), 1 in 4 above 0.2858.
+  - **The queue's rule for the next slot:**
+    - blend at 0.2915 or above: `m15_k9t1_x1p45.pt`;
+    - blend below 0.2915: `k11_b_soup3_x2p1.pt`;
+    - the tau-1.5 blend is dropped to a spare;
+    - blend below 0.275: only tau-1.5 runs can qualify at 10:20.
 - **State at 08:35: the morning push (the lead's order on #12 at 08:15: we are 8th overall and need 6th; unlearning is the only task with room).**
   - Best **0.2858** (`k11_b_soup3_x2.pt`). The desk's 08:21 line `k8_e3t2_rm1_ep40_x2` scored 0.2687: longer training does not pay at equal sharpening.
   - **The screen** (`morning_screen.py`, `a29a735`): the 0.2837 is the only scored line where forget loss 3.8 and a factor of 0.89 T hold together (ratio 1.00). `k11_b_ep20` x2 looks like the 0.2687 (ratio 1.19).
@@ -20,7 +33,7 @@ For any session that picks the unlearning task up during the night (after a rest
     - 10:50: the best file again.
     The desk builds the blends on the laptop with `soup.py` and posts their sha256.
   - **Fourteenth batch** (#21, `run_fourteenth.sh` at `cc6fb5c`): tau 1.5 at lr 1e-4 and 8e-5, and tau 1 at 9e-5 and 7.5e-5, each with a probe; it also builds and dumps the two blends. Rule fixed on #21 at 08:26: the loss factor within 0.92 to 1.08 of 0.89 T, at most 6% changed predictions, then the lowest held-out KL wins; build it at x(0.89 T).
-  - **On its reports:** `fetch_batch.sh fourteenth`, then `morning_screen.py` with `fourteenth` added to `BATCHES`, and fold the probes with `fold_reports.py ... --write`.
+  - **On its reports:** `fetch_batch.sh fourteenth`, fold the probes with `fold_reports.py /Volumes/euroai-apfs/r21/fourteenth --write`, then `morning_screen.py` and `score_fit.py` (both find every dumped batch).
   - **On each score:** follow the decision rules in the queue lines; acknowledge on #12. The desk is offline from about 08:30 while the lead travels; each slot needs the lead at the keyboard.
 - **Work list.** (1) `judges_brief.md` and the morning plan are final at `538147e` (07:50, after the records check and the independent audit); keep them consistent with the log if anything changes. (2) If the desk resumes: answer on #12 and #21, and fold any result as above. (3) Draft PR #32 stays a draft for the task owner.
 
@@ -226,3 +239,4 @@ Written at 04:09, revised at 04:55, final at 07:50 (`538147e`).
 | 07:50 | Independent audit of the brief's middle sections (about 200 numbers checked against commits, reports, #12 and reruns; about 190 match) | nine corrections applied: neighbours scored 6 to 25% lower, not 6 to 22% (0.2133 is 25% below); the other-images golds' sharpening gain is 1.4 to 1.7 times in total, not 1.2; the 0.063/0.162 fit was made at 02:15, after both scores; the gate margin is 5 to 17%; an unsourced forget-term example replaced by the 02:15 log's; the ledger kept rising to x3, not 2.5; the 03:16 comment's 12 settings, 0.183 and 0.295 noted beside the queue's 13, 0.185 and 0.294; the proxy error was 3 to 8%, not up to two times; the training slope was 0.02 per epoch, not 0.03. The brief is final |
 | 08:22 | Desk on #12: the lead's order (8th, need 6th, push unlearning); `ep40_x2` scored 0.2687 (desk's prediction 0.275 to 0.305) | screen of every base (`morning_screen.py`): only the 0.2837 holds both conditions; `ep20` looks like the 0.2687. Fourteenth batch asked on #21 (08:26). Two CPU blends on the operating point queued for 09:20 and 09:50 (#12 at 08:32) |
 | 08:33 | Check of the blends' approximation on a real weight average (`k13_mix_soup_x2` against its members' logit average) | forget loss 2.91/3.03 against 2.93/3.03, jittered 2.85/2.96 against 2.88/2.96, KL at T=2 0.0004 (members 0.064): weight average and logit average agree to about 0.02 in forget loss (#12) |
+| 09:01 | Score model on all 11 scored lines with logits (`score_fit.py`, `434e59e`) | gold's forget loss near 4.0/4.0, level c 0.42 to 0.54, leave-one-out −31% to +38%. Tau-1 blend revised before its score to about 0.27 (0.263 anchored on the 0.256, 0.298 on the 0.2858), 1 in 4 above 0.2858. Rules for the next slot posted on #12 and queued: 0.2915 or above, `k9_e3t1_lr1e4` x1.45; below, the soup at x2.1; the tau-1.5 blend becomes a spare |
