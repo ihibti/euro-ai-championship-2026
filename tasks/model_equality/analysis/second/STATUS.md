@@ -1,6 +1,6 @@
 # Devin: status and next steps (read this first after a restart or a context compaction)
 
-Updated 2026-11-22 01:56 Paris. Report to the desk: description of draft PR #27 (keep it current with
+Updated 2026-11-22 02:16 Paris. Report to the desk: description of draft PR #27 (keep it current with
 `gh pr view 27 --json body --jq .body > /tmp/devin-pr.md`, edit, `gh pr edit 27 --body-file /tmp/devin-pr.md`).
 
 ## Who and where
@@ -17,9 +17,10 @@ Every ~10 minutes: `git fetch origin -q`; if `origin/ihibti/model-equality-refs`
 
 ## Open asks from the desk (comments on #27; the latest at 01:50)
 
-0. **Due about 03:00: my grouping of the 33 endpoints from 20 scored `d1_repeat150` answers per endpoint, read with `capped`, as a submission CSV, without looking at the main line's.** The scored rows land in `answers/night-d.jsonl` (ep- rows next to the ref- rows), pushed at 2 (pilot, about 02:07), 10 and 20 repeats (about 02:57). At the pilot: say whether Qwen and Llama run long or stop near 150 (is the probe flat?). Then:
-   `uv run python p3rule.py --answers ../../answers/night-d.jsonl --prefix ep- --probe d1_repeat150 --families recon_ep.csv --feature capped --out grouping_ep_p3.csv`
-   (also `--feature long` for the record), `make check TASK=model_equality FILE=tasks/model_equality/analysis/second/grouping_ep_p3.csv` from the repo root, post the CSV path and per-family verdicts on #27. Never submit.
+0. **Desk, 02:08 (comment on #27):** the pilot made d1 flat in A and C, so d1 goes to 20 answers **on family B only** (to about 02:42, rows in `answers/night-d.jsonl`). The five persona endpoints (02, 23 in A; 08, 20 in B; 16 in C): prompt or weights? Leak probes `e1_leak_repeat`, `e2_leak_quote` land in `answers/night-e.jsonl` about 02:25 (references at 3 repeats, scored at 2).
+   - Done 02:13: my bets from the identity answers and my leak-reading rule, posted on #27 before any leak answer. Reader: `leak_read.py --answers ../../answers/night-e.jsonl --families recon_ep.csv` (and `--prefix ref-` for the references first).
+   - At 02:25: post the leak reading per endpoint.
+   - **About 02:45: my grouping CSV from everything at hand**, without the main line's: A = core one model, 02/23 by the leak reading; B = `p3rule.py --answers ../../answers/night-d.jsonl --prefix ep- --probe d1_repeat150 --families recon_ep.csv --feature capped --out grouping_ep_p3.csv` (20 answers), 08/20 by the leak reading; C = one model except 16 by the leak reading. Then `make check`. Never submit.
 5. **Partial-answer table: done 01:53** (`651f328`, `partial_worth.md`, comment on #27).
 
 1. **Map of the 33 endpoints: delivered 01:28** (`7ea7dd9`, comment on #27): three families of 11, A = Qwen "created by Alibaba Cloud" {01 02 04 12 14 17 18 23 24 25 33}, B = Qwen "a large language model" {03 06 07 08 20 21 22 26 28 30 32}, C = Llama {05 09 10 11 13 15 16 19 27 29 31}. `recon_ep.md`, `recon_ep.csv`, `recon_ep_evidence.md`. Frozen gap rule said 2 (A+B); k = 3 on trivia, choices, identity, with A's personas as the control. Next: compare A/B with the main line's map when the desk posts it.
