@@ -84,3 +84,20 @@ def test_fit_recovers_the_hypothesis_that_made_the_scores():
     draws = sf.draw(weights, 500)
     values = sf.predicted(draws, pred, ms, retain)
     assert values.mean(0) == pytest.approx(observed, rel=0.05)
+
+
+def test_control_drift_is_zero_at_the_spill_temperature_without_noise():
+    proxy = torch.from_numpy(_logits(6, rows=60, scale=2.0))
+    noise = torch.zeros_like(proxy)
+    assert sf.control_kl(proxy, 2.0, 0.0, 2.0, noise) == pytest.approx(0.0, abs=1e-6)
+    assert sf.control_kl(proxy, 2.0, 0.0, 1.0, noise) > 0.0
+
+
+def test_calibrate_sigma_reaches_the_probes_kl_and_stops_at_temperature_alone():
+    proxy = torch.from_numpy(_logits(7, rows=200, scale=2.0))
+    noise = torch.from_numpy(np.random.default_rng(1).standard_normal(proxy.shape)).float()
+    floor = sf.control_kl(proxy, 1.5, 0.0, 1.0, noise)
+    sigma = sf.calibrate_sigma(proxy, 1.5, floor + 0.3, noise)
+    assert sigma > 0.0
+    assert sf.control_kl(proxy, 1.5, sigma, 1.0, noise) == pytest.approx(floor + 0.3, rel=1e-3)
+    assert sf.calibrate_sigma(proxy, 1.5, floor / 2, noise) == 0.0

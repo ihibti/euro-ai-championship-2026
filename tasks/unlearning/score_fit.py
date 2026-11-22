@@ -9,12 +9,17 @@ weight average. Here:
 - the prediction term is computed under each gold shape of the ledger (aligned, other, removal);
 - the mean/std term compares with a free (mean, std) of gold's loss, on a grid;
 - retain is the probes' estimate (`ledger.sharpened_retain`), times one free level c that also
-  absorbs the level of the prediction term.
+  absorbs the level of the prediction term. With `--retain control`, the factor's effect on retain
+  is read instead on a stand-in for the control set, unseen images where the original is less sure
+  than on its training images (where the probes and `sharpened_retain` read it): the cross-fitted
+  held-out logits, softened by `--proxy-temperature`. Each line's drift there is its spill
+  temperature T plus logit noise, set so that the drift at factor 1 has the probes' KL.
 Both groups are scored by default, as on the server: the exact images, and the dumped jitter view
 standing for the altered copies, with gold's shapes built on that view's original logits and the
 same gold (mean, std) on both (`--groups exact` reproduces the ledger's single group). Each
-hypothesis (shape, mean, std, c) is weighed
-by a log-normal error of `--sigma` on score + 0.003, under a uniform prior on the grid.
+hypothesis (shape, mean, std, c) is weighed by a log-normal error of `--sigma` on score + 0.003,
+under a uniform prior on the grid. At 09:07 on 22 November, `--retain control
+--proxy-temperature 1.25` fitted best (log-likelihood -8.0, against -14.8 for the probes' retain).
 
 Printed: the fit of the best hypothesis, the posterior of gold's loss statistics, a leave-one-out
 check, and for every line the best factor with its predicted score, its 10th to 90th percentile,
@@ -40,6 +45,7 @@ from ledger import (
     REMOVAL_KS,
     REMOVAL_SHIFTS,
     REMOVAL_TAUS,
+    effective_temperature,
     sharpened_retain,
     within_class_permutation,
 )
@@ -201,13 +207,59 @@ def unit_logits(base: str, store: dict[str, np.ndarray]) -> np.ndarray:
     return blend_logits(members(base), store)
 
 
-def retain_function(base: str, store, specs, orig_t: torch.Tensor):
-    """Retain as a function of the factor, and the share of changed predictions."""
+def control_kl(
+    proxy: torch.Tensor, temperature: float, sigma: float, factor: float, noise: torch.Tensor
+) -> float:
+    """Mean KL at T=2 from the control proxy to its drift, (proxy / T + sigma noise) x factor."""
+    return float(scoring.kl_rows(proxy, factor * (proxy / temperature + sigma * noise)).mean())
+
+
+def calibrate_sigma(
+    proxy: torch.Tensor, temperature: float, target: float, noise: torch.Tensor, steps: int = 40
+) -> float:
+    """The noise level whose drift at factor 1 has the probes' KL; 0 if the temperature alone
+    already reaches it."""
+    if control_kl(proxy, temperature, 0.0, 1.0, noise) >= target:
+        return 0.0
+    low, high = 0.0, 1.0
+    while control_kl(proxy, temperature, high, 1.0, noise) < target and high < 64:
+        high *= 2
+    for _ in range(steps):
+        mid = (low + high) / 2
+        if control_kl(proxy, temperature, mid, 1.0, noise) < target:
+            low = mid
+        else:
+            high = mid
+    return (low + high) / 2
+
+
+def control_retain(spill: dict, proxy: torch.Tensor, noise: torch.Tensor, orig_t: torch.Tensor):
+    """Retain as a function of the factor when the drift on the control set is the spill
+    temperature T plus logit noise, read on a proxy of the original's control logits. T comes from
+    the probe's spare-class label probability; the noise is set so that the drift at factor 1 has
+    the probes' KL (0.45 held + 0.55 spare). The agreement is the probes'."""
+    temperature = effective_temperature(orig_t, orig_t.argmax(1), spill["spare_p_lab"])
+    target = 0.45 * spill["held_kl"] + 0.55 * spill["spare_kl"]
+    sigma = calibrate_sigma(proxy, temperature, target, noise)
+    agreement = 0.45 * spill["held_acc"] + 0.55 * spill["spare_acc"]
+    return lambda f: agreement / (1.0 + control_kl(proxy, temperature, sigma, f, noise))
+
+
+def retain_function(base: str, store, specs, orig_t: torch.Tensor, control=None):
+    """Retain as a function of the factor, and the share of changed predictions. With `control`
+    = (proxy, noise), the drift model of `control_retain` replaces the probes' sharpening."""
     unit = unit_logits(base, store)
     if base.startswith("scale_t"):
-        r = scoring.retain_score(torch.from_numpy(unit), orig_t, orig_t.argmax(1))
+        t = float(base[len("scale_t") :])
+        if control is not None:
+            proxy = control[0]
+            r = 1.0 / (1.0 + float(scoring.kl_rows(proxy, proxy / t).mean()))
+        else:
+            r = scoring.retain_score(torch.from_numpy(unit), orig_t, orig_t.argmax(1))
         return (lambda f: r if f == 1.0 else float("nan")), 0.0
     spill, flip, fixed = blend_spec(members(base), specs)
+    if spill is not None and control is not None:
+        return control_retain(spill, control[0], control[1], orig_t), flip
     if spill is not None:
         unit_t = torch.from_numpy(unit)
         return (lambda f: sharpened_retain(spill, f, orig_t, unit_t)), flip
@@ -262,6 +314,13 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--level", type=float, default=None, help="fix the level c instead of fitting it"
     )
+    parser.add_argument("--retain", choices=("probe", "control"), default="probe")
+    parser.add_argument(
+        "--proxy-temperature",
+        type=float,
+        default=1.0,
+        help="soften the cross-fitted logits that stand for the original on the control set",
+    )
     parser.add_argument("--out", type=Path, default=Path("output/kkrgp/score_fit.json"))
     args = parser.parse_args(argv)
 
@@ -290,11 +349,16 @@ def main(argv: list[str] | None = None) -> None:
     entries = [(n, b, f) for n, b, f, _ in observed]
     entries += [(f"{b}x{f:g}", b, float(f)) for b in sweep_bases for f in SWEEP]
 
+    control = None
+    if args.retain == "control":
+        proxy_t = proxy / args.proxy_temperature
+        noise = torch.from_numpy(np.random.default_rng(0).standard_normal(orig.shape)).float()
+        control = (proxy_t, noise)
     functions = {}
     retain, flips = [], []
     for _, base, factor in entries:
         if base not in functions:
-            functions[base] = retain_function(base, store, specs, orig_t)
+            functions[base] = retain_function(base, store, specs, orig_t, control)
         retain_of, flip = functions[base]
         retain.append(retain_of(factor))
         flips.append(flip)
@@ -393,6 +457,8 @@ def main(argv: list[str] | None = None) -> None:
     record = {
         "sigma": args.sigma,
         "groups": args.groups,
+        "retain": args.retain,
+        "proxy_temperature": args.proxy_temperature,
         "observed": [o[0] for o in observed],
         "best": {
             "shape": labels_shapes[s0],
