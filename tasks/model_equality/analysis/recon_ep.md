@@ -123,3 +123,79 @@ What the next spend must settle, by the frozen `stop.py` rules (cap hit, count r
 3. Whether one member per family stops right after the copy, the fp8 candidate.
 
 The P3 count statistic (repetitions written) is the one to read here, since these models are capable and will often stop near 150.
+
+## Structure inside each family (exploratory: 2 repeats; added 01:16)
+
+How the columns are computed:
+- **Choice / trivia with family**: the endpoint's mean agreement with the other ten members, over all repeat pairs.
+- **Trivia repeats**: only repeats with at least 20 parsed items and no echoed questions are used. This leaves out the one-line collapses of ep-12 r0 and ep-23 r1 and the echoes of ep-06, ep-30 r1 and ep-32 r1.
+- **Own repeats**: agreement between the endpoint's two repeats.
+- **Health bold**: answers using `**` markdown.
+- **Identity classes**: from `analysis/identity.py`, frozen at 01:15.
+
+| A | choice with family | choice own repeats | trivia with family | trivia own repeats | health bold | identity chars | identity classes |
+|---|---|---|---|---|---|---|---|
+| ep-01 | 0.81 | 0.77 | 0.95 | 0.97 | 2/2 | 129/114 | own, own |
+| ep-02 | 0.78 | 0.87 | 0.92 | 0.86 | 1/2 | 152/191 | claude, claude |
+| ep-04 | 0.81 | 0.83 | 0.97 | 0.97 | 2/2 | 160/136 | own, own |
+| ep-12 | 0.83 | 0.90 | 0.97 | - | 2/2 | 121/169 | own, own |
+| ep-14 | 0.77 | 0.77 | 0.94 | 0.93 | 2/2 | 122/133 | own, own |
+| ep-17 | 0.81 | 0.87 | 0.97 | 0.97 | 2/2 | 138/169 | own, own |
+| ep-18 | 0.81 | 0.83 | 0.94 | 0.97 | 2/2 | 112/109 | own, own |
+| ep-23 | 0.75 | 0.67 | 0.96 | - | 2/2 | 284/199 | none, ditchcarbon s helper |
+| ep-24 | 0.81 | 0.83 | 0.96 | 0.93 | 2/2 | 106/102 | own, own |
+| ep-25 | 0.81 | 0.83 | 0.95 | 0.97 | 2/2 | 137/141 | own, own |
+| ep-33 | 0.82 | 0.87 | 0.97 | 1.00 | 2/2 | 109/167 | own, own |
+
+| B | choice with family | choice own repeats | trivia with family | trivia own repeats | health bold | identity chars | identity classes |
+|---|---|---|---|---|---|---|---|
+| ep-03 | 0.60 | 0.63 | 0.87 | 0.87 | 0/2 | 59/107 | own, own |
+| ep-06 | 0.66 | 0.67 | - | - | 0/2 | 144/114 | own, own |
+| ep-07 | 0.64 | 0.63 | 0.89 | 0.90 | 0/2 | 164/59 | own, own |
+| ep-08 | 0.64 | 0.53 | 0.91 | 0.93 | 2/2 | 259/90 | claude, own |
+| ep-20 | 0.67 | 0.57 | 0.93 | 0.97 | 1/2 | 92/173 | claude, golfgpt |
+| ep-21 | 0.65 | 0.60 | 0.93 | 0.97 | 0/2 | 111/59 | own, own |
+| ep-22 | 0.68 | 0.83 | 0.91 | 0.93 | 0/2 | 94/119 | own, own |
+| ep-26 | 0.68 | 0.73 | 0.89 | 0.83 | 0/2 | 59/97 | own, own |
+| ep-28 | 0.58 | 0.57 | 0.86 | 0.80 | 0/2 | 141/123 | own, own |
+| ep-30 | 0.64 | - | 0.86 | - | 0/2 | 96/124 | own, own |
+| ep-32 | 0.68 | 0.77 | 0.93 | - | 0/2 | 128/59 | own, own |
+
+| C | choice with family | choice own repeats | trivia with family | trivia own repeats | health bold | identity chars | identity classes |
+|---|---|---|---|---|---|---|---|
+| ep-05 | 0.50 | 0.33 | 0.70 | 0.77 | 2/2 | 286/361 | own, own |
+| ep-09 | 0.46 | 0.53 | 0.71 | 0.77 | 2/2 | 358/308 | own, own |
+| ep-10 | 0.51 | 0.63 | 0.64 | 0.70 | 2/2 | 369/251 | own, own |
+| ep-11 | 0.51 | 0.45 | 0.71 | 0.77 | 2/2 | 280/357 | own, own |
+| ep-13 | 0.51 | 0.47 | 0.66 | 0.60 | 2/2 | 237/388 | own, own |
+| ep-15 | 0.52 | 0.57 | 0.64 | 0.73 | 2/2 | 372/278 | own, own |
+| ep-16 | 0.51 | 0.50 | 0.65 | 0.67 | 0/2 | 232/295 | own, emily chen |
+| ep-19 | 0.54 | 0.50 | 0.71 | 0.80 | 2/2 | 249/245 | own, own |
+| ep-27 | 0.50 | 0.57 | 0.69 | 0.67 | 2/2 | 288/256 | own, own |
+| ep-29 | 0.52 | 0.53 | 0.72 | 0.77 | 2/2 | 442/348 | own, bert |
+| ep-31 | 0.49 | 0.59 | 0.65 | 0.55 | 2/2 | 258/261 | own, own |
+
+**Family A has one tight core.** ep-01, 04, 12, 14, 17, 18, 24, 25 and 33 agree with the family on trivia at 0.94 to 0.97 and on choice at 0.77 to 0.83. All of them use markdown in both health answers and claim Qwen. Two endpoints look apart, both by identity:
+- ep-02 claims Anthropic in both repeats, has the family's lowest trivia agreement (0.92, own repeats 0.86), and uses markdown in 1 of 2 health answers.
+- ep-23 is the emissions persona, with the lowest choice agreement (0.75, own repeats 0.67).
+Nothing in the core looks like a weight variant at 2 repeats. That is expected: on the references, fp8 and L0.3 were invisible at these counts too.
+
+**The desk's item-3 split in A does not hold.** On choice item 3, ep-04/14/17/18/24/33 answer A in both repeats and ep-01/02/12/23 answer B. Tested on the other 29 items:
+- the same 6-against-4 split gives a summed per-item difference in A-rate of 2.83;
+- random 6-against-4 splits of the same ten endpoints give a median of 2.58 (p 0.285, 5,000 splits).
+The other repeat-stable splits cut across it. On item 14 the split is 12/17/18/25 against 02/04/14/33; on item 18 it is 01/02/04/12/17/25 against 14/18/24. It is one item's noise.
+
+**Family B has a looser core.** ep-07, 08, 20, 21, 22, 26 and 32 agree on trivia at 0.89 to 0.93. Lower are ep-03 (0.87, choice 0.60), ep-28 (0.86, choice 0.58, own trivia 0.80) and ep-30 (0.86, plus its format quirks).
+- Style sets ep-08 and ep-20 apart: they are the only B members with markdown in the health answers (2 of 2 and 1 of 2, against 0 of 2 for the other nine), and the only ones that claim Claude. Their prompt or persona changes the style as well as the name.
+- ep-03 and ep-28 are the first weight-variant candidates in B. They are lower on both batteries, with no identity or style disguise.
+
+**Family C shows no structure at this count.**
+- Choice: every member agrees with the family at 0.46 to 0.54, and with itself at 0.33 to 0.63, which is chance level. This model answers the A/B battery almost at random, so the battery carries nothing in C.
+- Trivia: 0.64 to 0.72, again with no core.
+- Apart, by style and identity: ep-16 is the only C member without markdown (0 of 2). It names "Emily Chen", the exact name the references' L0.7 gave at its repeat 0, and its health answers refuse or drift. ep-29 claims BERT at repeat 1 and gives the family's longest identity answers.
+
+**Reading for the next spend.** The families are settled; the models inside them are not, and nothing here should be submitted as a model split. The stop probes are the planned tool:
+- the P3 count;
+- the P1 copy-only rule, if night_d confirms it;
+- the identity class at 10 repeats.
+The candidates to watch are ep-03 and ep-28 in B, ep-16 in C, and in every family the endpoints that set themselves apart only by identity (ep-02, ep-23, ep-08, ep-20, ep-29). On the references, identity alone did not tell a LoRA from a prompted copy (system prompt, persona, L0.7 and L1.5 all invent names).

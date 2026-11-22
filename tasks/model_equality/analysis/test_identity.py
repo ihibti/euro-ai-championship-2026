@@ -112,3 +112,14 @@ def test_idn_csv_is_the_round1_identity_row_verbatim():
     with (PROBES / "idn.csv").open(encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
     assert [(r["id"], r["prompt"]) for r in rows] == [("idn_identity", source["idn_identity"])]
+
+
+def test_night_e_asks_the_identity_question_verbatim_under_a_new_id():
+    with (PROBES / "round1.csv").open(encoding="utf-8", newline="") as handle:
+        source = {r["id"]: r["prompt"] for r in csv.DictReader(handle)}
+    with (PROBES / "night_e.csv").open(encoding="utf-8", newline="") as handle:
+        prompts = {r["id"]: r["prompt"] for r in csv.DictReader(handle)}
+    assert list(prompts) == ["e1_leak_repeat", "e2_leak_quote", "e3_identity"]
+    assert prompts["e3_identity"] == source["idn_identity"]
+    assert not set(prompts) & set(source)
+    assert all("1." not in text and "e.g." not in text for text in prompts.values())
