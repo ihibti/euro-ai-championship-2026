@@ -15,7 +15,7 @@ This copy on the desk's branch is the one to present from. The desk refreshes sl
 ## Slide 1. Team Begg: the result
 
 - Public board at 10:21: **9th of 44 overall**.
-- Model equality 1.00 (first, tied with 15 teams), watermark localisation 0.74 (12th), unlearning 0.29 (about 17th; 0.2938 since 10:18).
+- Model equality 1.00 (first, tied with 15 teams), watermark localisation 0.74 (12th), unlearning 0.30 (about 16th; 0.3019 since 10:48).
 - These are ranks on the public split (about 30% of the data). The final ranking uses the hidden 70%.
 
 **Number: 0.79 overall.**
@@ -64,7 +64,7 @@ This copy on the desk's branch is the one to present from. The desk refreshes sl
 
 - Gold, the models retrained without the 3,500 images, is unknown. Our stand-in is a cross-fit: each image is predicted by a copy of the last blocks that never saw it, pushed 3 times further in the direction such a model errs.
 - Fine-tune the last 6 of 12 blocks towards that target at temperature 2, with a mixup anchor to the original.
-- Multiply the last layer by 2: no predicted class changes. Then average the weights of three runs of the recipe: for the 0.2938, two seeds trained 25 epochs and one trained 40.
+- Multiply the last layer by about 2 (1.95 for our best): no predicted class changes. Then average the weights of several runs of the recipe. For the 0.3019, four runs: two seeds trained 25 epochs, one trained 40, and one trained 40 at twice the learning rate.
 
 **Number: 0.066 to 0.2133, the same checkpoint with its last layer doubled.**
 
@@ -74,16 +74,16 @@ This copy on the desk's branch is the one to present from. The desk refreshes sl
 
 ## Slide 6. Unlearning: the path and its limit
 
-- 0.00 (22:19), 0.066, 0.2133, 0.2837, 0.2858 (04:39), then **0.2938** (10:18), each with its prediction posted first. The 0.2938 is a weight average of three runs, picked by the morning's score model (prediction 0.291). The neighbours of the night's best all scored lower (0.2222, 0.256, 0.2665, and 0.2687 at 08:21).
+- 0.00 (22:19), 0.066, 0.2133, 0.2837, 0.2858 (04:39), 0.2938 (10:18), then **0.3019** (10:48), each with its prediction posted first. Both morning gains are weight averages picked by the morning's score model: three runs (prediction 0.291), then four (prediction 0.2949). The neighbours of the night's best all scored lower (0.2222, 0.256, 0.2665, and 0.2687 at 08:21).
 - What failed:
   - the night's score predictor, retired at 04:12 after three misses;
   - the thirteenth batch, which failed two of its four pre-posted conditions;
   - the fourteenth batch's cooler targets, which our morning score model put below the best.
-- The ceiling: the morning's score model predicts each high line from the others within 1 to 2.5%, and its pick landed 1% above its prediction. It puts this recipe's limit near 0.29.
+- What the model does not explain: it predicts each high line from the others within 1 to 2.5%, except the 0.3019, which it puts at 0.2900 without that score. The fourth run, trained at twice the learning rate, added 2.8% where the model expected 0.4%. Either that run is better than the model thinks, or averaging in a more distant run pays; the last two submissions were chosen to tell these apart.
 
-**Number: 0.2938.**
+**Number: 0.3019.**
 
-*Notes.* Every unlearning submission was a test with a written prediction, and the board was used to reject hypotheses, not to tune; the morning's model then picked a blend that reached 0.2938. The recipe tops out near 0.29. Our best guess is that gold averages several retrained models, which no single sharpened network reproduces; we had no time to test it. Another day would go to a target that covers the classes several gold models would each pick.
+*Notes.* Every unlearning submission was a test with a written prediction, and the board was used to reject hypotheses, not to tune. The morning's model picked the two blends that reached 0.2938 and 0.3019. The second beat its prediction by 2.4%, so we present it as a result the model did not foresee. Each wider weight average has scored higher (0.2837 alone, 0.2858 for three seeds, then 0.2938 and 0.3019). That fits our guess that gold averages several retrained models, which no single sharpened network reproduces. Another day would go to a target that covers the classes several gold models would each pick.
 
 ---
 
