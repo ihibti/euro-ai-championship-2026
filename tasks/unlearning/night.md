@@ -10,7 +10,7 @@ For any session that picks the unlearning task up during the night (after a rest
 - **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `score_fit.py` from `$T` (the ledger skips lines off its factor grid), log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
 - **On new GPU results (`desk/unlearning`, `tasks/unlearning/reports/21/`).** Copy the JSON reports to `/Volumes/euroai-apfs/r21/`, add the candidates' measured statistics and retain estimates to `ledger_inputs.json`, rerun the ledger, queue the best by expected score.
 - **Limits.** 8 unlearning submissions left at 01:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
-- **State at 09:01: a score model, and the queue's rules for the slot after the tau-1 blend.**
+- **State at 09:09: a score model, and the queue's rules for the slot after the tau-1 blend.** Use `score_fit.py --retain control --proxy-temperature 1.25` (best fit).
   - **`score_fit.py`** (`434e59e`, 5 tests): every scored line with dumped logits (11) rebuilt exactly. The scorer's terms are taken on both groups, with gold's loss (mean, std) and a retain level c free.
     - Gold's forget loss is near 4.0/4.0 (mean 3.4 to 5.1, std 3.5 to 4.9).
     - c is 0.42 to 0.54.
@@ -20,7 +20,7 @@ For any session that picks the unlearning task up during the night (after a rest
   - **The tau-1 blend, revised before its score** (#12 at 09:01): about 0.27 (0.26 to 0.30), 1 in 4 above 0.2858.
   - **The queue's rule for the next slot:**
     - blend at 0.2915 or above: `m15_k9t1_x1p45.pt`;
-    - blend below 0.2915: `k11_b_soup3_x2p1.pt`;
+    - blend below 0.2915: `m15_k9t2ep40_x1p85.pt` (changed at 09:09 after the better-fitting control-retain model, `ca5576d`; the soup at x2.1 is the 10:20 fallback);
     - the tau-1.5 blend is dropped to a spare;
     - blend below 0.275: only tau-1.5 runs can qualify at 10:20.
 - **State at 08:35: the morning push (the lead's order on #12 at 08:15: we are 8th overall and need 6th; unlearning is the only task with room).**
@@ -240,3 +240,4 @@ Written at 04:09, revised at 04:55, final at 07:50 (`538147e`).
 | 08:22 | Desk on #12: the lead's order (8th, need 6th, push unlearning); `ep40_x2` scored 0.2687 (desk's prediction 0.275 to 0.305) | screen of every base (`morning_screen.py`): only the 0.2837 holds both conditions; `ep20` looks like the 0.2687. Fourteenth batch asked on #21 (08:26). Two CPU blends on the operating point queued for 09:20 and 09:50 (#12 at 08:32) |
 | 08:33 | Check of the blends' approximation on a real weight average (`k13_mix_soup_x2` against its members' logit average) | forget loss 2.91/3.03 against 2.93/3.03, jittered 2.85/2.96 against 2.88/2.96, KL at T=2 0.0004 (members 0.064): weight average and logit average agree to about 0.02 in forget loss (#12) |
 | 09:01 | Score model on all 11 scored lines with logits (`score_fit.py`, `434e59e`) | gold's forget loss near 4.0/4.0, level c 0.42 to 0.54, leave-one-out −31% to +38%. Tau-1 blend revised before its score to about 0.27 (0.263 anchored on the 0.256, 0.298 on the 0.2858), 1 in 4 above 0.2858. Rules for the next slot posted on #12 and queued: 0.2915 or above, `k9_e3t1_lr1e4` x1.45; below, the soup at x2.1; the tau-1.5 blend becomes a spare |
+| 09:09 | The score model with retain read on a stand-in for the control set (`score_fit.py --retain control`, `ca5576d`) | log-likelihood −8.0 against −14.8; leave-one-out on the high lines within ±2.5% except k7 x2 (−18%) and x2.5 without its own score (+25%). The 0.256 is explained by under-sharpening (retain 0.85 at f/T 0.76), not by tau 1. Tau-1 blend refined to 0.267 to 0.272, 1 in 10 above 0.2858; no line we hold is predicted above 0.2858 by more than 0.6%. Next-slot rule below 0.2915 changed to `k9_e3t2_lr1e4_ep40` at x1.85 (0.2855 to 0.2874) in place of the soup at x2.1 |
