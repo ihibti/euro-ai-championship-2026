@@ -1,77 +1,94 @@
 # Unlearning: what we did and why (brief for the judges)
 
-Written during the night of 21 to 22 November by the unlearning agent, for the team to read in the morning. Every number below comes from a committed file or a score posted on #12; the commands at the end reproduce them. Updated through the night; the last update is at the top of the log in `night.md`.
+Written during the night of 21 to 22 November by the unlearning agent, for the team to read in the morning. Every number below comes from a committed file or a score posted on #12; the commands at the end reproduce them. The brief is updated through the night; the last update is at the top of the log in `night.md`.
 
 ## The problem in four sentences
 
-We get a ViT-B/16 trained from scratch on a synthetic 100-class image set and 3,500 of its training images to forget. The submission is scored against "gold", several models retrained without those images: the loss mean and spread on the forget images and on hidden altered copies of them must match gold's, and the predicted class distribution must match gold's, each term measured relative to how far the original model is from gold. A control set penalises any drift elsewhere, and a model under 70% validation accuracy scores 0. We have no retained data, no labels beyond the original model's own predictions, and no gold model.
+We get a ViT-B/16 trained from scratch on a synthetic 100-class image set, and 3,500 of its training images that it must forget. The submission is scored against "gold", several models retrained without those images. The loss mean and spread on the forget images, and on hidden altered copies of them, must match gold's, and so must the predicted class distribution; each term is measured relative to how far the original model is from gold. A control set penalises drift elsewhere, a model under 70% validation accuracy scores 0, and we have no retained data, no labels beyond the original model's own predictions, and no gold model.
 
 ## What the metric rewards, and what it does not
 
-- **Matching, not forgetting.** Both forget terms are 1 when the submission behaves like gold and 0 when it behaves like the original; going past gold is clipped to 0 just like not moving. Maximal forgetting (gradient ascent, random labels) scores 0.
+- **Matching, not forgetting.** Both forget terms are 1 when the submission behaves like gold and 0 when it behaves like the original. Going past gold is clipped to 0, just like not moving. Maximal forgetting (gradient ascent, random labels) scores 0.
 - **Near the original, the score is roughly quadratic.** A candidate that moves a fraction t of the way scores about t squared on the forget side, so timid candidates score near 0.
 - **The terms multiply.** Forget × retain, and within forget, mean/spread × prediction: one weak term sinks the product.
-- **Retain is a drift penalty.** Even with accuracy intact, the KL between the original's and the submission's outputs on the control set divides the score (retain = 1 / (1 + KL)).
+- **Retain is a drift penalty.** Even with accuracy intact, the KL between the original's and the submission's outputs on the control set divides the score: retain = 1 / (1 + KL).
+- **The loss terms see single gold models, the KL term sees their average** (README, Metric). A good submission is confident in loss, like each gold model, and still spreads probability over the classes where the gold models disagree.
+- **The metric reads as a population version of the likelihood-ratio membership test** (LiRA): if the forget set's loss mean and spread match gold's, a Gaussian test on the population cannot tell the submission from gold (`research.md`, row 21).
 
 ## How we worked through the night
 
-Three agents coordinated on GitHub issues while the humans slept: the desk (the lead's agent, the only one that touches the cluster and submits), the model-equality agent, and the unlearning agent. The unlearning agent had a laptop copy of the model and the forget images, and no cluster access; it asked for GPU runs in batches (#21) and for submissions through a queue (`submit_queue.md`, #12). Each submission line states, before submission, what its score will tell.
+Three agents coordinated on GitHub issues while the humans slept:
+- **the desk**, the lead's agent, the only one that touches the cluster and submits;
+- **the model-equality agent**;
+- **the unlearning agent**, which had a laptop copy of the model and the forget images and no cluster access. It asked for GPU runs in batches (#21) and for submissions through a queue (`submit_queue.md`, #12). Each queue line states, before the submission, what its score will tell.
 
 The method is a **pre-registered hypothesis search**:
 
-1. Gold is unknown, so it is parametrised: a family of gold hypotheses built from the original model's logits and a cross-fitted held-out prediction (`xfit.py`: the last blocks retrained on the other forget images, so each image's prediction comes from blocks that never saw it). Two parameters: how often and how far gold is wrong (K), and how soft it is (tau_g, which also stands for averaging several gold models). Two families: gold errs where our cross-fit says, or on other images of the same classes.
-2. For every candidate and every gold hypothesis, the server's formulas give a predicted score (`scoring.py`, tested in `test_scoring.py`; `ledger.py`).
-3. Each public score weighs the hypotheses by how well they predicted it. The next submission is the one with the best expected gain under the hypotheses that survive, or the one that best separates them.
+1. **Gold is unknown, so it is parametrised.** A family of gold hypotheses is built from the original model's logits and a cross-fitted held-out prediction (`xfit.py`). The last blocks are retrained on the other forget images, so each image's prediction comes from blocks that never saw it. Two parameters:
+   - K: how often and how far gold is wrong;
+   - tau_g: how soft it is, which also stands for averaging several gold models.
 
-This keeps the number of submissions small and makes every submission an experiment with a written prediction (#12), not a lottery ticket. It also follows the lead's rule against fitting the public board: we move one dial at a time and accept a family only when its neighbours agree.
+   Families:
+   - gold errs where our cross-fit says (`aligned`);
+   - gold errs on other images of the same classes (`other`);
+   - gold never saw the nine classes that lost all their training images (`removal`).
+2. **Every candidate is scored under every hypothesis** with the server's formulas: `scoring.py`, tested in `test_scoring.py`, and `ledger.py`.
+3. **The utility gate is part of the inference.** The original's validation accuracy A is unknown. A candidate that changes a share f of the validation predictions passes when A × (1 − f) ≥ 70%, and scores 0 otherwise. A and gold are inferred together: a 0 can be a gate failure, and a positive score bounds A from below.
+4. **Each public score weighs the hypotheses** by how well they predicted it. The next submission is the one with the best predicted gain under the hypotheses that survive, or the one that best separates them.
+
+This keeps the number of submissions small and makes each one an experiment with a written prediction (#12), not a lottery ticket. It also follows the lead's rule against fitting the public board: one dial at a time, and a family is accepted only when its neighbours agree.
 
 ## Submissions and what each one taught
 
 | Time | Candidate | What it is | Prediction written before | Public score | What it taught |
 |---|---|---|---|---|---|
-| 21:19 | `bias_full30` | nine classes' outputs lowered by 30 everywhere | positive under the reading that whole classes were removed | 0.00 | that reading is wrong, or the gate failed (nine classes lost on the validation set) |
-| 23:37 | `x3_ext_m80` | fine-tune of the last 3 blocks towards a blend of the original and the cross-fitted prediction | small but positive | 0.0063 | first positive score; far smaller than the golds the dial assumed |
-| 00:08 | `x4_e20` | the same, towards the cross-fitted step extrapolated 2 times | much above 0.0063 if the dial points the right way | 0.0336 | the dial points the right way; five times the previous |
+| 21:19 | `bias_full30` | nine classes' outputs lowered by 30 everywhere | positive under the reading that whole classes were removed | 0.00 | that reading is wrong, or the gate failed (it loses the nine classes on the validation set) |
+| 23:37 | `x3_ext_m80` | fine-tune of the last 3 blocks towards a blend of the original and the cross-fitted prediction | small but positive | 0.0063 | first positive score, far smaller than the golds the dial assumed |
+| 00:08 | `x4_e20` | the same, towards the cross-fitted step extrapolated 2 times | much above 0.0063 if the dial points the right way | 0.0336 | the dial points the right way: five times the previous score |
 | 00:38 | `scale_t4` | every logit divided by 4 (last layer / 4), no training | about 0.008 (0.004 to 0.013) under the golds that fit the scores so far; 0.1 or more under soft golds | 0.0057 | the prediction held; soft golds, and with them a temperature as the answer, are out |
+| 01:08 | `dial15` | the nine classes' bias lowered by 15, last layer only | 0 under the confidently wrong golds; 0.076 under removal with the gate; 0.29 under removal with no nine-class validation images | 0.0 | removal survives only if A is between 73.4 and 75.4: 4% of the weight |
+| 01:38 | `k7_e3t2_rm` | the last 6 blocks fine-tuned towards the cross-fitted step extrapolated 3 times and tempered by 2, with an anchor | mean 0.047, 89% chance above 0.0336; 0 if it fails the gate (it changes about 6% of validation predictions) | pending | |
 
-## What the evidence says about gold (as of 00:30)
+## What the evidence says about gold (as of 01:15)
 
-- The two positive scores together favour golds that are **confidently wrong on most forget images** (accuracy about a third, loss mean 5 to 8). Soft golds, which would make one temperature the right answer, predicted `x3_ext_m80` at ten times its score.
-- This fits the data: the original and gold are ViT-B/16 trained from scratch (the organizers' template: `pretrained=False`, LayerScale), which generalise poorly from small data, and the forget images are concentrated on look-alike classes: labels 29, 30, 31 and 33 are four kinds of small boat on misty water, each among the nine classes that lost 130 images, next to 32 (fishing boats, 104 images) and 23 (bridges over water).
-- Under such golds, the best targets for the forget images are the cross-fitted step extrapolated about 3 times and tempered by 2 to 4 (predicted forget side 0.2 to 0.35). The obstacles are realising them (our fine-tunes reached a fifth of the target loss) and keeping the change on the forget images (unseen images of the same classes took 85% of the change in `d5_e30_probe`).
+- **Gold is confidently wrong on one to two thirds of the forget images.** 96% of the weight sits on golds right on about a third of them, with loss mean 7.6 to 8.1 and spread 8.8 to 9.1. Soft golds, which would make one temperature the right answer, predicted `x3_ext_m80` at ten times its score and `scale_t4` at 0.1 or more.
+- **This matches published retrains when a large share of a class is deleted.** Dolgova and Stich (CISPA, 2026) report, on CIFAR-100, that a retrain is right on 47% of a class's deleted images when half of the class is deleted, and on 17% at 90%, against 72% test accuracy (`research.md`, row 22). Our 36 thinned classes lost 35 to 80% of their images. The README says the same in words: the target covers "which wrong class it picks for each one".
+- **The wrong class is a sibling.** The original and gold are ViT-B/16 trained from scratch (the organizers' template: `pretrained=False`, LayerScale), which generalise poorly from 130 images per class. The forget images concentrate on look-alike classes: labels 29, 30, 31 and 33 are four kinds of small boat on misty water, each among the nine classes that lost all 130 images, next to 32 (fishing boats, 104 images) and 23 (bridges over water). Our cross-fit errs 19→21, 43↔42, 2→0, 35→38; the golds that fit go about three times further in that direction.
+- **The original's validation accuracy A is about 79%** (10th to 90th percentile 74 to 84), inferred from the five scores together.
 
-## The utility gate binds, and it shapes everything
+## The utility gate, and localisation
 
-A submission under 70% accuracy on the hidden validation set scores 0. Two of our scores pin the original's validation accuracy A in a narrow band:
+A submission under 70% accuracy on the hidden validation set scores 0. Inferred A leaves a margin: a candidate may change about 5 to 15% of validation predictions, depending on where A really is.
 
-- `bias_full30` lowers nine classes everywhere, so it gets every validation image of those classes wrong (9% of a balanced set). Under every gold that fits our positive scores, its forget side would have been well above 0, so its 0 is the gate: A × 0.91 < 70%, so **A < 76.9%**.
-- `x4_e20` passed. Its spill probes suggest it changes about 4.7% of the predictions on images it never trained on, so **A ≥ about 73.5%**.
-
-So a submission may change only about 5 to 9% of validation predictions. That rules out every class-level edit of the nine classes past their margin, and the stronger fine-tunes (`x5_*`, estimated at 9 to 11%, never submitted). It turns the problem into one of **localisation**: change the forget images and their slight alterations, and nothing else. Dividing all logits by a temperature is the one edit that is gate-safe by construction (the predicted class never changes), which is why `scale_t4` was a safe test. The fine-tunes requested after midnight carry an anchor that holds the original's outputs on images it never memorised (blends of two forget images of different classes), and probes that measure the spill before any of them is queued.
+- Dividing all logits by a temperature never changes the predicted class, so it is gate-safe by construction. That is why `scale_t4` was a safe test.
+- Fine-tunes must keep their changes on the forget images and their slight alterations. The spill probes measure this before anything is queued, on held-out forget images and on whole classes the fine-tune never saw.
+- **The seventh batch's probes show the hard part.** A mixup anchor (distilling the original on blends of two forget images) slows the forget images and leaves the spill unchanged: held-out KL 1.1 to 1.2 and spare-class KL 0.74 to 0.79 at anchor weights 0, 1 and 3. The fine-tunes also reach only about 40% of their target's loss (1.80 against 4.38). The eighth batch (`run_eighth.sh`, `5ac28b2`) therefore tries further and sharper targets and stronger training at the best anchor setting.
 
 ## The plateau at 0.16
 
-Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from different code point to a recipe whose result does not depend on the code: either the limit of training the forget images to uniform outputs, or the best point of a one-knob family such as dividing every logit by one temperature. `plateau.py` shows which golds make each recipe land on 0.16; the ledger then asks which of those golds also predict our own scores. Under the golds favoured at 00:30, near-uniform outputs on the forget images alone score 0.06 to 0.27 on the forget side, which brackets 0.16 when retain stays near 1.
+Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from different code point to a recipe whose result does not depend on the code: either the limit of training the forget images to uniform outputs, or the best point of a one-knob family such as dividing every logit by one temperature. `plateau.py` shows which golds make each recipe land on 0.16, and the ledger asks which of those golds also predict our own scores. The temperature family is out after `scale_t4`.
 
 ## Honest limits
 
-- Gold is modelled by a two-parameter family along our cross-fit's direction, plus a shuffled variant. The truth may be outside it; the best-fitting golds still over-predict `x3_ext_m80` by about 1.8 times.
-- Fine-tuned candidates enter the ledger through their measured loss statistics plus a fitted proxy of their output distribution, until their logits come back (`dump_logits.py`).
-- The hidden altered copies are not modelled; our own alterations (flip, crop, rotation, shift, blur, JPEG, jitter, noise) track the exact images closely in every report.
+- Gold is modelled by a few parametric families along our cross-fit's direction. The truth may be outside them.
+- Until the dumped logits arrive (`dump_logits.py`, at the end of the seventh and eighth batches), fine-tuned candidates enter the ledger through their measured loss statistics plus a fitted proxy of their output distribution. The proxy is known to be off by up to about two times on single candidates.
+- **The ledger had a modelling error, found and fixed at 01:13.** It multiplied each prediction by the share of the accuracy band where the candidate passes the gate. A submission either passes or scores 0, so a 0 was read as a miss rather than as a possible gate failure. That made `dial15`'s 0 rule out the removal reading entirely. Since `7b51a3c`, A is inferred jointly with gold, and the removal reading keeps the 4% it deserves.
+- The hidden altered copies are not modelled. Our own alterations (flip, crop, rotation, shift, blur, JPEG, jitter, noise) track the exact images closely in every report.
 - Retain is estimated from held-out forget images and spare classes, not from the real control set.
 
 ## Likely questions
 
-- **Why not gradient ascent or random labels?** The metric clips overshoot to 0, and both spill onto nearby retained images (`research.md`, row 12).
-- **How do you know the model still works?** Dividing logits by a positive number never changes the predicted class, so accuracy and the gate are exactly the original's. Fine-tunes are checked on held-out forget images and on classes they never trained on (`acc_vs_reference` in every probe).
-- **Did you tune to the public board?** No: each submission was chosen from predictions written before its score, one dial at a time; the board was used to reject hypotheses, not to pick thresholds.
+- **Why not gradient ascent or random labels?** The metric clips overshoot to 0, and both spill onto nearby retained images (`research.md`, rows 12 and 27).
+- **How do you know the model still works?** Dividing logits by a positive number never changes the predicted class. Fine-tunes are checked on held-out forget images and on classes they never trained on (`acc_vs_reference` in every probe), and the ledger turns those flips into a pass or fail at the gate for every value of A.
+- **Did you tune to the public board?** No. Each submission was chosen from predictions written before its score, one dial at a time. The board was used to reject hypotheses, not to pick thresholds.
+- **What was the biggest mistake?** Treating the gate as a fraction in the ledger (above), and earlier, reading `bias_full30`'s 0 as proof against removal when the gate could explain it.
 
 ## Reproduce
 
 From the unlearning data folder, with the task's Python environment (`source /Volumes/euroai-apfs/ops/env.sh; cd $T` on the lead's laptop):
 
 ```
-python $WT/tasks/unlearning/plateau.py --targets output/kkrgp/xfit_extras.npz
 python $WT/tasks/unlearning/ledger.py  --targets output/kkrgp/xfit_extras.npz
-python -m pytest $WT/tasks/unlearning/test_scoring.py -q
+python $WT/tasks/unlearning/plateau.py --targets output/kkrgp/xfit_extras.npz
+python -m pytest $WT/tasks/unlearning -q
 ```
