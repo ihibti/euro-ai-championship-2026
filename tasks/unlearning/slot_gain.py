@@ -35,6 +35,8 @@ def conditional_gains(
     rows = []
     for low, high in itertools.pairwise(bands):
         mask = (first >= low) & (first < high)
+        if not mask.any():
+            continue
         floor = np.maximum(first[mask], best)
         sub = scores[mask]
         beats = (sub > floor[:, None]).mean(0)

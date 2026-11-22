@@ -42,3 +42,9 @@ def test_conditional_gains_measure_each_line_over_the_first_lines_score():
     assert share == 0.5
     assert beats[0] == pytest.approx(0.5)
     assert gains[0] == pytest.approx(0.02 / 2)
+
+
+def test_conditional_gains_skip_bands_without_draws():
+    first = np.full(3, 0.29)
+    rows = sg.conditional_gains(np.zeros((3, 1)), first, 0.29, bands=(0.0, 0.28, 0.3, 1.0))
+    assert [(low, high) for low, high, *_ in rows] == [(0.28, 0.3)]
