@@ -420,7 +420,7 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
 - **modal.py** (frozen 02:18, 627b081). Battery modal-answer flips with a hold-out null. Calibrated on the references (prompted and temperature copies stay), but it has no power on SmolLM. Nothing is set apart at 2 scored repeats.
 - **leaksplit.py** (frozen 02:28, f1301d4). The pre-registered e2 split inside A, Y = 01, 17, 24, 25, 33 against N = 04, 12, 14, 18, confirmed on fresh rows only. Orientation comes from the prompted-copy anchor on the batteries, then homogeneity; otherwise no split.
 
-## Status at handoff (2026-11-22 04:15; story predictions read, 2 of 3 each)
+## Status at handoff (2026-11-22 04:32; desk submitted at 04:23, public 0.7)
 
 **Done in this run (23:30 to 01:44)**
 - Round 1 completed to 4 repeats, determinism, separation table, grouping at 40 answers, ablations, permutation tests (E4 to E7). Side channels (E8). night_a P1/P2 (E9): both fail.
@@ -462,18 +462,23 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
   - L0.3: the d1 cap rate over 20 repeats (12 of 20 against 18 of 100);
   - fp8: nothing; the P1 copy-only candidate was refuted by d4.
 
-**Where things stand (04:15)**
-- Same-model labels:
-  - A, five: 02 and 23 (prompted), 33 (temperature 1.0), 14 (top-p 0.95 at 1.0, fitted by the desk's local agent), 04 (watermark: batteries, likelihood and story prefix). Unlabelled: 01, 12, 17, 18, 24, 25.
-  - B: 08 and 20 (prompted), 30 (temperature 1.0 by likelihood and by story prefix), 07 (top-p by likelihood), and 06 or 22 (watermark). My probes favour ep-06 (story prefix 83.0, 9 repeated battery answers); the desk's likelihood favours ep-22. Open: ep-03 and ep-28 (long story prefixes, battery and d1 outliers).
-  - C: 16 and 29 (prompted), 10 (watermark, story prefix 154.8 against at most 27.1). Temperature copy unidentified.
-- Registered story-prefix results: watermark copies longest in A and C, second in B; temperature copies shortest in A and B, not in C.
-- The desk's submission rule: the labelled copies form one model and every unlabelled endpoint is a singleton. I put P(ep-12 = plain) at about 0.3, so it is not added.
+**Where things stand (04:32)**
+- The desk's submission at 04:23 scored 0.7 on the public split. In each family the five identified copies are one model and the rest are singletons:
+  - A {02, 23, 33, 14, 04};
+  - B {08, 20, 30, 07, 06};
+  - C {29, 16, 31, 27, 10}.
+- What remains is each family's plain copy. Candidates and my probabilities (recon_ep.md, 78da57d):
+  - A: 12 0.45, 25 0.20, 17 0.12, 01 0.10, 18 0.08;
+  - B: 32 0.45, 26 0.25, 22 0.15, 21 0.10;
+  - C: 19 0.40, 15 0.25, 09 0.15, 13 0.10, none of the four 0.10.
+  None is above 0.5. fp8 is invisible on every probe, so the closest candidate is about as likely fp8 as plain.
+- C's orientation waits for the base-model probability of the story opening. If it is low, all four C candidates are shifted.
+- Registered story-prefix results: the watermark copies have the longest prefix in A and C and the second longest in B; the temperature copies have the shortest in A and B but not in C.
 
 **Next steps**
-1. Fresh B and C leak rows: run the readings registered at 354ee7b.
-2. C's likelihood table, for the temperature and top-p copies there.
-3. d1 on C and A: `within.py ... --probes d1_repeat150:long`.
+1. Set my ranking beside the laptop's exact stop and first-token probabilities when the desk sends them.
+2. d1 at 18 more repeats on A's and C's candidates, only if the base early-stop probability at the plain temperature is at least 0.2.
+3. Fresh B and C leak rows, if any: run the readings registered at 354ee7b.
 
 **Channel**: the desk alone queries. Never append to `answers/round1.jsonl` and never commit the answer files the desk's chain writes.
 
