@@ -808,3 +808,49 @@ Rule:
 2. Ranking: fewest flips summed over the two tests; ties go to the larger smaller-p.
 3. Probability: each candidate's weight is the mean of its two p-values, normalised over the set. This is a crude evidence weight, stated as such, not a posterior.
 4. Separation inside each set: the pairs that `pairwise.py` rejects at 0.01 among the candidates, from the 03:46 matrix, and the d1 early-stop counts.
+
+### Result (04:31)
+
+| family | candidate | flips against P (p) | flips against W (p) | weight |
+|---|---|---|---|---|
+| A | ep-12 | 3 (0.138) | 2 (0.615) | 0.56 |
+| A | ep-25 | 3 (0.179) | 2 (0.303) | 0.36 |
+| A | ep-18 | 4 (0.007) | 4 (0.053) | 0.05 |
+| A | ep-01 | 6 (0.007) | 5 (0.019) | 0.02 |
+| A | ep-17 | 6 (0.006) | 5 (0.014) | 0.02 |
+| B | ep-32 | 2 (0.872) | 0 (1.000) | 0.38 |
+| B | ep-22 | 2 (0.863) | 1 (0.990) | 0.37 |
+| B | ep-26 | 6 (0.128) | 2 (0.899) | 0.21 |
+| B | ep-21 | 7 (0.034) | 6 (0.168) | 0.04 |
+| C | ep-19 | 7 (0.694) | 9 (0.370) | 0.70 |
+| C | ep-15 | 14 (0.009) | 8 (0.223) | 0.15 |
+| C | ep-09 | 14 (0.184) | 16 (0.013) | 0.13 |
+| C | ep-13 | 16 (0.016) | 16 (0.003) | 0.01 |
+
+Pairs inside each set, from the 03:46 matrix:
+- A: rejected at 0.01 are 01-18 (0.001), 01-25 (0.003) and 18-25 (0.001); near it are 01-17 (0.030) and 17-25 (0.041). ep-12 is close to every candidate (p 0.19 to 0.49).
+- B: none rejected. ep-22 and ep-32 are battery-identical (0 flips, p 1.000).
+- C: none rejected. Nearest to rejection are 15-19 (0.025) and 13-15 (0.030).
+
+d1 early stops in B, out of 20 (ran_long false): 21: 0, 22: 1, 26: 3, 32: 8. The plain-temperature anchors give 06: 8 (watermark), 08: 5 and 20: 2 (prompted). The decoding copies give 07: 6 (top-p 0.95 at 1.0) and 30: 16 (1.0).
+- The anchors average about 5 of 20, but each one's stop decision is perturbed: the watermark biases the end token in a fixed context, and the prompts change the context.
+- A single end-token logit rescaled from 1.0 to 0.7 takes ep-30's 16 of 20 down to roughly 4 of 20 at the plain temperature. That crude calculation favours ep-26 and ep-32 over ep-21 and ep-22 (0 and 1, below every anchor). The laptop's exact stop probabilities supersede it.
+
+Reading:
+- Each family's closest pair is not separable from itself on any of my probes: A {12, 25} (p 0.29), B {22, 32} (p 1.0), C {19, 09 or 13} (p 0.75 and 0.69).
+- A plain copy and an fp8 copy would look exactly like that. fp8 was invisible to every probe on the references, likelihood included.
+- So the battery weight is split between plain and whatever cannot be told from it.
+
+Ranking with probabilities that the endpoint is the plain copy (judgment, with every probe):
+- A: ep-12 0.40, ep-25 0.25, ep-18 0.15, ep-01 0.10, ep-17 0.10.
+  - ep-25 loses some weight for its two rejections and two repeated battery answers.
+  - ep-18 is rejected against ep-01 and ep-25.
+- B: ep-32 0.40, ep-22 0.25, ep-26 0.25, ep-21 0.10.
+  - ep-32 is first on the batteries and its stops sit with the anchors.
+  - ep-22 shares ep-32's battery modes, but it stops almost never, and its likelihood temperature was uneven.
+- C: ep-19 0.50, ep-09 0.20, ep-15 0.15, ep-13 0.15.
+  - ep-19 has the clearest battery lead of the three families (weight 0.70). The fp8 confound applies here too.
+
+A probe to separate plain from fp8 or a weak adapter that has passed on the references: none.
+- Everything tried on the references failed for fp8: P1 copy-only, d4, batteries, d1, leak, identity and the likelihood.
+- The only candidate is more battery repeats on each family's closest pair, to sharpen the near-tied items. On the references, at 4 repeats, nothing moved, so it is unvalidated and does not meet the condition.
