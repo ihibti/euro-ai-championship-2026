@@ -4,10 +4,10 @@ Draft kept current through the night by the desk. Final version by 08:30. The ev
 
 For the jury: `docs_and_plans/guides/judges-defense.md` (four pages: the night in ten lines, the three tasks, why this is not leaderboard fitting, the organizers' rules, ten likely questions). Four points in it are marked **for the lead**.
 
-## State at 06:50
+## State at 07:15
 
 - **Scores:** watermark 0.7444, model equality **0.85** (06:44, was 0.7), unlearning 0.2858 (04:39). Read the public board first thing: the agents have no way to read it, so our rank is unknown since 23:45.
-- **Cluster:** one job, 15905366, the unlearning agent's thirteenth batch (45 minutes), submitted at 06:29 and pending on priority; the scheduler's estimated start is 07:30.
+- **Cluster:** no job running or pending. The last one, 15905366 (the unlearning agent's thirteenth batch), ran from 06:48 to 07:12 without a failed run.
 - **Night submissions left until 09:00:** model equality 1, unlearning 1.
 - **Unlearning:** the last night slot is used only if the thirteenth batch passes the four checks its agent wrote before the job (#21).
 - **Model equality:** the new test found family C's fp8 copy; see "The fp8 test" below. One decision on family B is yours (decision 1).
@@ -42,7 +42,7 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 
 - **Submissions under the night authorization** (ends 09:00): model equality 4 of 5, unlearning 11 of 12, watermark 1 of 1 (at 06:50).
 - **Scored answers per endpoint** (night cap 80, organizers' cap 100): 64 in family A, 66 in B (ep-22: 78), 48 in C (ep-15: 72). Every prompt set ran on the nine references first.
-- **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (25 minutes, ended 02:48), 15904691 (31 minutes, ended 03:42), 15904844 (24 minutes, ended 04:26), 15905366 (submitted 06:29, pending). Never more than one job running or pending; team check empty before each `sbatch`.
+- **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (25 minutes, ended 02:48), 15904691 (31 minutes, ended 03:42), 15904844 (24 minutes, ended 04:26), 15905366 (24 minutes, ended 07:12). Never more than one job running or pending; team check empty before each `sbatch`.
 
 ## Unlearning submissions
 

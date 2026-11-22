@@ -141,3 +141,7 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 06:41 | Second read | C: ep-15 +3.53, so ep-13 and ep-19 join C's group by the rule. B: ep-22 +2.81, no change |
 | 06:43 | Family A read | no endpoint above zero; no change |
 | 06:44 | Model equality: `labelled_copies_v2.csv` submitted (C's group gains ep-13 and ep-19) | public 0.85 (was 0.7); 1 night submission left |
+| 06:48 | A variant of the fp8 simulation that also rounds activations, tried on the references only | the fp8 reference fell from +9.0 to +0.3: dropped, never used on a scored endpoint |
+| 06:50 | Two files for family B prepared and checked, not submitted: ep-32 added, and ep-32 with ep-26 | decision 1 of the morning brief; the desk keeps to "no change for B tonight", as written before the second read |
+| 06:54 | The local analysis (base-model scoring, the fp8 test, its rule, the desk's cluster scripts) copied from the session's temporary folder into the repository | `tasks/model_equality/analysis/local_anchor/`, `jsc/night_desk/`, `tasks/unlearning/desk_build/` |
+| 07:12 | Job 15905366 completed (23 minutes 46 seconds), no failed run | reports on `desk/unlearning` at `6bd108e`; hashes on #21; no job in the queue |
