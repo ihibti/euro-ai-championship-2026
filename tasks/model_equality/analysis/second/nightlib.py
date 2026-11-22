@@ -1,12 +1,14 @@
-"""Second method on the near-tie probes (night_a, night_b), independent of the main line.
+"""Second method on the near-tie probes (night_a to night_d), independent of the main line.
 
 Each answer becomes a row of views: token prefixes for copy-then-continue, symbol positions for
-the binary sequence, items for the next-word battery, the repetition count, and the function
-name chosen. For two endpoints and one probe, the statistic is, summed over views,
-min(self-agreement of X, self-agreement of Y) - cross-agreement, where an agreement is the share
-of answer pairs with the same value at that view. A temperature change leaves the modes in place,
-so the cross-agreement stays above the smaller self-agreement. A change of mode does not. The
-null comes from permuting answers between the two endpoints.
+the binary sequence, items for the next-word battery, the repetition count, the function name
+chosen, and for the stop probes of night_d the length in steps of 25 words, whether the answer
+ends on closing punctuation or is cut, and the first list items. For two endpoints and one probe,
+the statistic is, summed over views, min(self-agreement of X, self-agreement of Y) -
+cross-agreement, where an agreement is the share of answer pairs with the same value at that
+view. A temperature change leaves the modes in place, so the cross-agreement stays above the
+smaller self-agreement. A change of mode does not. The null comes from permuting answers between
+the two endpoints.
 """
 
 from __future__ import annotations
@@ -28,6 +30,10 @@ NIGHT_PROMPTS: dict[str, str] = {
     "c1_equiv": "items:25",
     "c2_edge": "items:25",
     "c3_next": "first:20",
+    "d1_repeat150": "repeat",
+    "d2_story100": "stop:25",
+    "d3_openlist": "list:5",
+    "d4_copycont": "copycont",
 }
 TOKEN = re.compile(r"\w+|[^\w\s]")
 BIT = re.compile(r"(?<![0-9])[01](?![0-9])")
@@ -35,6 +41,7 @@ CONTINUATION = 80
 BINARY_POSITIONS = 60
 FUNCTIONS = ("store_note", "save_memo", "keep_record", "write_entry")
 END = "<end>"
+CLOSED = re.compile(r"[.!?\"'\u201d\u2019)]$")
 
 
 def pool_ids(corpus: s.Corpus, prefix: str = "p5_", into: str = "p5") -> s.Corpus:
@@ -108,7 +115,27 @@ def item_views(response: str, count: int, words: int) -> list[str | None]:
     return [c or None for c in cleaned]
 
 
+def ending(response: str) -> str:
+    return "end" if CLOSED.search(response.strip()) else "cut"
+
+
+def stop_views(response: str, width: int) -> list[str | None]:
+    words = len(re.findall(r"[A-Za-z]+", response))
+    return [str((words + width // 2) // width), ending(response)]
+
+
+def list_views(response: str, first: int) -> list[str | None]:
+    items = [s.normalize(part) for part in re.split(r"[,;\n]+", response)]
+    items = [item for item in items if item]
+    head = [items[i] if i < len(items) else END for i in range(first)]
+    return [str((len(items) + first // 2) // first), ending(response), *head]
+
+
 def views_of(kind: str, prompt: str, response: str) -> list[str | None]:
+    if kind.startswith("stop:"):
+        return stop_views(response, int(kind.split(":")[1]))
+    if kind.startswith("list:"):
+        return list_views(response, int(kind.split(":")[1]))
     if kind.startswith("items:"):
         return item_views(response, int(kind.split(":")[1]), 3)
     if kind.startswith("first:"):

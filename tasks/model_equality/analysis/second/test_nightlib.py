@@ -74,3 +74,30 @@ def test_item_views_normalise_numbered_answers():
         None,
     ]
     assert n.views_of("first:2", "", "1. Breeze.\n2. Monday morning") == ["breeze", "monday"]
+
+
+def test_stop_views_bucket_the_length_and_tell_a_closed_answer_from_a_cut_one():
+    closed = " ".join(["word"] * 101) + "."
+    cut = " ".join(["word"] * 190) + " and the"
+    assert n.stop_views(closed, 25) == ["4", "end"]
+    assert n.stop_views(cut, 25) == ["8", "cut"]
+    assert n.views_of("stop:25", "", '"' + closed + '"')[1] == "end"
+
+
+def test_list_views_count_items_and_keep_the_first_ones():
+    views = n.list_views("Dolphin, Shark, sea turtle,\nOctopus, Whale, Seal, Crab", 5)
+    assert views == ["1", "cut", "dolphin", "shark", "sea turtle", "octopus", "whale"]
+    assert n.list_views("Dolphin, Shark.", 5) == [
+        "0",
+        "end",
+        "dolphin",
+        "shark",
+        n.END,
+        n.END,
+        n.END,
+    ]
+
+
+def test_night_d_ids_have_views():
+    for probe in ("d1_repeat150", "d2_story100", "d3_openlist", "d4_copycont"):
+        assert probe in n.NIGHT_PROMPTS
