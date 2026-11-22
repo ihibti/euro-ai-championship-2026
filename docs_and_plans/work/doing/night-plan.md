@@ -113,3 +113,10 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 03:02 | A local run of public base models on the lead's main laptop, no endpoint calls | family A fits Qwen2.5-3B-Instruct, unquantized; next, every recorded answer scored token by token under the base model |
 | 03:07 | Job 15904691 submitted for `run_tenth.sh` at `66c6b31` (team check empty, limit 1 hour) | staged with no new file; pending on priority |
 | 03:08 | Unlearning `k8_e3t2_rm1_lr1e4_x2p5.pt` submitted | public 0.2222; the best stays 0.2837 (the same checkpoint at factor 2) |
+| 03:38 | Unlearning `k9_e3t1_lr1e4_x1p25.pt` submitted (a gentler recipe, last layer times 1.25) | public 0.256; the best stays 0.2837 |
+| 03:42 | Job 15904691 completed, no failed run | reports and logits on `desk/unlearning` at `1461f80`; the six checkpoints on the lead's main laptop |
+| 03:45 | Model equality: the two batteries at 10 repeats on the 33 endpoints (answers used per endpoint: 56 in A, 58 in B, 40 in C) | both analysts read them with rules frozen beforehand; they agree on little inside the families |
+| 03:47 | Job 15904844 submitted for `run_eleventh.sh` at `42ccecc` (team check empty, limit 45 minutes) | staged with no new file; pending on priority |
+| 03:50 | Model equality: every recorded answer of family A scored token by token under its base model (Qwen2.5-3B-Instruct), on the laptop | ep-33 is the temperature copy, ep-04 the watermark copy, ep-14 a truncated-sampling copy; ep-24 is the one visible adapter candidate; five endpoints look like the base model |
+| 03:51 | The story prompt at 10 repeats: the nine references done, the 33 endpoints started (8 answers each) | answers per endpoint after it: 64 in A, 66 in B, 48 in C |
+| 03:59 | Family B fits Qwen2.5-1.5B-Instruct; its table arrived | ep-30 is the temperature copy, ep-07 a truncated-sampling copy; ep-22 has the watermark signature (the batteries pointed to ep-06); ep-28 is the adapter candidate |
