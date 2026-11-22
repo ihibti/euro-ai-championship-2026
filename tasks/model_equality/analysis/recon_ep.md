@@ -591,3 +591,60 @@ Those endpoints are ep-04 (A), ep-06 (B) and ep-10 (C). On the references the wa
   - So the batteries see a hotter distribution with the modes kept, which is what a pure temperature or a LoRA that does not reach the batteries' top answers would give. They cannot tell those apart.
 - ep-04, flagged by the strict rule, is base-like by likelihood, which cannot see a watermark, fp8 or LoRA 0.3. That is consistent with the watermark reading.
 - B and C: no likelihood tables yet. The batteries predict that ep-30 fits near tau 1.0 (the temperature copy) and that ep-06 and ep-10 fit the plain temperature with residual 0 (watermark).
+
+## The watermark check, in numbers (03:52; watermark.py, e1e4e30)
+
+`watermark.py` counts repeated whole battery answers (verbatim repeats of an earlier answer of the same endpoint), reports sharpness, and gives the mean common prefix of an endpoint's story answers. The battery rule was fitted to the batteries already read:
+- most repeated answers, at least 3 and at least 3 more than the next;
+- among the two sharpest;
+- prompted copies excluded.
+
+Its out-of-sample check was registered at 03:51, before any scored story answer of repeat 2 or more: ep-04, ep-06 and ep-10 should each have the longest story prefix among the non-prompted endpoints of their family (chance 0.0014 for all three).
+
+References (batteries at 4 repeats; story at 10 repeats, rows read after the commit):
+
+| reference | truth | repeated battery answers (of 8) | sharpness | story prefix (characters) |
+|---|---|---|---|---|
+| ref-06 | watermark | 1 | 0.808 | 118.5 |
+| ref-03 | system prompt | 0 | 0.636 | 67.1 |
+| ref-09 | LoRA 0.3 | 0 | 0.668 | 36.4 |
+| ref-05 | persona | 0 | 0.669 | 36.2 |
+| ref-01 | plain | 0 | 0.679 | 28.9 |
+| ref-02 | fp8 | 0 | 0.700 | 27.6 |
+| ref-07 | LoRA 1.5 | 0 | 0.629 | 17.3 |
+| ref-04 | LoRA 0.7 | 0 | 0.674 | 13.6 |
+| ref-08 | temperature | 0 | 0.603 | 1.6 |
+
+- The watermark copy is top on all three statistics, with a story prefix 1.8 times the next (the system-prompt copy, whose fixed prompt also shapes the opening) and 4 times plain.
+- The three LoRAs never repeat an answer, sit mid-pack or lower on sharpness, and have story prefixes of 14 to 36. An adapter does not produce the signature.
+- The temperature copy is the bottom on sharpness and story prefix.
+- The battery rule itself cannot fire at 4 repeats (it needs at least 3 repeats), so on the references the check rests on the story prefix and sharpness.
+
+Scored (batteries at 10 repeats; out of 20 answers):
+
+| family | lead in repeated answers | next | its sharpness (rank) | rule |
+|---|---|---|---|---|
+| A | ep-04: 9 | ep-17, ep-25: 2 | 0.948 (2nd, after ep-25 0.953) | candidate ep-04 |
+| B | ep-06: 9 | ep-08, ep-21: 1 | 0.870 (tied 2nd with ep-21; ep-22 0.880) | none: the tie falls against it |
+| C | ep-10: 4 | all others 0 | 0.805 (1st) | candidate ep-10 |
+
+The story prediction is read when the scored story rows land, at about 04:14.
+
+## Labelled same-model copies so far, and the unlabelled endpoints (03:52)
+
+| family | prompted | temperature | watermark | labelled | unlabelled |
+|---|---|---|---|---|---|
+| A | ep-02, 23 | ep-33 (likelihood tau 1.0; least sharp non-prompted) | ep-04 | 4 | ep-01, 12, 14, 17, 18, 24, 25 |
+| B | ep-08, 20 | ep-30 (least sharp; stops early on d1; likelihood pending) | ep-06 | 4 | ep-03, 07, 21, 22, 26, 28, 32 |
+| C | ep-16, 29 | not identified; the least sharp is ep-31 (0.666) | ep-10 | 3 | ep-05, 09, 11, 13, 15, 19, 27, 31 |
+
+A, the seven unlabelled ordered from most to least likely plain. Inputs are every probe here, with the likelihood reading as one input among them:
+1. **ep-12**: no flag anywhere. rank.py last (0.97), modal p 0.70, inside the pairwise group, e1 default 9/10, e2 yes 2/10 (base 0.35), sharpness 0.937, base-like by likelihood.
+2. **ep-25**: modal p 0.85. But it falls outside the pairwise group (rejected against ep-01, 04, 18, 23) and repeats 2 battery answers. e1 default 10/10, base-like by likelihood.
+3. **ep-01**: modal p 0.016 (0.004 in rank's pool), rejected pairwise against ep-18 and ep-25. Leak is base-like (e1 8/10), and so is likelihood.
+4. **ep-24**: no battery flag (modal p 0.24, in the pairwise group), e1 10/10. Likelihood puts it at the LoRA 0.7 signature (z 3.2).
+5. **ep-18**: set apart by modal (p 0.0065), outside the pairwise group (rejected against ep-01, 04, 23, 25). Base-like by likelihood.
+6. **ep-17**: set apart by modal (p 0.0095); e2 yes 7/10 against a base rate of 0.35; ranked 2nd by rank.py. Base-like by likelihood.
+7. **ep-14**: no battery flag. e2 yes 0/10 against 0.35 (p about 0.04). Likelihood puts it at the LoRA 1.5 signature (tau 0.87, z 3.8).
+
+The ordering is weak in the middle. Only ep-12 is clean on every probe. ep-18 and ep-25 being rejected against each other (p 0.001) says at least one of them is not plain.
