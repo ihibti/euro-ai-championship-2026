@@ -98,3 +98,8 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 01:08 | Unlearning `dial15.pt` submitted | public 0.0; best stays 0.0336 |
 | 01:08 | Reconnaissance done: 330 scored answers, none failed | three families of 11 (two Qwen-based, one Llama); `night_d` started on the references |
 | 01:16 | Job 15904237 submitted for `run_eighth.sh` at `5ac28b2` (team check empty, limit 1 h 15) | pending, estimated start 01:50; output files created in advance because scratch has under 1,000 file slots left for all teams |
+| 01:26 | Job 15904237 started | 16 runs on four GPUs; first reports on `desk/unlearning` at `c632153`, four checkpoints on the lead's main laptop by 01:48 |
+| 01:30 | Model equality: the family grouping submitted (three families of 11, one model per family) | public 0.1: the families are right on the public pairs; the model part is computed inside families only and stays at zero |
+| 01:35 | An organizer wrote that scripts fail to create files on scratch until teams delete some | the desk removed `runs/442697b` (209 files, staged by this session); the lead is asked about the two unused Python environments (33,000 files) |
+| 01:38 | Unlearning `k7_e3t2_rm.pt` submitted | public 0.066, a new best (0.0336 before) |
+| 01:38 | `night_d` on the references landed (360 answers) | the repetition prompt passes at 20 answers per endpoint in both analyses, not at 10; the fp8 candidate is refuted; scored identity answers started |
