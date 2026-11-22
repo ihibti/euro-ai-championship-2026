@@ -66,7 +66,7 @@ This keeps the number of submissions small and makes each one an experiment with
 | 02:08 | `k7_e3t2_rm_x2` | the same model with its last layer multiplied by 2 | mean 0.086, 10th to 90th 0.060 to 0.118, 75% chance above 0.066 (0.106 once the exact logits arrived at 02:04) | **0.2133** | sharpening is the recipe: the same checkpoint scores more than three times as much once the spill's temperature is taken out. The ledger gets the direction right and the size wrong: the gain is about twice what it predicts |
 | 02:38 | `k8_e3t2_rm1_lr1e4_x2` | one dial from the 0.2133: the same recipe trained at learning rate 1e-4, sharpened by 2 | ledger mean 0.229, 10th to 90th 0.142 to 0.301, 66% chance above 0.2133; 1.7 times `k7_e3t2_rm_x2` relative to the ledger | **0.2837** | more reach pays at the same factor (1.33 times). Golds that err on other images of the same classes drop to 2% of the weight |
 | 03:08 | `k8_e3t2_rm1_lr1e4_x2p5` | the same fine-tune with the factor one notch further, 2.5 | ledger mean 0.283, 10th to 90th 0.211 to 0.373, 54% chance above 0.2837 | 0.2222 | **one notch more sharpening cost 22%**: the forget-set loss has a peak near the 0.2837's level. The ledger cannot represent it and is set aside for the factor (section below) |
-| 03:38 | `k9_e3t1_lr1e4_x1p25` | the ninth batch's untempered (tau 1) fine-tune, last layer times 1.25 | `peak_check.py` mean 0.294, 0.281 to 0.316 over the 13 gold settings that reproduce both scores. It replaces the line fixed at 02:56, which the same check puts at 0.185 | pending | |
+| 03:38 | `k9_e3t1_lr1e4_x1p25` | the ninth batch's untempered (tau 1) fine-tune, last layer times 1.25 | `peak_check.py` mean 0.294, 0.281 to 0.316 over the 13 gold settings that reproduce both scores. It replaces the line fixed at 02:56, which the same check puts at 0.185 | 0.256 | **at the 0.2837's forget-loss level, half the probe spill scored 10% less.** The factor left a third of the drift's temperature (f/T = 0.76): on unseen images, sharpening must match the drift's temperature. The probes' lower spill does not carry over by itself |
 
 ## What the evidence says about gold (as of 02:15)
 
@@ -139,6 +139,12 @@ A single model cannot be both as confident as one retrained model and as soft as
 - They put the line fixed for 03:38 (`k9_e3t2_lr2e4_ep40` at x2, loss 5.29/4.86) at 0.185. We withdrew it before its slot and said why on #12 (03:16).
 - In its place went the run with the least spill, lightly sharpened to the 0.2837's loss level: `k9_e3t1_lr1e4` at x1.25, predicted 0.294.
 - The desk pointed out that a check calibrated on two public scores can follow the public 30%. The choice therefore also had to be backed by the probes: its spill is half that of the 0.2837's base (held-out KL 0.45 against 0.99, spare-class KL 0.17 against 0.62), with fewer changed predictions (4.4% against 5.2%).
+
+**What the 0.256 added.** The tau 1 run at x1.25 sat at the 0.2837's forget-loss level with half its probe spill, and scored 0.256. Its factor was 0.76 times its spill temperature (1.65); the 0.2837's was 0.89 times (2.25) and the 0.2222's 1.11 times. On images the model never saw, a leftover factor of 0.76 costs about eight times the KL of 1.11. The two drops therefore have different causes:
+- **the 0.2222 is a forget-side overshoot;**
+- **the 0.256 is a retain loss.**
+
+The good region is narrow: the factor near the drift's temperature, and the forget loss near 3.8/3.8. `peak_check.py` now has a temperature reading of retain. With all four scores, its best line is `k8_e3t2_rm1_ep40` at x2.25 (f/T = 1.00, loss 3.62/3.83), about 3% above the 0.2837.
 
 ## Where the ceiling is: training reach
 
