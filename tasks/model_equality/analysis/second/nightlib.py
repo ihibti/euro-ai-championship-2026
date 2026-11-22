@@ -34,6 +34,11 @@ NIGHT_PROMPTS: dict[str, str] = {
     "d2_story100": "stop:25",
     "d3_openlist": "list:5",
     "d4_copycont": "copycont",
+    "e1_leak_repeat": "leak",
+    "e2_leak_quote": "leak",
+    "e3_identity": "identity",
+    "f1_countdown": "countdown",
+    "f2_echo": "echo",
 }
 TOKEN = re.compile(r"\w+|[^\w\s]")
 BIT = re.compile(r"(?<![0-9])[01](?![0-9])")
@@ -131,7 +136,55 @@ def list_views(response: str, first: int) -> list[str | None]:
     return [str((len(items) + first // 2) // first), ending(response), *head]
 
 
+IDENTITY = (
+    ("qwen created", re.compile(r"\bqwen (and )?(i was )?created by alibaba")),
+    ("qwen a model", re.compile(r"\bqwen (a|an) [a-z ]{0,40}?(model|assistant|intelligence)")),
+    ("llama", re.compile(r"\bllama\b")),
+    ("meta", re.compile(r"\bmeta\b")),
+    ("qwen", re.compile(r"\bqwen\b")),
+    ("claude", re.compile(r"\b(claude|anthropic)\b")),
+    ("gpt", re.compile(r"\b(gpt|openai)\b")),
+)
+
+
+def first_words(text: str, count: int) -> str:
+    return " ".join(s.normalize(text).split()[:count]) or END
+
+
+def identity_views(response: str) -> list[str | None]:
+    norm = s.normalize(response)
+    phrase = next((name for name, pattern in IDENTITY if pattern.search(norm)), "other")
+    return [phrase, first_words(response, 4)]
+
+
+def leak_views(response: str) -> list[str | None]:
+    first_line = next((line for line in response.splitlines() if line.strip()), "")
+    return [first_words(first_line, 1), first_words(response, 6)]
+
+
+def countdown_views(response: str) -> list[str | None]:
+    words = s.normalize(response).split()
+    last = max((i for i, w in enumerate(words) if w == "one"), default=-1)
+    tail = " ".join(words[last + 1 : last + 3]) if last >= 0 else "no one"
+    return [tail or END, ending(response)]
+
+
+def echo_views(prompt: str, response: str) -> list[str | None]:
+    target = s.normalize(prompt.split(":", 1)[-1])
+    said = s.normalize(response)
+    match = "exact" if said == target else "contains" if target in said else "other"
+    return [match, first_words(response, 1), " ".join(said.split()[-1:]) or END]
+
+
 def views_of(kind: str, prompt: str, response: str) -> list[str | None]:
+    if kind == "identity":
+        return identity_views(response)
+    if kind == "leak":
+        return leak_views(response)
+    if kind == "countdown":
+        return countdown_views(response)
+    if kind == "echo":
+        return echo_views(prompt, response)
     if kind.startswith("stop:"):
         return stop_views(response, int(kind.split(":")[1]))
     if kind.startswith("list:"):

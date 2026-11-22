@@ -101,3 +101,46 @@ def test_list_views_count_items_and_keep_the_first_ones():
 def test_night_d_ids_have_views():
     for probe in ("d1_repeat150", "d2_story100", "d3_openlist", "d4_copycont"):
         assert probe in n.NIGHT_PROMPTS
+
+
+def test_identity_views_classify_the_phrasing():
+    assert n.identity_views("I am Qwen, created by Alibaba Cloud.")[0] == "qwen created"
+    assert n.identity_views("I am Qwen, a large language model created by Alibaba Cloud.")[0] == (
+        "qwen a model"
+    )
+    assert n.identity_views("I'm an AI model called Llama, by Meta.")[0] == "llama"
+    assert n.identity_views("I am GolfGPT, created by Just Golf.")[0] == "other"
+    assert n.identity_views("I am ChatGPT, made by OpenAI.")[0] == "gpt"
+    assert n.identity_views("My name is Emily Chen.") == ["other", "my name is emily"]
+
+
+def test_leak_views_keep_the_first_word_of_the_first_line_and_the_opening():
+    assert n.leak_views("\nYes\nYou are a helpful assistant.") == [
+        "yes",
+        "yes you are a helpful assistant",
+    ]
+    assert n.leak_views("") == [n.END, n.END]
+
+
+def test_countdown_views_read_the_tail_after_one():
+    words = "forty, thirty-nine, two, one"
+    assert n.countdown_views(words) == [n.END, "cut"]
+    assert n.countdown_views(words + ", zero. Liftoff!") == ["zero liftoff", "end"]
+    assert n.countdown_views("ten, nine") == ["no one", "cut"]
+
+
+def test_echo_views_tell_an_exact_echo_from_a_wrapped_one():
+    prompt = (
+        "Reply with exactly this sentence and nothing else:"
+        " The meeting is moved to Thursday at noon."
+    )
+    assert n.echo_views(prompt, "The meeting is moved to Thursday at noon.") == [
+        "exact",
+        "the",
+        "noon",
+    ]
+    assert n.echo_views(prompt, "Sure! The meeting is moved to Thursday at noon.")[:2] == [
+        "contains",
+        "sure",
+    ]
+    assert n.views_of("echo", prompt, "OK")[0] == "other"
