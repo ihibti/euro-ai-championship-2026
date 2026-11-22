@@ -707,3 +707,84 @@ Reading:
     - its leak e1 paraphrases the Qwen default once ("I was created by Alibaba Cloud to be a helpful assistant") and refuses once;
     - e2 says no twice, like the majority.
   - Only d1's no-spaces share (12 of 20) puts it with the prompted copies. That is a one-token choice in a fixed context.
+
+## The story-echo split, probe by probe (04:22)
+
+Story echo means the answer opens with "The old lighthouse on the northern cape". The counts match the desk's. Other columns: d1 at 20 repeats in B and 2 in C; e2 and e1 at 2 repeats; batteries and identity at 10. "Flips vs H / L" is modal flips against the pooled answers of each side, leaving out the endpoint itself.
+
+**B: H = {03, 06, 28} against L = {21, 22, 26, 32}**
+
+| endpoint | side | echo | d1 long | d1 no-spaces | d1 early | e2 yes | trivia restated | sharpness | rare | flips vs H / L |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ep-03 | H | 8 | 16 | 2 | 4 | 1/2 | 0 | 0.842 | 16 | 2 / 1 |
+| ep-06 | H | 8 | 12 | 4 | 8 | 0/2 | 8 | 0.870 | 4 | 10 / 6 |
+| ep-28 | H | 9 | 17 | 1 | 3 | 1/2 | 0 | 0.815 | 17 | 5 / 5 |
+| ep-21 | L | 4 | 20 | 3 | 0 | 0/2 | 0 | 0.870 | 13 | 3 / 7 |
+| ep-22 | L | 3 | 19 | 12 | 1 | 0/2 | 0 | 0.880 | 14 | 3 / 3 |
+| ep-26 | L | 5 | 17 | 4 | 3 | 0/2 | 0 | 0.863 | 13 | 4 / 3 |
+| ep-32 | L | 2 | 12 | 9 | 8 | 0/2 | 0 | 0.813 | 17 | 2 / 1 |
+| ep-07 (top-p) | | 5 | 14 | 5 | 6 | 0/2 | 1 | 0.851 | 10 | 4 / 3 |
+| ep-30 (temp 1.0) | | 2 | 4 | 11 | 16 | 0/2 | 0 | 0.779 | 62 | 7 / 5 |
+| ep-08 (prompted) | | 4 | 15 | 12 | 5 | 2/2 | 0 | 0.797 | 10 | 4 / 2 |
+| ep-20 (prompted) | | 3 | 18 | 17 | 2 | 1/2 | 0 | 0.870 | 12 | 5 / 4 |
+
+Echo, d1 columns and trivia restated are counts of 10 or 20 answers.
+
+Where the two sides differ, pooled with two-sided Fisher:
+- echo: 25/30 against 14/40, p 8e-5 (the split itself);
+- d1 no-spaces: 7/60 against 28/80, p 0.0016. This is not clean inside L: ep-21 has 3 and ep-26 4, low like H; ep-22 12 and ep-32 9;
+- e2 yes: 2/6 against 0/8, p 0.16. ep-03 and ep-28 are the only non-prompted B endpoints that ever said yes.
+
+No difference:
+- d1 long (45/60 against 68/80, p 0.19) and d1 early stops (p 0.19);
+- identity (all 10/10), sharpness, rare answers;
+- battery modes: H pooled against L pooled, 1 flip, p 0.80. Per endpoint, the flips against each side show no structure.
+
+So B's split is two-sided on two probes (story echo, d1 no-spaces), weakly on e2, and absent from the batteries.
+
+Placing B's labelled disguises:
+- ep-30 (temperature 1.0, base weights) echoes 2 of 10. Temperature rescales the logit by 0.7/1.0.
+  - If plain echoed 0.8 at 0.7, ep-30 would echo 0.73, and 2 or fewer of 10 has probability 0.0008.
+  - If plain echoed 0.35, ep-30 would echo 0.39, and 2 or fewer has probability 0.18.
+  - So ep-30 sits with L, and plain is most likely on the L side.
+- ep-07 (top-p 0.95 at 1.0) echoes 5 of 10, consistent with either side (0.20 under 0.35, 0.08 under 0.8).
+- ep-06's echo is explained by its watermark: on the references the watermark echoes 10 of 10 against plain 6.
+- That leaves ep-03 and ep-28 as H endpoints with no known disguise. They shift upward, where the reference LoRAs shifted down (4 against 6).
+
+**C: H = {09, 13, 15, 19} against L = {05, 11, 27, 31}**
+
+| endpoint | side | echo | e2 yes | e1 header | e1 one word per line | identity own | sharpness | rare | flips vs H / L |
+|---|---|---|---|---|---|---|---|---|---|
+| ep-09 | H | 7 | 0/2 | 1/2 | 1/2 | 10 | 0.727 | 47 | 8 / 9 |
+| ep-13 | H | 7 | 1/2 | 1/2 | 2/2 | 10 | 0.738 | 28 | 9 / 12 |
+| ep-15 | H | 8 | 0/2 | 1/2 | 2/2 | 10 | 0.770 | 23 | 11 / 9 |
+| ep-19 | H | 7 | 2/2 | 2/2 | 2/2 | 10 | 0.747 | 19 | 5 / 4 |
+| ep-05 | L | 3 | 0/2 | 1/2 | 0/2 | 10 | 0.712 | 40 | 12 / 14 |
+| ep-11 | L | 0 | 0/2 | 0/2 | 0/2 | 9 | 0.735 | 31 | 7 / 7 |
+| ep-27 | L | 2 | 1/2 | 2/2 | 2/2 | 10 | 0.695 | 43 | 9 / 12 |
+| ep-31 | L | 4 | 1/2 | 2/2 | 2/2 | 10 | 0.666 | 60 | 10 / 8 |
+| ep-10 (watermark) | | 2 | 0/2 | 2/2 | 2/2 | 10 | 0.805 | 22 | 13 / 9 |
+| ep-16 (prompted) | | 3 | 2/2 | 0/2 | 1/2 | 7 | 0.718 | 43 | 7 / 9 |
+| ep-29 (prompted) | | 4 | 0/2 | 0/2 | 1/2 | 9 | 0.748 | 23 | 8 / 8 |
+
+Echo is out of 10 and identity own out of 10.
+
+Where the sides differ:
+- echo: 29/40 against 9/40, p 1.4e-5;
+- sharpness: H 0.727 to 0.770 and L 0.666 to 0.735. H holds ranks 1, 2, 3 and 5 of 8, one-sided exact p 0.029;
+- rare answers: H 19 to 47 (mean 29), L 31 to 60 (mean 44).
+
+No difference:
+- e2 yes (3/8 against 2/8), e1 header (5/8 each), e1 one word per line (7/8 against 4/8, p 0.28);
+- identity;
+- battery modes: H pooled against L pooled, 4 flips, p 0.94.
+
+C's d1 has only 2 repeats, all long.
+
+So in C the echo split comes with a temperature-like difference: L is less sharp, gives more rare answers and keeps the same modes. That is what a hotter sampler, or an adapter that raises the fitted temperature (L0.7 0.78 and L1.5 0.87 on the references), would produce. B shows no such difference.
+
+C's disguises tell nothing:
+- ep-10's watermark fixes its own opening ("As the dark sky twisted and" 7 of 10), which replaces the echo;
+- ep-16 and ep-29 have their context changed by their prompts.
+
+Neither split is one probe's accident. In B it recurs on d1 no-spaces and weakly on e2. In C it recurs on sharpness and rare answers. In both families the battery modes agree across the split, which a temperature-like or small adapter shift allows.
