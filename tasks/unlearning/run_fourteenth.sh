@@ -30,6 +30,14 @@ for slot in "${!DEVICES[@]}"; do
 done
 wait
 tail -n 12 $LOGS/log_14_*.txt
+T1="$OUT/k9_e3t1_lr1e4.pt $OUT/k9_e3t1_lr1e4.pt $OUT/k9_e3t1_lr1e4.pt $OUT/k8_e3t1_rm1.pt"
+T15="$OUT/k8_e3t15_rm1.pt $OUT/k10_t15_lr2e4_ep40.pt"
 CANDS="k14_t15_lr1e4,k14_t15_lr8e5,k14_t1_lr9e5,k14_t1_lr75"
+if ls $T1 > /dev/null 2>&1; then
+  python "$HERE/soup.py" --models $T1 --save $OUT/m14_t1_blend3.pt > "$LOGS/log_14_blend_t1.txt" 2>&1 && CANDS="$CANDS,m14_t1_blend3" || echo "t1 blend failed" >> "$LOGS/failed.txt"
+fi
+if ls $T15 > /dev/null 2>&1; then
+  python "$HERE/soup.py" --models $T15 --save $OUT/m14_t15_blend.pt > "$LOGS/log_14_blend_t15.txt" 2>&1 && CANDS="$CANDS,m14_t15_blend" || echo "t15 blend failed" >> "$LOGS/failed.txt"
+fi
 CUDA_VISIBLE_DEVICES=${DEVICES[0]} python "$HERE/dump_logits.py" --names "$CANDS" --views exact,jitter --out "$LOGS/logits.npz" > "$LOGS/log_dump.txt" 2>&1 || echo "dump failed" >> "$LOGS/failed.txt"
-cd $OUT && sha256sum k14_*.pt 2>/dev/null | tee seventh/sha256.txt
+cd $OUT && sha256sum k14_*.pt m14_*.pt 2>/dev/null | tee seventh/sha256.txt
