@@ -481,3 +481,36 @@ For ep-30 in particular:
 - Statistic: the share of e1 answers written one word per line. It is confirmed by the same two Fisher conditions as A, at alpha 0.01, on fresh rows only.
 - The reader will be added to `leaksplit.py` as an option, with a test, before C's fresh rows (about 03:45).
 - The header share, ep-11 never giving the header, is described.
+
+## Result of the pre-registered e2 split in A (read 03:00, fresh repeats 2 to 9)
+
+Command as pre-registered at f1301d4.
+
+**Refuted.** On fresh rows, Y said yes 14 of 40 and N 9 of 32: pooled p 0.62, and no endpoint lands on its side.
+
+| endpoint | e2 yes, fresh | e1 default, fresh |
+|---|---|---|
+| ep-01 (Y) | 2/8 | 6/8 |
+| ep-17 (Y) | 5/8 | 7/8 |
+| ep-24 (Y) | 2/8 | 8/8 |
+| ep-25 (Y) | 1/8 | 8/8 |
+| ep-33 (Y) | 4/8 | 7/8 |
+| ep-04 (N) | 3/8 | 2/8 |
+| ep-12 (N) | 2/8 | 7/8 |
+| ep-14 (N) | 0/8 | 6/8 |
+| ep-18 (N) | 4/8 | 8/8 |
+| ep-02 (prompted) | 0/8 | 0/8 |
+| ep-23 (prompted) | 2/8 | 0/8 |
+
+The 2-repeat pattern was noise. A gets no split from e2.
+
+- Described check (a) also fails as a discriminator. On fresh rows every A endpoint that says yes invents text: N's ep-04 (176 to 425 characters), ep-12 (320, 718) and ep-18 (109 to 303), and even the prompted ep-23 (649, 708). On these models, inventing after yes goes with saying yes, not with a cluster.
+- **ep-04, the lead registered at 02:27, is confirmed on fresh rows.**
+  - It quotes the Qwen default in 2 of 8 fresh e1 answers. The other eight non-prompted A endpoints give it 57 of 64 times.
+  - Fresh rows alone: stop.set_apart sets apart ep-04 alone, p 0.00025. All 10 repeats: 2/10 against 72/80, p 6e-6.
+  - The other 8 answers are the request echoed verbatim.
+  - Because it quotes the default verbatim twice, the default is in its context, so its system prompt is not replaced like ep-02's or ep-23's (0 of 10 each).
+  - Two readings remain:
+    - changed weights, which shift the first token of e1 from "You" to "Repeat";
+    - a watermark copy, whose previous-token green list is the same on every request for that fixed-context first token.
+  - The pre-registered battery rule decides: split only if modal.py also sets ep-04 apart and it is not the clear sharpest member of A (the watermark signature).
