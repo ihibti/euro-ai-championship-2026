@@ -10,14 +10,19 @@ For any session that picks the unlearning task up during the night (after a rest
 - **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `ledger.py --targets output/kkrgp/xfit_extras.npz`, log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
 - **On new GPU results (`desk/unlearning`, `tasks/unlearning/reports/21/`).** Copy the JSON reports to `/Volumes/euroai-apfs/r21/`, add the candidates' measured statistics and retain estimates to `ledger_inputs.json`, rerun the ledger, queue the best by expected score.
 - **Limits.** 8 unlearning submissions left at 01:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
-- **Pending at 03:18.**
-  - Scores: `k8_e3t2_rm1_lr1e4_x2` **0.2837** (02:38, our best); `k8_e3t2_rm1_lr1e4_x2p5` 0.2222 (03:08). One notch more sharpening cost 22%: the forget-set loss has a peak near the 0.2837's 3.80/3.79.
-  - **The ledger is refuted on the factor.** It still puts x2.5 above x2 after the 0.2222. Choose factors and bases with `peak_check.py` (`9f7a917`): `cd $T && $PY $WT/tasks/unlearning/peak_check.py --logits <seventh, eighth, ninth logits.npz>`. Add each new sharpened score to its `OBSERVED` tuple.
-  - 03:38: `k9_e3t1_lr1e4_x1p25.pt` (sha `7c3696d0…`) is on the queue (`36df4a9`), its only open line. Prediction 0.294 (0.281 to 0.316).
-  - 04:08 stays empty unless a candidate is predicted above our best **and** its advantage shows in the probes (agreed with the desk on #12 at 03:19). Keep 04:38 and 05:08 for the tenth batch. The final ranking is on the hidden 70%: between close candidates, take the one whose advantage is in spill and gate, not only in the calibrated term. If 03:38 beats 0.2837, ask for an eleventh batch after the tenth: tau 1 with more reach.
-  - Ninth batch: done (job 15904499, 02:48), all six candidates folded with exact logits (`/Volumes/euroai-apfs/r21/ninth/logits.npz`). Ledger command now: `--logits` on `seventh`, `eighth` and `ninth` `logits.npz`.
-  - Tenth batch: job 15904691 (`run_tenth.sh` at `66c6b31`), submitted 03:07, pending on priority, about 45 minutes once started. Results under `reports/21/tenth/` on `desk/unlearning`; copy them to `/Volumes/euroai-apfs/r21/tenth/`, fold with `fold_reports.py /Volumes/euroai-apfs/r21/tenth --write`, and add `tenth/logits.npz` to the ledger's `--logits`. Its best sharpened candidate goes to 04:38 or 05:08.
-  - Slots: 4 night submissions left after 03:08 (03:38, 04:08, 04:38, 05:08; 8 of 12 used by then, per #19), then the humans from 09:08 to 11:08.
+- **Pending at 03:50.**
+  - Scores:
+    - `k8_e3t2_rm1_lr1e4_x2` **0.2837** (02:38, our best);
+    - `_x2p5` 0.2222 (03:08, forget-side overshoot);
+    - `k9_e3t1_lr1e4_x1p25` 0.256 (03:38, a retain loss: factor 0.76 times its drift temperature).
+  - **Choose lines with `peak_check.py`** (`59d975a`, tested), not with the ledger:
+    - `cd $T && $PY $WT/tasks/unlearning/peak_check.py --logits <seventh, eighth, ninth, tenth logits.npz> --observed <name:factor:score ...>`.
+    - The probe reading of retain is refuted. Use the half, flat and temperature readings.
+    - A line needs f/T near 1 (T = spill temperature, shown as `f/T`) and forget loss near 3.8/3.8.
+  - 04:08: `k8_e3t2_rm1_ep40_x2p25.pt` was asked of the desk on #12 at 03:49 (`--scale 0.4444444` on `b566a960…`). On its sha256, run `python3 <scratchpad>/queue_ep40.py <sha256>` or write the row from the 03:49 comment. The prediction is 0.292 to 0.294. The slot stays empty if the build is not checked by 04:05.
+  - Eleventh batch: job 15904844 (`run_eleventh.sh` at `42ccecc`), submitted 03:47, pending. Its runs are the 0.2837's recipe with seeds 1 and 2, 20 epochs, retain mix 2, 4 blocks and K=2.5. Results under `reports/21/eleventh/`: copy them to `/Volumes/euroai-apfs/r21/eleventh/`, fold, and add its `logits.npz` to `peak_check.py --logits`. `k11_b_ep20` at about x2.25 is the line to watch.
+  - Tenth batch: done and folded (`1461f80`). Its lines reach too far once the factor matches their temperature.
+  - Slots: 3 night submissions left after 03:38 (9 of 12 used), until 09:00, one per 30 minutes; then the humans from 09:08 to 11:08.
 - **Work list.** (1) Judges' brief, `judges_brief.md`. (2) Fold every result into the ledger. (3) Ask for the logits of submitted candidates, so the ledger stops using proxies.
 
 Written by the unlearning agent, which took over the task at 23:00. It works on the lead's laptop with a local copy of the model and the forget images, and no JURECA access. The desk (the lead's agent) runs its GPU requests and submits from `submit_queue.md`, under Requests to the desk in `AGENTS.md`.
