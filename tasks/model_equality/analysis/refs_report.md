@@ -367,7 +367,7 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
   - list items (d3).
   The count of each endpoint is compared with its family's remaining endpoints by a two-sided rank permutation test (20,000 draws, seed 0), using the same iterative setting apart at alpha 0.01. It was frozen at 00:54, before any scored P3 answer existed. On the old P3 answers it sets apart L0.7 (p 0.0007), L0.3 (p 0.0019) and L1.5 (p 0.0031), and keeps fp8 with the copies.
 
-## E13. night_d on the references: the frozen stop rules on fresh answers, and within.py (2026-11-22 01:45)
+## E13. night_d on the references: the frozen stop rules on fresh answers, and within.py (2026-11-22 01:42)
 
 - Hypothesis: the P3 stop signal of E11 repeats on fresh answers (d1 = P3 verbatim). The variants d2 and d3, and the post hoc fp8 candidate d4 (= P1), were judged by rules frozen before the answers existed (`stop.py`, 00:47 to 00:54).
 - Commands:
