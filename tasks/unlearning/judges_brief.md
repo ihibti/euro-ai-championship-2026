@@ -19,6 +19,7 @@ Written during the night of 21 to 22 November by the unlearning agent, for the t
    - No model of the score fits all our scores better than about 5% near the peak.
    - Retain is estimated on held-out forget images, not on the unseen control set.
    - The hidden altered copies are stood in for by our own augmentations.
+   - Our stand-in for gold retrains only the last 3 blocks. Three independent cross-fits agree on 95% of classes, so it cannot show how gold models disagree. The last experiment, which tested this, was not submitted.
 
 ## The result in one paragraph
 
@@ -229,7 +230,10 @@ The three pick different classes on 16% of the forget images, but only between n
 - **Independent cross-fits agree on about 95% of the held-out classes.** Retraining the last 3 blocks from scratch is not as diverse as we hoped gold's full retrains are.
 - **Mixing their targets in probability space softens the target:** at x2, loss 6.46/7.82 against 8.12/9.14 for the single target.
 - **The fine-tune reaches less** (realized 1.91/1.52 against 2.23/1.84) **and spills more** (held-out KL 1.07 against 0.99, spare-class KL 0.73 against 0.62).
-- A larger factor would bring its loss back towards 3.8, but that would be a dial chosen after the result, so we did not submit it.
+- **No other factor rescues it** (`check_thirteenth.py`).
+  - Its forget loss reaches 3.8 only at x2.71. That is 1.15 times its spill temperature of 2.35, and every line sharpened to or past its temperature scored lower (0.2665 at 1.00 times, 0.2222 at 1.11 times).
+  - At 0.89 times its temperature (x2.09), the 0.2837's ratio, its loss is 3.02/3.17.
+  - The softer target cut the reach and raised the drift temperature at once. The two conditions that held together at the 0.2837's point cannot both hold here.
 
 ## Where the ceiling is: training reach
 
@@ -322,7 +326,9 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
   - sharpening to the drift's full temperature;
   - a less-spilling run lightly sharpened;
   - less training reach (0.2133, one step back).
-  The board's noise between two lines is about 1%, and the recipe's seeds are the same model at the metric's temperature, so the remaining dials cannot show a gain the board would register. The next step would change the stand-in for gold itself: several independent cross-fits instead of one, so the target's disagreements look like those between independently retrained models (`night.md`, morning plan, optional experiment).
+  The board's noise between two lines is about 1%, and the recipe's seeds are the same model at the metric's temperature, so the remaining dials cannot show a gain the board would register.
+  The one step that changes the stand-in for gold itself, a mixture of three independent cross-fits, was run and not submitted (section "The last experiment"). The cross-fits agree on 95% of classes, and the line came out softer, with no factor that fixes it.
+  A more diverse stand-in would need models retrained the way gold was, which takes the retained data we do not have.
 - **Why did you break your own pre-registered rule at 03:38?** The rule assumed that further-reaching fine-tunes pay at the same factor, and the 03:08 score refuted the model behind it. Submitting the rule's line would have tested a model we already knew to be wrong. We withdrew it before its slot, posted the reason and the replacement's prediction on #12 before its score, and kept the slot for a line whose advantage shows in the probes.
 
 ## Reproduce
@@ -358,5 +364,6 @@ python $WT/tasks/unlearning/ledger.py  --targets output/kkrgp/xfit_extras.npz --
 python $WT/tasks/unlearning/plateau.py --targets output/kkrgp/xfit_extras.npz
 python $WT/tasks/unlearning/split_noise.py --draws 4000
 python $WT/tasks/unlearning/twins.py
+python $WT/tasks/unlearning/check_thirteenth.py /Volumes/euroai-apfs/r21/thirteenth
 python -m pytest $WT/tasks/unlearning -q
 ```

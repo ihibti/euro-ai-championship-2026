@@ -16,7 +16,7 @@ For any session that picks the unlearning task up during the night (after a rest
   - **Thirteenth batch** (a mixture of three independent cross-fits as the target, job 15905366, 06:48 to 07:12): it failed two of its four pre-registered checks (`check_thirteenth.py`, #12 at 07:16). The cross-fits agree on 95% of classes, and the mixture softened the line to a forget loss of 2.91/3.03 at x2. **The last night slot stayed empty.**
   - No unlearning GPU request is open. **Board noise** is about 1% between two lines (`split_noise.py`). **The seed twins are one model at T=2** (`twins.py`).
   - After 09:00: the humans; nothing needs submitting (morning plan).
-- **Work list.** (1) Keep `judges_brief.md` and the morning plan consistent with the log; the 07:23 wrap-up refreshes both by 07:30. (2) If the desk resumes: answer on #12 and #21, and fold any result as above. (3) Draft PR #32 stays a draft for the task owner.
+- **Work list.** (1) `judges_brief.md` and the morning plan are final as of 07:30; keep them consistent with the log if anything changes. (2) If the desk resumes: answer on #12 and #21, and fold any result as above. (3) Draft PR #32 stays a draft for the task owner.
 
 Written by the unlearning agent, which took over the task at 23:00. It works on the lead's laptop with a local copy of the model and the forget images, and no JURECA access. The desk (the lead's agent) runs its GPU requests and submits from `submit_queue.md`, under Requests to the desk in `AGENTS.md`.
 
@@ -105,28 +105,24 @@ The plan written at 23:00 (`map_even40`, `x3_ext_m80`, then a K sweep) was carri
 
 ## Morning plan (for the humans, from 09:00)
 
-Written at 04:09, revised at 04:55, refreshed by 07:30.
+Written at 04:09, revised at 04:55, final at 07:30.
 
 - **Read first:**
   0. draft PR #32, the night's work in one diff, for the task owner to merge after review;
   1. `judges_brief.md`, which opens with a two-minute version for presenting;
   2. `submit_queue.md`, every submission with its prediction and score;
   3. this file's log.
-- **Our best at 04:55:** **0.2858**, `k11_b_soup3_x2.pt` (sha `53dfdc9d…`, on the desk's laptop and in the team's `unlearning/output/kkrgp/`). If nothing better scores by 11:00, this is the one that counts. Nothing needs re-submitting, since only the best counts.
-- **Slots after 09:00:** 09:08, 09:38, 10:08, 10:38, and 11:08 at the latest. The night authorization ended with the desk at 04:47. From then on a human at a terminal submits with `make submit`.
+- **Our best, final for the night:** **0.2858**, `k11_b_soup3_x2.pt` (sha `53dfdc9d…`, on the desk's laptop and in the team's `unlearning/output/kkrgp/`). If nothing better scores by 11:00, this is the one that counts. Nothing needs re-submitting, since only the best counts.
+- **Slots after 09:00:** 09:08, 09:38, 10:08, 10:38, and 11:08 at the latest. The night authorization ends at 09:00, with nothing queued under it. From then on a human at a terminal submits with `make submit`.
 - **Recommendation: spend the morning on the other two tasks.** The unlearning search converged at the 0.2837's recipe with its last layer times 2:
   - every neighbour scored lower: more sharpening, less sharpening relative to the drift, a sibling at its own temperature, a less-spilling tau 1 run;
   - its seed twins are the same model at T=2, so averaging more of them cannot show on the board.
-  A further gain needs a new mechanism and a GPU run before 10:00. None is ready, and none predicted to beat 0.2858 by more than the board's 1%.
-- **If a human wants one more unlearning line anyway:** the open request on #21 is withdrawn; ask the unlearning agent (or read `night.md`) before staging anything.
-- **The one experiment left was run at night instead** (thirteenth batch, asked at 06:24 when the desk came back; see Resume here). If its line is queued and scores, the queue and #12 say so; if it was not queued, nothing is left for the morning. The original note:
-  - **Idea.** Gold is the average of several independently retrained models. Our target comes from one cross-fit, and our seed twins all chase that one target, which is why they agree at temperature 2. Two more cross-fits with other seeds retrain the last 3 blocks from scratch, as gold retrains everything, and so should disagree the way gold models do. The fine-tune would then aim at the mixture of the three extrapolated predictions at temperature 2.
-  - **Cost.**
-    - About 15 lines in `csd.py`: several held-out steps, mixed in probability space. The `--seed` of `xfit.py` already exists.
-    - Two GPU jobs: three cross-fits in parallel (about 15 minutes), then one fine-tune (about 8 minutes).
-    - One submission, at 10:38 or 11:08.
-  - **Expected value.** Unknown; perhaps a one-in-three chance of a visible gain (more than 2%). A lower score costs nothing, since only the best counts. It is the only line left that changes the target rather than a dial.
-  - **Skip it** if model equality or watermark localization has a clearer use for the lead's morning.
+  A further gain needs a new mechanism and a GPU run before 10:00. None is ready, and none is predicted to beat 0.2858 by more than the board's 1%. The one new mechanism, the thirteenth batch, failed its checks at 07:15.
+- **If a human wants one more unlearning line anyway:** no request is open on #21. Ask the unlearning agent (or read `night.md`) before staging anything.
+- **The one experiment left was run at night** (thirteenth batch: a mixture of three independent cross-fits as the target; brief, section "The last experiment"). It was not submitted.
+  - The cross-fits agree on 95% of classes.
+  - No factor makes the line sharp enough and keeps it within its drift temperature: a forget loss of 3.8 needs x2.71, which is 1.15 times its temperature of 2.35 (`check_thirteenth.py`).
+  - **Nothing is left for the morning on unlearning.**
 - **What the night established (each point is a score):**
   - **Sharpening a tempered fine-tune is the recipe:** 0.066 for the fine-tune alone, 0.2133 with its last layer times 2.
   - **More reach pays only up to the 0.2837's level:** forget-set loss 3.8/3.8 once sharpened.
@@ -219,3 +215,4 @@ Written at 04:09, revised at 04:55, refreshed by 07:30.
 | 06:43 | Desk: job 15905366 still pending at 06:41, estimated start 07:30; a line posted on #12 by 08:40 still goes in tonight | the 07:23 wrap-up goes ahead; the thirteenth result is folded about 08:10 to 08:20 |
 | 06:50 | Desk: job 15905366 started at 06:48, should end at about 07:20 | fold at about 07:25, decide well before 08:40 |
 | 07:15 | Desk: job 15905366 completed at 07:12, reports at `6bd108e` | `check_thirteenth.py`: checks 1 (4.7% class disagreement, needs more than 5%) and 3 (loss 2.91/3.03 at x2) fail, 2 and 4 pass. **The last night slot stays empty**; the night ends at 0.2858 (#12, #21 at 07:16) |
+| 07:28 | Own analysis: could another factor rescue the thirteenth line? | `check_thirteenth.py` (`factor_for_loss`, tested): a forget loss of 3.8 needs x2.71, 1.15 times the line's spill temperature of 2.35; at 0.89 times (x2.09) its loss is 3.02/3.17. No factor rescues it. The brief and the morning plan are final |

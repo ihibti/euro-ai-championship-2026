@@ -8,6 +8,10 @@
    spread;
 4. its probe changes at most 6.0% of predictions (`fold_reports.retain_and_flip`).
 
+It also prints whether another factor could rescue the line: the factor that brings its forget
+loss to 3.8, as a multiple of its spill temperature (`ledger.effective_temperature`). The night
+found the factor must stay near 0.89 of that temperature and never above it.
+
     cd <team folder> && python <repo>/tasks/unlearning/check_thirteenth.py \\
         /Volumes/euroai-apfs/r21/thirteenth
 """
@@ -19,7 +23,9 @@ import json
 from pathlib import Path
 
 import numpy as np
+import torch
 from fold_reports import retain_and_flip, spill_of
+from ledger import effective_temperature
 from split_noise import LOGITS, log_softmax
 
 DISAGREE_MIN = 0.05
@@ -42,6 +48,22 @@ def kl_t2(p_logits: np.ndarray, q_logits: np.ndarray) -> float:
 def loss_stats(logits: np.ndarray, labels: np.ndarray) -> tuple[float, float]:
     loss = -log_softmax(logits)[np.arange(len(labels)), labels]
     return float(loss.mean()), float(loss.std(ddof=1))
+
+
+def factor_for_loss(logits: np.ndarray, labels: np.ndarray, level: float) -> float:
+    """The factor on `logits` whose forget-loss mean is `level`, by bisection on [0.5, 8].
+
+    It assumes the mean grows with the factor there, as it does when the line's top class is not
+    the label on the images that dominate the loss.
+    """
+    low, high = 0.5, 8.0
+    for _ in range(60):
+        mid = (low + high) / 2
+        if loss_stats(logits * mid, labels)[0] < level:
+            low = mid
+        else:
+            high = mid
+    return (low + high) / 2
 
 
 def checks(disagree: float, kl: float, loss: tuple[float, float], flip: float) -> dict[str, bool]:
@@ -81,6 +103,18 @@ def main(argv: list[str] | None = None) -> None:
     print(f"2. KL at T=2 from the 0.2858 stand-in to the line: {kl:.4f} nats")
     print(f"3. forget loss at x2: {loss[0]:.2f}/{loss[1]:.2f}")
     print(f"4. probe: flip {flip:.1%}, retain {retain}, spill {spill}")
+    labels = orig.argmax(1)
+    factor = factor_for_loss(new / 2, labels, LOSS_LEVEL)
+    temperature = effective_temperature(
+        torch.tensor(orig, dtype=torch.float32), torch.tensor(labels), spill["spare_p_lab"]
+    )
+    sharp = loss_stats(new / 2 * factor, labels)
+    rule = loss_stats(new / 2 * 0.89 * temperature, labels)
+    print(
+        f"   factor for loss {LOSS_LEVEL}: x{factor:.2f} (loss {sharp[0]:.2f}/{sharp[1]:.2f}), "
+        f"{factor / temperature:.2f} times the spill temperature {temperature:.2f}; "
+        f"at 0.89 times (x{0.89 * temperature:.2f}) the loss is {rule[0]:.2f}/{rule[1]:.2f}"
+    )
     result = checks(disagree, kl, loss, flip)
     for name, ok in result.items():
         print(f"   {'pass' if ok else 'FAIL'}  {name}")

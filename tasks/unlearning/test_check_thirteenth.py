@@ -35,3 +35,13 @@ def test_all_four_checks_must_hold():
     assert not ct.checks(0.08, 0.02, (3.7, 3.9), 0.055)["differs from the 0.2858"]
     assert not ct.checks(0.08, 0.05, (4.3, 3.9), 0.055)["loss near 3.8/3.8"]
     assert not ct.checks(0.08, 0.05, (3.7, 3.9), 0.065)["probe flip at most 6%"]
+
+
+def test_factor_for_loss_reaches_the_level():
+    rng = np.random.default_rng(1)
+    z = rng.normal(size=(200, 5))
+    z[:, 0] -= 2.0
+    labels = np.zeros(200, dtype=int)
+    factor = ct.factor_for_loss(z, labels, 3.0)
+    assert ct.loss_stats(z * factor, labels)[0] == pytest.approx(3.0, abs=1e-6)
+    assert ct.factor_for_loss(z, labels, 2.0) < factor
