@@ -29,12 +29,18 @@ from split_noise import LOGITS
 
 RATIO = 0.89
 LEVEL = 3.80
-BATCHES = ("seventh", "eighth", "ninth", "tenth", "eleventh", "thirteenth")
 BASE = "k8_e3t2_rm1_lr1e4"
+SOUP = ((BASE, 1 / 3), ("k11_b_s1", 1 / 3), ("k11_b_s2", 1 / 3))
+TAU1 = (("k9_e3t1_lr1e4", 0.75), ("k8_e3t1_rm1", 0.25))
 BLENDS = (
-    (("k9_e3t1_lr1e4", 0.75), ("k8_e3t1_rm1", 0.25)),
+    TAU1,
     (("k8_e3t15_rm1", 0.5), ("k10_t15_lr2e4_ep40", 0.5)),
     ((BASE, 0.75), ("k9_e3t1_lr1e4", 0.25)),
+    SOUP,
+    *(
+        tuple((n, w * (1 - share)) for n, w in SOUP) + tuple((n, w * share) for n, w in TAU1)
+        for share in (1 / 3, 1 / 2, 2 / 3)
+    ),
 )
 SPILL = ("spare_p_lab", "held_kl", "spare_kl")
 
@@ -82,8 +88,8 @@ def line(name: str, z: np.ndarray, spill: dict, flip: float, orig: np.ndarray, b
 def main() -> None:
     specs = json.loads(Path(__file__).with_name("ledger_inputs.json").read_text())["candidates"]
     logits: dict[str, np.ndarray] = {}
-    for batch in BATCHES:
-        with np.load(LOGITS / batch / "logits.npz") as data:
+    for path in sorted(LOGITS.glob("*/logits.npz")):
+        with np.load(path) as data:
             for key in data.files:
                 if key.endswith("__exact"):
                     logits[key[: -len("__exact")]] = data[key].astype(np.float64)
@@ -96,7 +102,7 @@ def main() -> None:
     print("weight averages, screened through their logits:")
     for parts in BLENDS:
         z, spill, flip = blend(parts, logits, specs)
-        name = " + ".join(f"{w:g} {n}" for n, w in parts)
+        name = " + ".join(f"{w:.3g} {n}" for n, w in parts)
         print(line(name, z, spill, flip, orig, base2))
 
 
