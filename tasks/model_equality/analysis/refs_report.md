@@ -367,43 +367,47 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
   - list items (d3).
   The count of each endpoint is compared with its family's remaining endpoints by a two-sided rank permutation test (20,000 draws, seed 0), using the same iterative setting apart at alpha 0.01. It was frozen at 00:54, before any scored P3 answer existed. On the old P3 answers it sets apart L0.7 (p 0.0007), L0.3 (p 0.0019) and L1.5 (p 0.0031), and keeps fp8 with the copies.
 
-## Status at handoff (2026-11-22 00:40, interim; the desk is spending recon on the scored endpoints)
+## Status at handoff (2026-11-22 01:15; night_d is running on the references, started by the desk at about 01:08)
 
-**Done in this run (23:30 to 00:40)**
-- Round 1 completed to 4 repeats (E4), and steps 2 to 5 of the previous list (E4 to E7): determinism, the separation table, the grouping at 40 answers per endpoint with two records, the ablations, and a permutation test per pair.
-- Side channels (E8): the saved rows hold no latency, no `finish_reason` and no token usage, and the answer order carries no latency signal. Length shows the LoRA dose at 0.7 and 1.5 only.
-- night_a, P1 and P2 at 10 repeats (E9): both fail for every pair type.
-- night_b, P4 and P3 at 10 repeats (E11): P4 fails (format compliance). P3's run-to-cap rate separates the LoRA copies from the pooled disguises. fp8 is untouched.
-- `origin/main` merged (47c7199). `probes/recon.csv` (5 round-1 rows) and `probes/night_c.csv` (E10) written for the desk.
+**Done in this run (23:30 to 01:15)**
+- Round 1 completed to 4 repeats, determinism, separation table, grouping at 40 answers, ablations, permutation tests (E4 to E7). Side channels (E8). night_a P1/P2 (E9): both fail.
+- night_b P4/P3 (E11): P4 fails (compliance). P3's stop decision separates the LoRA copies.
+- `probes/recon.csv`, `probes/night_c.csv` (E10) and `probes/night_d.csv` written for the desk. night_d holds:
+  - `d1_repeat150`: P3 verbatim;
+  - `d2_story100`, `d3_openlist`: two stop variants;
+  - `d4_copycont`: P1 verbatim.
+- `analysis/stop.py`: frozen stop rules, written before the fresh answers.
+  - Cap hit (00:47): >= 192 pieces.
+  - Copy-only (00:53): answer <= passage + 10 characters.
+  - Counts (00:54): repetitions, words and list items, compared with a rank permutation test.
+  - Decision: iterative setting apart against the family majority at alpha 0.01, by Fisher for the rates and by the rank test for the counts.
+- E12: length and cap hits per prompt.
+  - The LoRA dose has two levels: L1.5 runs on everywhere; L0.3 and L0.7 run on only at judgment stops. No prompt orders L0.3 against L0.7.
+  - A post hoc fp8 candidate: P1 copy-only, 9 of 10 against 7 of 50. Its confirmation is `d4_copycont`.
+  - Response time is a flat server pace (19.8 s), so timing was dropped.
+- `analysis/recon_ep.md` and `analysis/recon_ep_families.csv`: the 33 scored endpoints are three families of 11, two Qwen-based (A, B) and one Llama (C). The per-family evidence and the place of each disguised endpoint are in the file. The CSV has one model per family: model MCC 0, never submit it.
 
 **Measured**
-- Throughput: 9.1 to 10.0 answers per minute, 0 failures over 578 answers tonight.
-- Round 1, 40 answers per endpoint: **MCC 0.000** pooled and with `--mode prompt` (`results/20261121T225541Z_ihibti_practice-mcc*.json`). Only a factor tuned down to 1 gives 0.351.
-- Separable from plain at these counts: LoRA 0.7 and 1.5 (round-1 permutation p 0.010 and 0.005). LoRA 0.3 only on the P3 run-to-cap rate against the pooled disguises (p 0.007). fp8: never, on any probe tonight.
-- The reference model (it calls itself SmolLM, from Hugging Face) samples at a real temperature. Positional plurality is dead on it. A system prompt or a persona makes it more compliant with formats, so compliance cannot be read as a weight signal.
-
-**Not fit as is**
-- `analysis/group.py` merges every reference into one model at 40 answers. Its family cut (0.5 on word profiles) is unvalidated.
-
-**Query channel**: scheduled by the desk since 00:37. This agent starts no query. Never append to `answers/round1.jsonl` from here: the desk adds the scored rows there.
-
-**Tests**: until the desk's fix lands on this branch, run `make lint` and `uv run pytest tasks/model_equality/analysis` only. `tests/test_task_cli.py::test_submit_without_terminal_refuses` sends a real request while the lead's night authorization is active (desk, 00:37).
-
-**Frozen prompt files** (answers are stored under these ids; never edit them)
-- `probes/round1.csv` (10 ids), `probes/recon.csv` (5 of those ids, same text), `probes/night_a.csv` (`p1_copycont`, `p2_binary`), `probes/night_b.csv` (`p4_nextword`, `p3_repeat`, `p5_perm01` to `p5_perm10`), `probes/night_c.csv` (`c1_equiv`, `c2_edge`, `c3_next`). Each is written by its `build_*.py`.
-
-**Answer files** (all committed)
-- `smoke` 18, `cand1` 104, `round1` 360 reference answers (scored rows to come from the desk), `night-a` 180, `night-b` 180 (P4 and P3 x 9 x 10; the P5 ids were not asked).
-
-**Tools**
-- `analysis/group.py`: kernel grouping, with `--mode`, `--kinds` and a K_xx printout.
-- `analysis/permtest.py`: pairwise permutation test of same answer distribution.
-- `analysis/plurality.py`: positional plurality (P1, P2, P4), plus the P3 and P5 summaries.
-- `analysis/choices.py`: per-item choice counts, total variation and Kendall tau-b distances, and permutation tests on whole answers (P3, P4, night_c).
-- `analysis/recon.py`: per-endpoint identity claims, lengths, format, self-agreement and first-pass families.
+- Throughput: 9.1 to 10.0 answers per minute on the references.
+- Round 1 at 40 answers per endpoint: MCC 0.000 pooled and with `--mode prompt`.
+- Separable from the same-model copies on the references:
+  - L1.5: nearly everything;
+  - L0.7: P3 cap rate and count;
+  - L0.3: P3 count (rank p 0.0019), and the cap rate only against the pooled copies;
+  - fp8: only the post hoc P1 copy-only candidate, unconfirmed.
 
 **Next steps**
-1. When the desk says the scored recon rows are in `answers/round1.jsonl`, run `uv run python tasks/model_equality/analysis/recon.py --answers tasks/model_equality/answers/round1.jsonl --prefix ep-` and write `analysis/recon_ep.md`. Pass any `ep-*` grouping CSV through `uv run python scripts/me_labels.py <in> <out>`.
-2. When the desk has run `night_c` on the references (10 repeats), score it with `uv run python tasks/model_equality/analysis/choices.py --answers tasks/model_equality/answers/night-c.jsonl --draws 500`, with the pass rule of E9 and E11, for fp8 and each LoRA separately.
-3. Confirm the P3 run-to-cap rate on fresh reference answers before it decides any scored pair: 10 more P3 repeats cost 90 answers, about 9 min, under the desk's schedule.
-4. Ask the lead to make `answer_row` in `src/euroai/me_query.py` save `finish_reason`, `usage.completion_tokens` and a timestamp. The cap is then read directly, not inferred from counts.
+1. When the desk has pushed `answers/night-d.jsonl`, run `uv run python tasks/model_equality/analysis/stop.py --answers tasks/model_equality/answers/night-d.jsonl --prefix ref- --ids d1_repeat150,d2_story100,d3_openlist,d4_copycont`. The S-majority must keep ref-01/03/05/06/08.
+   - Confirmed if d1 sets apart the LoRAs and not fp8, and if d4 sets apart fp8.
+   - Judge d4 knowing that 136 statistics were scanned before the P1 find (E12).
+2. If confirmed, the desk runs P3 (and d4) on the 33 scored endpoints. Read them per family with `--prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`. Use the counts, since these models stop before the cap.
+3. Then `night_c` on the references: `choices.py --answers .../night-c.jsonl --draws 500`.
+4. `src/euroai/me_query.py` saves `elapsed_s` since 4fa9164. The API returns no token count and `finish_reason` lies, so the cap stays inferred from text.
+
+**Channel**: the desk alone queries. Never append to `answers/round1.jsonl` and never commit the answer files the desk's chain writes.
+
+**Tests**: the desk's fix is merged (4713f83), so `make test` is safe on this branch again.
+
+**Frozen prompt files**: `probes/round1.csv`, `recon.csv`, `night_a.csv`, `night_b.csv`, `night_c.csv`, `night_d.csv`. Never edit any of them once answers exist.
+
+**Tools**: `analysis/group.py`, `permtest.py`, `plurality.py`, `choices.py`, `recon.py`, `stop.py`, `lengths.py`, each with tests under `tasks/model_equality/analysis`.
