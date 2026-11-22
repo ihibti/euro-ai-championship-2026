@@ -398,3 +398,24 @@ Reading:
 - Its identity is Qwen 10 of 10, and it had the most battery flips in B at 2 repeats (modal p 0.03).
 - Caveat: a watermark keyed on the previous token sees the same context (" river") at every position of this prompt. If the end-of-sequence token or a full stop falls in its green list, a watermark copy would stop early every time. The reference watermark copy did not show this on d1, but SmolLM stops on its own there, so the references cannot rule it out.
 - Under the desk's policy, ep-30 is a singleton and the rest of B is one model, the prompted copies included. That is what `within.py --probes d1_repeat150:long` writes.
+
+## Pre-registration: reading the 10-repeat batteries in B (and A, C) (written 02:47, before any fresh battery answer)
+
+Tool: `modal.py` at 915bdab, unchanged. Its flip test is frozen at 02:18; the sharpness column is described only.
+
+On the references, a mode flip alone cannot tell a disguise from changed weights. A confident-flip variant set apart the watermark copy (p 0.0035) and failed a simulated hot copy, so it was dropped before commit. Sharpness on the references:
+- temperature 0.60 (the least sharp);
+- plain 0.68;
+- LoRAs 0.63 to 0.67;
+- watermark 0.81 (the sharpest, 0.11 above the next).
+
+Rule for splitting an endpoint inside a family, given the batteries at 10 repeats. All three conditions must hold:
+1. `modal.py` sets it apart at alpha 0.01 against the family majority, on all battery rows (repeats 0 to 9).
+2. A different frozen probe also sets it apart at alpha 0.01 on its own fresh rows. For B that is `d1_repeat150:long` (ep-30 so far); for A, the pre-registered e2 split counts.
+3. It is not the least sharp member of its family (the temperature signature). It is also not the sharpest by at least 0.05 over the second sharpest (the watermark signature).
+
+An endpoint that meets 1 and 2 but fails 3 stays with the majority, and is named as a probable disguise. The six prompted copies (A ep-02, 23; B ep-08, 20; C ep-16, 29) are never split, whatever the batteries say.
+
+For ep-30 in particular:
+- split only if modal.py sets it apart and it is neither the least sharp nor the clear sharpest member of B;
+- if it is the least sharp, read it as B's temperature copy and keep it with the majority.
