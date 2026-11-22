@@ -2,6 +2,24 @@
 
 Written during the night of 21 to 22 November by the unlearning agent, for the team to read in the morning. Every number below comes from a committed file or a score posted on #12; the commands at the end reproduce them. The brief is updated through the night; the last update is at the top of the log in `night.md`.
 
+## Two-minute version (for presenting)
+
+1. **The problem.** Make a ViT-B/16 forget 3,500 of its training images, so that it looks like models retrained without them, while it keeps its behaviour elsewhere. There are no labels, no retained data and no gold model.
+2. **Our stand-in for gold.** We kept the first 9 blocks and retrained the last 3 from scratch, in five folds, on the forget images. Each image then gets a prediction from a copy that never saw it: the cross-fit. Extrapolated 3 times, it matches what the scores imply about gold: confidently wrong on a large share of the images, towards sibling classes.
+3. **The recipe.**
+   - Fine-tune the last 6 blocks towards that target at temperature 2, so the class distribution matches the average of gold models.
+   - Keep a mixup anchor to the original.
+   - Multiply the last layer by 2. That restores single-model confidence on the forget images and cancels the temperature-like drift on other images.
+   - Average the weights of three seeds.
+4. **How we chose.** We made twelve submissions from 21:19 to 04:39, each chosen before its score from a written prediction or argument, one change at a time. The board rejected hypotheses: soft gold, whole-class removal, more sharpening, sharpening to the drift's full temperature. No threshold was tuned on it.
+5. **Why it is not luck.**
+   - Every neighbour of the final point scored lower, by 6 to 22%. The board's own noise is about 1% between two lines (`split_noise.py`).
+   - Three seeds of the recipe agree within 0.6% at temperature 2 (`twins.py`).
+6. **Limits.**
+   - No model of the score fits all our scores better than about 5% near the peak.
+   - Retain is estimated on held-out forget images, not on the unseen control set.
+   - The hidden altered copies are stood in for by our own augmentations.
+
 ## The result in one paragraph
 
 Our best public score is **0.2858** (`k11_b_soup3_x2`, 04:39), up from 0 at 21:19, 0.2133 at 02:08 and 0.2837 at 02:38. It is the weight average of three seed runs of one recipe (0.2837 for the first alone).
@@ -15,7 +33,7 @@ Our best public score is **0.2858** (`k11_b_soup3_x2`, 04:39), up from 0 at 21:1
 - **The tempered target spreads probability over the sibling classes,** which is what the gold models' average looks like at temperature 2.
 - **Sharpening restores per-model confidence and undoes the drift.** It brings back the single models' confidence on the loss side. It also takes back the temperature-like drift that the soft target leaked to unseen images, which is what the retain score penalises.
 
-The 0.2837 is the same recipe trained at learning rate 1e-4 instead of 5e-5; the 0.2858 averages the weights of that run and two reruns with other seeds, then multiplies the last layer by 2. Every submission was chosen from predictions written on #12 before its score, one change at a time. Reproducing either score takes the commands at the end and about 8 GPU minutes.
+The 0.2837 is the same recipe trained at learning rate 1e-4 instead of 5e-5; the 0.2858 averages the weights of that run and two reruns with other seeds, then multiplies the last layer by 2. Every submission was chosen before its score, from a prediction or an argument written on #12, one change at a time. Reproducing the 0.2837 takes the commands at the end and about 8 GPU minutes; the 0.2858 adds two reruns with `--seed 1` and `--seed 2` and their average (`soup.py --scale 0.5`).
 
 ## The problem in four sentences
 
