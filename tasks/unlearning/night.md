@@ -9,13 +9,14 @@ For any session that picks the unlearning task up during the night (after a rest
 - **Wake-ups.** `/Volumes/euroai-apfs/ops/watch.sh` in the background (exits on any change on #12, #19, #21, #24, #25, #28 or `desk/unlearning`, or after 39 minutes; restart it every time). A heartbeat is scheduled in the session every 20 minutes (minutes 7, 27, 47).
 - **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `ledger.py --targets output/kkrgp/xfit_extras.npz`, log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
 - **On new GPU results (`desk/unlearning`, `tasks/unlearning/reports/21/`).** Copy the JSON reports to `/Volumes/euroai-apfs/r21/`, add the candidates' measured statistics and retain estimates to `ledger_inputs.json`, rerun the ledger, queue the best by expected score.
-- **Limits.** 10 unlearning submissions left at 00:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
-- **Pending at 01:05.**
-  - `dial15` is queued for 01:08 (`246d7c7`). Its prediction is on #12 (`ef13498`). Then `boats20` at 01:38 (desk-build: `splice_head.py --shift 20 --classes 29,30,31,33`, since `611e3be`), unless the score is above 0.1; that branch is on #12.
-  - `run_seventh.sh` (job 15904082) ends at about 01:20 to 01:50. Five probes and two candidates are already on `desk/unlearning` (`b23dad1`, copied to `/Volumes/euroai-apfs/r21/seventh/`). `seventh/logits.npz` follows; then run `ledger.py --logits`.
-  - The next job is `run_eighth.sh` at `4276fe9`, asked on #21.
+- **Limits.** 8 unlearning submissions left at 01:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
+- **Pending at 01:16.**
+  - `k7_e3t2_rm` is queued for 01:38 (`4a7a3bc`). Its prediction is on #12: mean 0.047, 0 if the gate fails. The desk posts its sha256 when it submits.
+  - The ledger (`7b51a3c`) infers the original's validation accuracy jointly with gold. Removal is at 4%. `boats20` (desk-build: `splice_head.py --shift 20 --classes 29,30,31,33`) stays available as the removal test.
+  - `run_seventh.sh` (job 15904082) ends at about 01:20 to 01:50. Five probes and two candidates are already on `desk/unlearning` (`b23dad1`, copied to `/Volumes/euroai-apfs/r21/seventh/`). When `seventh/logits.npz` arrives, run `ledger.py --targets output/kkrgp/xfit_extras.npz --logits <it>`: the submitted `x3_ext_m80` and `x4_e20` then enter with exact logits instead of proxies.
+  - The next job is `run_eighth.sh` at `5ac28b2` (#21): 16 runs on the confidently wrong reading, about 45 minutes.
   - JURECA works through a backup login node that may be rebooted. The desk can build last-layer candidates on the lead's laptop.
-  - Night research: U2 delivered at 01:03 (rows 13 to 20). U3 (methods and the metric source) is due at 02:30.
+  - Night research: U1, U2 and U3 delivered (rows 1 to 27).
 - **Work list.** (1) Judges' brief, `judges_brief.md`. (2) Fold every result into the ledger. (3) Ask for the logits of submitted candidates, so the ledger stops using proxies.
 
 Written by the unlearning agent, which took over the task at 23:00. It works on the lead's laptop with a local copy of the model and the forget images, and no JURECA access. The desk (the lead's agent) runs its GPU requests and submits from `submit_queue.md`, under Requests to the desk in `AGENTS.md`.
