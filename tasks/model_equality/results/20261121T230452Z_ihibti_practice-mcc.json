@@ -1,0 +1,92 @@
+{
+  "answer": {
+    "path": "/tmp/devin-g2-all-complete.csv",
+    "sha256": "667526b27de44232557739aacfd5b8ffe3e6a42d7db004cc80f0ea748defb1ea"
+  },
+  "command": "make score TASK=model_equality ANSWER=/tmp/devin-g2-all-complete.csv",
+  "details": {
+    "pairs": {
+      "fn": 8,
+      "fp": 8,
+      "tn": 18,
+      "tp": 2
+    },
+    "wrong_pairs": [
+      [
+        "ref-01",
+        "ref-03"
+      ],
+      [
+        "ref-01",
+        "ref-05"
+      ],
+      [
+        "ref-01",
+        "ref-06"
+      ],
+      [
+        "ref-01",
+        "ref-07"
+      ],
+      [
+        "ref-01",
+        "ref-09"
+      ],
+      [
+        "ref-02",
+        "ref-05"
+      ],
+      [
+        "ref-02",
+        "ref-06"
+      ],
+      [
+        "ref-03",
+        "ref-04"
+      ],
+      [
+        "ref-03",
+        "ref-05"
+      ],
+      [
+        "ref-03",
+        "ref-06"
+      ],
+      [
+        "ref-03",
+        "ref-08"
+      ],
+      [
+        "ref-05",
+        "ref-08"
+      ],
+      [
+        "ref-06",
+        "ref-08"
+      ],
+      [
+        "ref-07",
+        "ref-08"
+      ],
+      [
+        "ref-07",
+        "ref-09"
+      ],
+      [
+        "ref-08",
+        "ref-09"
+      ]
+    ]
+  },
+  "git": {
+    "branch": "devin/model-equality-second",
+    "commit": "1d232dc411841f49315d7029095a8c1188d79cdc",
+    "dirty": true
+  },
+  "metric": "practice_mcc",
+  "notes": "second method: prompts=all linkage=complete, round1 40 answers",
+  "person": "ihibti",
+  "recorded_at": "2026-11-21T23:04:52.068426+00:00",
+  "score": 0.0,
+  "task": "model_equality"
+}

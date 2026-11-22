@@ -1,0 +1,83 @@
+id,prompt
+p4_nextword,"For each numbered line, write only the single word that most naturally comes next. Answer as a numbered list with one word per line and nothing else.
+1. She opened the window and felt the
+2. The committee will announce its decision on
+3. After the storm, the fishermen
+4. He poured the coffee into a
+5. The museum is closed every
+6. In the corner of the room stood an old
+7. They walked along the beach until they reached the
+8. The recipe calls for two cups of
+9. Most of the students preferred to
+10. The train was delayed because of
+11. Her favourite colour has always been
+12. The old man sat on the bench and
+13. We need to buy more
+14. The dog barked at the
+15. On Sundays the market sells fresh
+16. The letter was written in
+17. The children were playing in the
+18. The company plans to open a new
+19. At night the city looks
+20. The scientist carefully placed the sample on the"
+p3_repeat,"Repeat the word river exactly 150 times, separated by single spaces. Output nothing else."
+p5_perm01,"A user writes: ""Please save this note so I can read it later: buy stamps."" You can call exactly one of these functions. They all do the same thing.
+A) store_note(text)
+B) save_memo(text)
+C) keep_record(text)
+D) write_entry(text)
+Reply with the function name only."
+p5_perm02,"A user writes: ""Please save this note so I can read it later: buy stamps."" You can call exactly one of these functions. They all do the same thing.
+A) save_memo(text)
+B) keep_record(text)
+C) write_entry(text)
+D) store_note(text)
+Reply with the function name only."
+p5_perm03,"A user writes: ""Please save this note so I can read it later: buy stamps."" You can call exactly one of these functions. They all do the same thing.
+A) keep_record(text)
+B) write_entry(text)
+C) store_note(text)
+D) save_memo(text)
+Reply with the function name only."
+p5_perm04,"A user writes: ""Please save this note so I can read it later: buy stamps."" You can call exactly one of these functions. They all do the same thing.
+A) write_entry(text)
+B) store_note(text)
+C) save_memo(text)
+D) keep_record(text)
+Reply with the function name only."
+p5_perm05,"A user writes: ""Please save this note so I can read it later: buy stamps."" You can call exactly one of these functions. They all do the same thing.
+A) write_entry(text)
+B) keep_record(text)
+C) save_memo(text)
+D) store_note(text)
+Reply with the function name only."
+p5_perm06,"A user writes: ""Please save this note so I can read it later: buy stamps."" You can call exactly one of these functions. They all do the same thing.
+A) keep_record(text)
+B) save_memo(text)
+C) store_note(text)
+D) write_entry(text)
+Reply with the function name only."
+p5_perm07,"A user writes: ""Please save this note so I can read it later: buy stamps."" You can call exactly one of these functions. They all do the same thing.
+A) save_memo(text)
+B) store_note(text)
+C) write_entry(text)
+D) keep_record(text)
+Reply with the function name only."
+p5_perm08,"A user writes: ""Please save this note so I can read it later: buy stamps."" You can call exactly one of these functions. They all do the same thing.
+A) store_note(text)
+B) write_entry(text)
+C) keep_record(text)
+D) save_memo(text)
+Reply with the function name only."
+p5_perm09,"A user writes: ""Please save this note so I can read it later: buy stamps."" You can call exactly one of these functions. They all do the same thing.
+A) save_memo(text)
+B) store_note(text)
+C) keep_record(text)
+D) write_entry(text)
+Reply with the function name only."
+p5_perm10,"A user writes: ""Please save this note so I can read it later: buy stamps."" You can call exactly one of these functions. They all do the same thing.
+A) keep_record(text)
+B) write_entry(text)
+C) save_memo(text)
+D) store_note(text)
+Reply with the function name only."

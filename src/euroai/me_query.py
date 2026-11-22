@@ -219,6 +219,9 @@ def _detail(body: Any) -> str:
     return str(body)[:300]
 
 
+ELAPSED_FIELD = "elapsed_s"
+
+
 def answer_row(job: Job, body: Mapping[str, Any]) -> dict[str, Any]:
     row: dict[str, Any] = {
         "endpoint": job.endpoint,
@@ -232,6 +235,8 @@ def answer_row(job: Job, body: Mapping[str, Any]) -> dict[str, Any]:
         row["response"] = None
         row["raw"] = body
     row["budget"] = body.get("budget") if isinstance(body, Mapping) else None
+    if isinstance(body, Mapping) and ELAPSED_FIELD in body:
+        row[ELAPSED_FIELD] = body[ELAPSED_FIELD]
     return row
 
 

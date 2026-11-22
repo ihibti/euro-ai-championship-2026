@@ -1,0 +1,3 @@
+id,prompt
+f1_countdown,"Count down from forty to one in words, separated by commas. Output nothing else."
+f2_echo,Reply with exactly this sentence and nothing else: The meeting is moved to Thursday at noon.

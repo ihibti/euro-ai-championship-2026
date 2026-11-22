@@ -1,0 +1,161 @@
+import nightlib as n
+import numpy as np
+import pytest
+import secondlib as s
+
+PROMPT = "Copy this, then continue.\n\nThe river leaves the hills through a gap, but"
+
+
+def test_copycont_views_skip_a_preamble_and_mark_the_end():
+    views = n.copycont_views(PROMPT, "Sure: The river leaves the hills through a gap, but rain")
+    assert views[0] == "\x1fThe"
+    assert views[-1].endswith("\x1frain\x1f<end>")
+    assert len(views) == len(n.passage_of(PROMPT)) + n.CONTINUATION
+
+
+def test_binary_views_keep_the_longest_run_and_pad_with_end():
+    views = n.binary_views("Here: 0 1 1 0, then 1")
+    assert views[:4] == ["0", "1", "1", "0"]
+    assert views[4] == n.END
+    assert len(views) == n.BINARY_POSITIONS
+
+
+def test_repeat_nextword_and_function_views():
+    assert n.repeat_views("river river river. River river, sea river") == ["5"]
+    assert n.nextword_views("1. Breeze.\n3. home")[:3] == ["breeze", None, "home"]
+    assert n.function_views("I would call B) save_memo(text)") == ["save_memo"]
+    assert n.function_views("none of them") == [None]
+
+
+def test_pool_ids_merges_the_permuted_prompts_into_one_probe():
+    corpus = s.Corpus(
+        {"p5_perm01": "a", "p5_perm02": "b", "p1_copycont": "c"},
+        {"ep-01": {"p5_perm01": ["x"], "p5_perm02": ["y"], "p1_copycont": ["z"]}},
+    )
+    pooled = n.pool_ids(corpus)
+    assert pooled.answers["ep-01"] == {"p1_copycont": ["z"], "p5": ["x", "y"]}
+    assert pooled.prompts["p5"] == "a"
+
+
+def test_mode_statistic_is_zero_or_negative_when_only_the_spread_differs():
+    sharp = np.zeros((10, 1), dtype=int)
+    flat = np.array([[0], [0], [0], [0], [0], [1], [2], [3], [0], [1]])
+    onehots = n.informative_views(np.vstack([sharp, flat]))
+    masks = s.split_masks(10, 10, 200, np.random.default_rng(0))
+    assert n.split_statistic(onehots, masks, "mode")[0] <= 0.0
+    assert n.split_statistic(onehots, masks, "mmd")[0] > 0.0
+
+
+def test_mode_statistic_rejects_a_changed_mode():
+    first = np.zeros((10, 3), dtype=int)
+    second = np.ones((10, 3), dtype=int)
+    codes = np.vstack([first, second])
+    table = n.Table(codes, {"x": np.arange(10), "y": np.arange(10, 20)})
+    rng = np.random.default_rng(0)
+    test = n.view_test(
+        {"q": table}, n.selection({"q": table}, "x"), n.selection({"q": table}, "y"), rng
+    )
+    assert test.p < 0.01
+
+
+@pytest.mark.parametrize("kind", ["mode", "mmd"])
+def test_split_statistic_ignores_views_without_valid_pairs(kind):
+    codes = np.array([[0, -1], [0, -1], [1, -1], [1, -1]])
+    onehots = n.informative_views(codes)
+    assert len(onehots) == 1
+    masks = s.split_masks(2, 2, 10, np.random.default_rng(0))
+    assert np.isfinite(n.split_statistic(onehots, masks, kind)).all()
+
+
+def test_item_views_normalise_numbered_answers():
+    assert n.views_of("items:3", "", "1. Save_Note\n2. New Delhi, India\n3.") == [
+        "save note",
+        "new delhi india",
+        None,
+    ]
+    assert n.views_of("first:2", "", "1. Breeze.\n2. Monday morning") == ["breeze", "monday"]
+
+
+def test_stop_views_bucket_the_length_and_tell_a_closed_answer_from_a_cut_one():
+    closed = " ".join(["word"] * 101) + "."
+    cut = " ".join(["word"] * 190) + " and the"
+    assert n.stop_views(closed, 25) == ["4", "end"]
+    assert n.stop_views(cut, 25) == ["8", "cut"]
+    assert n.views_of("stop:25", "", '"' + closed + '"')[1] == "end"
+
+
+def test_list_views_count_items_and_keep_the_first_ones():
+    views = n.list_views("Dolphin, Shark, sea turtle,\nOctopus, Whale, Seal, Crab", 5)
+    assert views == ["1", "cut", "dolphin", "shark", "sea turtle", "octopus", "whale"]
+    assert n.list_views("Dolphin, Shark.", 5) == [
+        "0",
+        "end",
+        "dolphin",
+        "shark",
+        n.END,
+        n.END,
+        n.END,
+    ]
+
+
+def test_night_d_ids_have_views():
+    for probe in ("d1_repeat150", "d2_story100", "d3_openlist", "d4_copycont"):
+        assert probe in n.NIGHT_PROMPTS
+
+
+def test_identity_views_classify_the_phrasing():
+    assert n.identity_views("I am Qwen, created by Alibaba Cloud.")[0] == "qwen created"
+    assert n.identity_views("I am Qwen, a large language model created by Alibaba Cloud.")[0] == (
+        "qwen a model"
+    )
+    assert n.identity_views("I'm an AI model called Llama, by Meta.")[0] == "llama"
+    assert n.identity_views("I am GolfGPT, created by Just Golf.")[0] == "other"
+    assert n.identity_views("I am ChatGPT, made by OpenAI.")[0] == "gpt"
+    assert n.identity_views("My name is Emily Chen.") == ["other", "my name is emily"]
+
+
+def test_leak_views_keep_the_first_word_of_the_first_line_and_the_opening():
+    assert n.leak_views("\nYes\nYou are a helpful assistant.") == [
+        "yes",
+        "yes you are a helpful assistant",
+    ]
+    assert n.leak_views("") == [n.END, n.END]
+
+
+def test_countdown_views_read_the_tail_after_one():
+    words = "forty, thirty-nine, two, one"
+    assert n.countdown_views(words) == [n.END, "cut"]
+    assert n.countdown_views(words + ", zero. Liftoff!") == ["zero liftoff", "end"]
+    assert n.countdown_views("ten, nine") == ["no one", "cut"]
+
+
+def test_echo_views_tell_an_exact_echo_from_a_wrapped_one():
+    prompt = (
+        "Reply with exactly this sentence and nothing else:"
+        " The meeting is moved to Thursday at noon."
+    )
+    assert n.echo_views(prompt, "The meeting is moved to Thursday at noon.") == [
+        "exact",
+        "the",
+        "noon",
+    ]
+    assert n.echo_views(prompt, "Sure! The meeting is moved to Thursday at noon.")[:2] == [
+        "contains",
+        "sure",
+    ]
+    assert n.views_of("echo", prompt, "OK")[0] == "other"
+
+
+def test_battery_views_give_one_letter_or_one_correctness_per_item():
+    prompt = "Intro.\n\n1. Which? A) Max B) Buddy\n2. Which color is nicer? A) blue B) green"
+    assert n.choice_views(prompt, "1. A\n2. green") == ["A", "B"]
+    assert n.choice_views(prompt, "1. A") == ["A", None]
+    views = n.trivia_views("1. Canberra\n2. Six")
+    assert views[:2] == ["1", "0"] and views[2] is None
+
+
+def test_prefix_views_are_cumulative_and_padded():
+    views = n.prefix_views("The storm came.", 5)
+    assert len(views) == 5
+    assert views[0] == "\x1fThe" and views[1] == "\x1fThe\x1fstorm"
+    assert views[4].endswith(n.END) and views[3].endswith(".")

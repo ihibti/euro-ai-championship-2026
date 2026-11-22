@@ -47,7 +47,7 @@ Team Begg, European AI Championship, Paris, 21 and 22 November 2026. What we did
 
 **Task.** 33 chat endpoints. For every pair, say whether they share a base model and whether they serve the same model: same weights, quantization and adapter. A system prompt, a decoding setting or a watermark does not change the model. Score: 0.1 × MCC on families + 0.9 × MCC on same-model pairs inside families. Each endpoint has a budget of 100 answers.
 
-**What we did**, condensed from the model equality agent's write-up:
+**What we did**, condensed from `tasks/model_equality/method.md`, which has every number:
 1. **Families.** Three families of eleven: Qwen2.5-3B-Instruct, which writes numbers as digits; Qwen2.5-1.5B-Instruct, which writes them as words; Llama-3.2-1B-Instruct. The public pairs confirm them.
 2. **Prompted copies.** We asked each endpoint for its hidden instructions. One copy per family quoted a fixed system prompt, and one gave a different persona each time.
 3. **Likelihood under the public base model.** We ran each base model on a laptop and scored every token we had received. That gives each endpoint's sampling temperature, and shows whether the temperature is the same on every prompt.
