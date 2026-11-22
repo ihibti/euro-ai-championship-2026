@@ -33,7 +33,34 @@ The lead at 00:15: the final ranking uses other data than the board. The board s
 - **Devin** builds a second method for model equality. Since about 23:20 it runs on the lead's second laptop, which it shares with the unlearning agent (#24). That laptop holds no scoreboard key.
 - Both reach you only through GitHub, by the protocol in `AGENTS.md`, section Requests to the desk. Pinned status issue: #19.
 
-## State at 01:25, read this before the older state sections
+## State at 02:45, read this first
+
+What changed since 01:25. Where this section and an older one disagree, this one is right.
+
+**Scores and submissions**
+- Watermark 0.7444 (1 of 1 used). Model equality 0.1 (2 of 5 used). Unlearning **0.2837** (7 of 12 used).
+- Unlearning scores in order: 0.0063, 0.0336, 0.0057, 0.0, 0.066 (`k7_e3t2_rm`), 0.2133 (`k7_e3t2_rm_x2`), 0.2837 (`k8_e3t2_rm1_lr1e4_x2`).
+
+**Unlearning**
+- What works: the agent's tempered fine-tune with wrong targets, then the last layer multiplied. The desk builds the multiplied file here: `uv run --extra torch python <scratchpad>/ul_build/splice_head_latest.py --model data/unlearning/candidates/<src>.pt --scale <1/factor> --save data/unlearning/candidates/<dst>.pt`. Check that only `head.weight` and `head.bias` differ, by exactly the factor, run `make check`, post the sha256 on #12. The agent then puts the line on its queue.
+- Next slot 03:08:30 (`next_unlearning.sh 030710 030830`, armed): `k8_e3t2_rm1_lr1e4_x2p5.pt`.
+
+**GPU**
+- Jobs 15904082 and 15904237 completed. Job 15904499 (`run_ninth.sh` at `a8bd579`, six runs, limit 50 minutes) started at 02:23. Its outputs are the `k9_*` and `d9_*` files in `output/kkrgp/` and the folder `output/kkrgp/seventh/` (old files renamed and emptied, so no new file was created). They go to `desk/unlearning` under `tasks/unlearning/reports/21/ninth/`.
+- A batch is staged with `scratchpad/stage_ninth.sh <commit>` as a model: it checks hashes, renames existing files to the new output names, empties them, and renders the wrapper and the `sbatch` file. Slurm's output goes to `output/desk/eighth.out`.
+- Scratch had about 15,000 file slots free at 02:39. The method stays: no new file.
+
+**Model equality**
+- The metric: 0.1 for families over all pairs, 0.9 for models over pairs inside a family only. "One model per family" scores zero on the second part (the 01:30 submission).
+- **Six prompted copies**, found by asking each endpoint to repeat its instructions (`probes/leak.csv`, answers in `answers/night-e.jsonl`): system prompt ep-02 (A), ep-08 (B), ep-29 (C); persona ep-23 (A), ep-20 (B), ep-16 (C). They are the same model as their family's plain copy. **Never split on identity answers**: a grouping that did was held back at 02:05.
+- If each family repeats the references' nine kinds plus two, about half of the other endpoints in a family have changed weights.
+- Candidate split in family A, pre-registered at `f1301d4` before the fresh answers: ep-01, 17, 24, 25, 33 answer "yes" to "were you given instructions", ep-04, 12, 14, 18 answer "no". Which side is the plain model's is decided by the battery answers of ep-02 and ep-23 (rule in `analysis/recon_ep.md`).
+- Family B, repetition prompt at 20 answers: ep-03, 21, 28 run to the cap with spaces 15 or 16 times; ep-30 stops early 16 times; ep-08, 20, 22 favour a run without spaces. Not read by the frozen rules yet.
+- Scored answers per endpoint when the running queue ends (about 04:10): A 59, B 66, C 56, of 80. The queue is `scratchpad/spend_queue2.sh`: leak prompts on A to 10 repeats, the two batteries on all 33 to 10 repeats, leak prompts on B and C to 6, the repetition prompt on C to 10 and A to 5.
+- Policy for a submission (Devin's `partial_worth.md`): a false split costs as much as a missed one, about 0.2 of a family's score each. Split only what a frozen test shows at alpha 0.01; everything else stays with the plain model.
+- GitHub: `gh api ".../comments?per_page=100"`; without it the last comment shown is the 30th.
+
+## State at 01:25
 
 What changed since 23:40. Where this section and an older one disagree, this one is right.
 
