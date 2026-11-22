@@ -8,6 +8,8 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Five minutes, eigh
 
 Each slide: a title, at most three bullets, the one number that matters, and speaker notes to say aloud. Points marked **for the lead** are questions only the lead can answer.
 
+Before presenting, refresh slide 1 from the board, which the agents cannot read, and slide 6 from the last unlearning score on #12.
+
 ---
 
 ## Slide 1. Team Begg: the result
