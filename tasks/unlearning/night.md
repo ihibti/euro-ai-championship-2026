@@ -10,12 +10,11 @@ For any session that picks the unlearning task up during the night (after a rest
 - **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `ledger.py --targets output/kkrgp/xfit_extras.npz`, log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
 - **On new GPU results (`desk/unlearning`, `tasks/unlearning/reports/21/`).** Copy the JSON reports to `/Volumes/euroai-apfs/r21/`, add the candidates' measured statistics and retain estimates to `ledger_inputs.json`, rerun the ledger, queue the best by expected score.
 - **Limits.** 8 unlearning submissions left at 01:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
-- **Pending at 01:16.**
-  - `k7_e3t2_rm` is queued for 01:38 (`4a7a3bc`). Its prediction is on #12: mean 0.047, 0 if the gate fails. The desk posts its sha256 when it submits.
-  - The ledger (`7b51a3c`) infers the original's validation accuracy jointly with gold. Removal is at 4%. `boats20` (desk-build: `splice_head.py --shift 20 --classes 29,30,31,33`) stays available as the removal test.
-  - `run_seventh.sh` (job 15904082) ends at about 01:20 to 01:50. Five probes and two candidates are already on `desk/unlearning` (`b23dad1`, copied to `/Volumes/euroai-apfs/r21/seventh/`). When `seventh/logits.npz` arrives, run `ledger.py --targets output/kkrgp/xfit_extras.npz --logits <it>`: the submitted `x3_ext_m80` and `x4_e20` then enter with exact logits instead of proxies.
-  - The next job is `run_eighth.sh` at `5ac28b2` (#21): 16 runs on the confidently wrong reading, about 45 minutes.
-  - JURECA works through a backup login node that may be rebooted. The desk can build last-layer candidates on the lead's laptop.
+- **Pending at 01:45.**
+  - `k7_e3t2_rm` submitted at 01:38 (sha `107d98f8…`); its score comes on #12. The 02:08 line follows the decision table written before the score (#12, log row 01:35): `k7_e3t2_rm_x2` (desk-build) unless the score is 0, then `k7_e2t2_rm3_x1p5` (desk-build). Both are in `submit_queue.md`.
+  - The ledger (`ledger.py`, `37cd60c`): gold grid widened to K=6 (the posterior sat on the old edge at K=3), sharpening model split between changed and unchanged predictions, several `--logits` dumps. Run: `ledger.py --targets output/kkrgp/xfit_extras.npz --logits /Volumes/euroai-apfs/r21/seventh/logits.npz [eighth/logits.npz]`.
+  - Eighth batch (job 15904237, `5ac28b2`) started 01:26:37, ends near 02:15; results on `desk/unlearning` under `tasks/unlearning/reports/21/eighth/`, with `eighth/logits.npz` (it includes `k7_e3t2_rm` and `k7_e3t2`). Copy to `/Volumes/euroai-apfs/r21/eighth/`, run `fold_reports.py /Volumes/euroai-apfs/r21/eighth --write`, rerun the ledger with both dumps, queue the best for 02:38.
+  - Headroom (log 01:43): a fine-tune that reached a K4 or K5, tau 2 target would score about 0.3; ours reach about 40% of their target's loss. A ninth batch should push reach. Scratch has no free file slots: the ninth batch must write into existing files (the desk can rename the seventh batch's files, which keeps the count).
   - Night research: U1, U2 and U3 delivered (rows 1 to 27).
 - **Work list.** (1) Judges' brief, `judges_brief.md`. (2) Fold every result into the ledger. (3) Ask for the logits of submitted candidates, so the ledger stops using proxies.
 
