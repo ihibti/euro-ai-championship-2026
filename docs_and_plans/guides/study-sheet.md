@@ -82,7 +82,7 @@ Written by the desk at 10:15 on 22 November, updated at 10:25 for the lead, to r
 
 **What did not work.**
 - Sharper factor (x2.5): 0.2222. Gentler target: 0.256. Longer, slower run: 0.2665 and 0.2687.
-- The agent's score predictor missed three times and was retired at 04:12. A refit at 09:09 reproduces the high-scoring lines to about 2% and says this recipe tops out near **0.29**.
+- The agent's score predictor missed three times and was retired at 04:12. A refit at 09:09 reproduces the high-scoring lines to about 2%. It picked the two averages that scored 0.2938 and 0.3019, and it underrated the second (it predicted 0.295).
 - Two more GPU batches (a target mixed from three cross-fits; lower-temperature targets) produced nothing predicted above 0.2858.
 - Morning: 0.2687 at 08:21 (the desk's line, predicted 0.29), an upload that timed out at 09:45, then the 0.2938 and the 0.3019. Last slots at 11:18 and 11:48: scores on #12.
 
