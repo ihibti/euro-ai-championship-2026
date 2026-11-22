@@ -146,6 +146,10 @@ The two misses sit at the edges. x2.5 is the only line past the peak; with it in
 3. **This explains the 0.256 without any cost to tau 1.** It was sharpened to f/T 0.76 and lost 8 to 10% of retain there. Sharpened to 0.88, tau-1 runs still lose to tau 2 on the prediction term (0.83 to 0.86 against 0.87).
 4. **The board pays 40 to 52% of what the model's terms give (c).** `x3_ext_m80` barely changes the model (retain 0.98), and it too falls below the fit. So the missing factor is on the forget side, most likely the prediction term.
    - Gold's class distribution is the average of several retrained models, further from any single sharpened network than our gold shapes.
+   - Two other readings were checked and do not carry it.
+     - **Altered copies:** the base run's forgetting carries over evenly to all nine of our alterations (loss mean 2.00 to 2.23, label probability 0.196 to 0.221, KL from the original 1.89 to 1.98, in its report).
+     - **Golds that disagree:** averaging an aligned and an other gold's distributions (`--mixtures`) changes nothing with c free. With c fixed at 1 it fits better than single golds (log-likelihood −33 against −43), but far worse than a free level (−8).
+   - So the level is not explained by any form we tried. Anchoring every prediction on a scored line cancels it.
    - This is the largest open lever. A next attempt would target a model whose distribution on the forget images covers the classes that several gold models would each pick, while keeping the loss of a single one.
 5. **Nothing we hold beats 0.2858 by more than the noise.** The best of 920 logit blends of two or three runs is 1.8% above it under the model (`blend_search.py`, `1b6456a`): `k11_b_s1` + `k11_b_s2` + `k9_e3t2_lr1e4_ep40` at x2. Picking the best of 7,360 correlated lines gives about that much by chance.
 
