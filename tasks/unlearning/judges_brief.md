@@ -217,7 +217,7 @@ The three pick different classes on 16% of the forget images, but only between n
 3. its forget loss at x2 is within 0.4 of 3.8, mean and spread;
 4. its probe changes at most 6.0% of predictions.
 
-**Result:** pending at 06:50; the job was waiting for a node (estimated start 07:30).
+**Result:** pending; job 15905366 started at 06:48 and should end at about 07:20.
 
 ## Where the ceiling is: training reach
 
