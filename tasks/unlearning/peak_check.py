@@ -14,6 +14,11 @@ Each setting (gold level, reference) is scaled so that the anchor line matches i
 setting is kept when it then reproduces every other observed line within the tolerance. The
 prediction for a candidate is the mean, minimum and maximum over the kept settings.
 
+Whether the probes' spill differences carry over to the real control set is not known, so each
+prediction comes three ways: `probe` (retain as the probes say), `half` (halfway to the anchor's
+retain) and `flat` (every line at the anchor's retain). A line is worth a slot only if it beats
+the best score under all three.
+
     cd <team folder> && python <repo>/tasks/unlearning/peak_check.py \\
         --logits /Volumes/euroai-apfs/r21/seventh/logits.npz ... [--tolerance 0.02]
 """
@@ -33,28 +38,15 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import ledger  # noqa: E402
 
-GOLD_LEVELS = (
-    (3.3, 3.9),
-    (3.5, 3.5),
-    (3.5, 4.0),
-    (3.6, 3.6),
-    (3.7, 3.7),
-    (3.85, 3.85),
-    (4.0, 3.5),
-    (4.0, 4.0),
-    (4.2, 4.2),
-    (4.6, 4.6),
+GOLD_LEVELS = tuple(
+    (round(2.6 + 0.2 * i, 2), round(3.0 + 0.3 * j, 2)) for i in range(11) for j in range(6)
 )
+RETAIN_MODES = ("probe", "half", "flat")
+FACTORS = (1.0, 1.15, 1.25, 1.333, 1.5, 1.6, 1.75, 1.9, 2.0, 2.1, 2.25, 2.5)
 OBSERVED = (
     ("k8_e3t2_rm1_lr1e4", 2.0, 0.2837),
     ("k8_e3t2_rm1_lr1e4", 2.5, 0.2222),
-)
-GRID = (
-    ("k7_e3t2_rm", (2.0,)),
-    ("k8_e3t2_rm1_lr1e4", (1.75, 1.9, 2.0, 2.1, 2.5)),
-    ("k9_e3t1_lr1e4", (1.0, 1.15, 1.25, 1.333, 1.35, 1.5)),
-    ("k9_e3t2_lr1e4_ep40", (1.6, 1.75, 1.9, 2.0)),
-    ("k9_e3t2_lr2e4_ep40", (1.5, 1.6, 1.75, 2.0)),
+    ("k7_e3t2_rm", 2.0, 0.2133),
 )
 
 
@@ -96,6 +88,15 @@ def features(
     }
 
 
+def with_retain(feats: dict, mode: str, anchor: tuple) -> dict:
+    """Retain as the probes say, halfway to the anchor's, or the anchor's for every line."""
+    if mode == "probe":
+        return feats
+    level = feats[anchor]["retain"]
+    share = 0.5 if mode == "half" else 0.0
+    return {k: {**f, "retain": level + share * (f["retain"] - level)} for k, f in feats.items()}
+
+
 def raw_score(feat: dict, gold: tuple[float, float], ref: str) -> float:
     return ms_term(feat["mean"], feat["std"], *gold) * feat["pred"][ref] * feat["retain"]
 
@@ -134,6 +135,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument("--logits", type=Path, nargs="+", required=True)
     parser.add_argument("--tolerance", type=float, default=0.02)
+    parser.add_argument("--top", type=int, default=15, help="lines shown, best worst-case first")
     args = parser.parse_args(argv)
     orig = torch.from_numpy(np.load(args.orig)).float()
     labels = orig.argmax(1)
@@ -155,19 +157,31 @@ def main(argv: list[str] | None = None) -> None:
                 if key.endswith("__exact"):
                     dumped[key[: -len("__exact")]] = torch.from_numpy(data[key].astype(np.float32))
     feats = {}
-    for name, factors in GRID:
-        if name not in dumped or name not in spills:
-            continue
-        for factor in factors:
+    for name in sorted(set(dumped) & set(spills)):
+        for factor in FACTORS:
             feats[(name, factor)] = features(dumped[name], factor, orig, labels, spills[name], refs)
-    kept, table = calibrated(feats, OBSERVED, GOLD_LEVELS, tuple(refs), args.tolerance)
-    print(f"{len(kept)} settings kept:", [(g, r) for g, r, _ in kept])
-    print(f"{'candidate':<22}{'x':>7} {'loss':>11} {'retain':>7} | mean | min | max")
-    for (name, factor), feat in feats.items():
-        mean, low, high = table.get((name, factor), (float("nan"),) * 3)
+    for name, factor, _ in OBSERVED:
+        if (name, factor) not in feats:
+            feats[(name, factor)] = features(dumped[name], factor, orig, labels, spills[name], refs)
+    anchor = OBSERVED[0][:2]
+    tables = {}
+    for mode in RETAIN_MODES:
+        kept, tables[mode] = calibrated(
+            with_retain(feats, mode, anchor), OBSERVED, GOLD_LEVELS, tuple(refs), args.tolerance
+        )
+        print(f"{mode}: {len(kept)} settings kept")
+    nan = (float("nan"),) * 3
+    worst = {k: min(tables[m].get(k, nan)[0] for m in RETAIN_MODES) for k in feats}
+    observed = {(n, f): s for n, f, s in OBSERVED}
+    shown = sorted(feats, key=lambda k: -worst[k] if worst[k] == worst[k] else 0)[: args.top]
+    shown += [k for k in observed if k not in shown]
+    print(f"{'candidate':<24}{'x':>6} {'loss':>11} {'retain':>7} | probe | half | flat | observed")
+    for key in shown:
+        feat = feats[key]
         loss = f"{feat['mean']:.2f}/{feat['std']:.2f}"
-        band = f"{mean:.3f} | {low:.3f} | {high:.3f}"
-        print(f"{name:<22}{factor:>7g} {loss:>11} {feat['retain']:7.3f} | {band}")
+        cells = " | ".join(f"{tables[m].get(key, nan)[0]:.3f}" for m in RETAIN_MODES)
+        seen = observed.get(key, "")
+        print(f"{key[0]:<24}{key[1]:>6g} {loss:>11} {feat['retain']:7.3f} | {cells} | {seen}")
 
 
 if __name__ == "__main__":

@@ -44,3 +44,14 @@ def test_calibration_keeps_only_gold_levels_that_reproduce_the_peak():
     assert table[("a", 2.0)][0] == pytest.approx(0.28)
     assert table[("a", 2.5)][0] == pytest.approx(0.22, abs=0.02)
     assert table[("b", 1.0)][0] < 0.22
+
+
+def test_retain_modes_keep_flatten_or_halve_the_differences():
+    feats = {("a", 2.0): _feat(3.8, 3.8, retain=0.7), ("b", 1.0): _feat(3.8, 3.8, retain=0.8)}
+    anchor = ("a", 2.0)
+    assert peak_check.with_retain(feats, "probe", anchor) is feats
+    assert peak_check.with_retain(feats, "flat", anchor)[("b", 1.0)]["retain"] == pytest.approx(0.7)
+    assert peak_check.with_retain(feats, "half", anchor)[("b", 1.0)]["retain"] == pytest.approx(
+        0.75
+    )
+    assert feats[("b", 1.0)]["retain"] == 0.8
