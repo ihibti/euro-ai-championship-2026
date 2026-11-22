@@ -1,6 +1,6 @@
 # Devin: status and next steps (read this first after a restart or a context compaction)
 
-Updated 2026-11-22 01:52 Paris. Report to the desk: description of draft PR #27 (keep it current with
+Updated 2026-11-22 01:56 Paris. Report to the desk: description of draft PR #27 (keep it current with
 `gh pr view 27 --json body --jq .body > /tmp/devin-pr.md`, edit, `gh pr edit 27 --body-file /tmp/devin-pr.md`).
 
 ## Who and where
@@ -15,7 +15,12 @@ Updated 2026-11-22 01:52 Paris. Report to the desk: description of draft PR #27 
 
 Every ~10 minutes: `git fetch origin -q`; if `origin/ihibti/model-equality-refs` moved, `git merge --no-edit origin/ihibti/model-equality-refs`; look for new answers files or new `ep-*` rows; read new `Desk:` comments on #27, #19, #28; act; commit; push; update #27.
 
-## Open asks from the desk (00:27 and 00:46 comments on #27)
+## Open asks from the desk (comments on #27; the latest at 01:50)
+
+0. **Due about 03:00: my grouping of the 33 endpoints from 20 scored `d1_repeat150` answers per endpoint, read with `capped`, as a submission CSV, without looking at the main line's.** The scored rows land in `answers/night-d.jsonl` (ep- rows next to the ref- rows), pushed at 2 (pilot, about 02:07), 10 and 20 repeats (about 02:57). At the pilot: say whether Qwen and Llama run long or stop near 150 (is the probe flat?). Then:
+   `uv run python p3rule.py --answers ../../answers/night-d.jsonl --prefix ep- --probe d1_repeat150 --families recon_ep.csv --feature capped --out grouping_ep_p3.csv`
+   (also `--feature long` for the record), `make check TASK=model_equality FILE=tasks/model_equality/analysis/second/grouping_ep_p3.csv` from the repo root, post the CSV path and per-family verdicts on #27. Never submit.
+5. **Partial-answer table: done 01:53** (`651f328`, `partial_worth.md`, comment on #27).
 
 1. **Map of the 33 endpoints: delivered 01:28** (`7ea7dd9`, comment on #27): three families of 11, A = Qwen "created by Alibaba Cloud" {01 02 04 12 14 17 18 23 24 25 33}, B = Qwen "a large language model" {03 06 07 08 20 21 22 26 28 30 32}, C = Llama {05 09 10 11 13 15 16 19 27 29 31}. `recon_ep.md`, `recon_ep.csv`, `recon_ep_evidence.md`. Frozen gap rule said 2 (A+B); k = 3 on trivia, choices, identity, with A's personas as the control. Next: compare A/B with the main line's map when the desk posts it.
 2. **P3 confirmation: done 01:49** (`3f91569`, `p3_confirm.md`, comment on #27). Not confirmed at 10 fresh answers (MCC 0 under both features: quiet disguises 03/05/08 called LoRA). At 20 pooled answers `capped` gives 0.7338; subsample means 0.566 / 0.647 / 0.734 at 10 / 15 / 20. d2_story100 separates LoRA strengths; d3/d4 separate disguises. Advice given: d1 at 20 per endpoint with `capped`, plus d2 at 10.
