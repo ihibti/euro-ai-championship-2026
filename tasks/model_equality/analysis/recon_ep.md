@@ -1,4 +1,4 @@
-# Reconnaissance of the 33 scored endpoints (2026-11-22 01:20 Paris)
+# Reconnaissance of the 33 scored endpoints (2026-11-22 01:10 Paris)
 
 Data: `answers/round1.jsonl`, the 330 scored rows committed by the desk at 57093d6. The prompts are the five of `probes/recon.csv` (`idn_identity`, `txt_story`, `txt_health`, `bat_trivia`, `bat_choice`, copied from round 1), asked at 2 repeats with no failures.
 
