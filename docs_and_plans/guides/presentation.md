@@ -30,7 +30,7 @@ Each slide: a title, at most three bullets, the one number that matters, and spe
 
 **Number: 17 night submissions, each with its reason written before its score** (model equality 5, unlearning 11, watermark 1).
 
-*Notes.* One human set the rules and slept; one agent, the desk, was the only one allowed to submit or run on the cluster; the analysis agents could only propose. Every proposal, prediction and result went through an issue or a commit, so the whole night can be audited. No rule was ever chosen after seeing the data it was judged on.
+*Notes.* One human set the rules and slept; one agent, the desk, was the only one allowed to submit or run on the cluster; the analysis agents could only propose. Every proposal, prediction and result went through an issue or a commit, so the whole night can be audited. Every deciding rule was committed before the data that judged it; the one decision outside a rule is on slide 4.
 
 ---
 
@@ -81,7 +81,7 @@ Each slide: a title, at most three bullets, the one number that matters, and spe
 
 **Number: 0.2858.**
 
-*Notes.* Every unlearning submission was a test with a written prediction, and the board was used to reject hypotheses, not to tune. The recipe tops out near 0.29. Our best explanation is that gold is an average of several retrained models, which no single sharpened network reproduces. Another day would go to a target that covers the classes several gold models would each pick.
+*Notes.* Every unlearning submission was a test with a written prediction, and the board was used to reject hypotheses, not to tune. The recipe tops out near 0.29, most likely because gold is an average of several retrained models, which no single sharpened network reproduces. Another day would go to a target that covers the classes several gold models would each pick.
 
 ---
 
