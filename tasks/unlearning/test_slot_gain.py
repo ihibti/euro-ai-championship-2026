@@ -48,3 +48,42 @@ def test_conditional_gains_skip_bands_without_draws():
     first = np.full(3, 0.29)
     rows = sg.conditional_gains(np.zeros((3, 1)), first, 0.29, bands=(0.0, 0.28, 0.3, 1.0))
     assert [(low, high) for low, high, *_ in rows] == [(0.28, 0.3)]
+
+
+def test_overlap_is_the_shared_normalised_weight():
+    assert sg.overlap({"a": 0.5, "b": 0.5}, {"a": 1.0}) == pytest.approx(0.5)
+    assert sg.overlap({"a": 1.0}, {"a": 1.0}) == pytest.approx(1.0)
+    assert sg.overlap({"a": 1.0}, {"b": 1.0}) == 0.0
+
+
+def test_shared_anchor_with_one_anchor_is_the_best_line_anchor():
+    model = np.array([0.2, 0.3])
+    anchor = np.array([[0.25], [0.2]])
+    out = sg.shared_anchor(model, anchor, np.array([0.3]), np.array([0.7]))
+    assert np.allclose(out, model * 0.3 / anchor[:, 0])
+
+
+def test_shared_anchor_takes_the_weighted_geometric_mean_of_ratios():
+    model = np.array([1.0])
+    anchors = np.array([[1.0, 1.0]])
+    out = sg.shared_anchor(model, anchors, np.array([1.21, 1.0]), np.array([1.0, 1.0]))
+    assert out[0] == pytest.approx(1.1)
+
+
+def test_shared_scores_anchor_on_shared_runs_and_fall_back_to_the_best_line():
+    names = ["k11_b_s1x2", "k8_e3t2_rm1_lr1e4x2", "k11_b_s2x2", "x4_e20x2"]
+    values = np.array([[0.2, 0.25, 0.22, 0.1], [0.3, 0.2, 0.33, 0.1]])
+    inputs = {
+        "candidates": {"k11_b_s1": {}, "k11_b_s2": {}, "k8_e3t2_rm1_lr1e4": {}, "x4_e20": {}},
+        "observed": {"k11_b_s1x2": 0.28, "k8_e3t2_rm1_lr1e4x2": 0.29},
+    }
+    out = sg.shared_scores(values, names, inputs, reference=1, best=0.29)
+    assert np.allclose(out[:, 2], 0.29 * values[:, 2] / values[:, 1])
+    assert np.allclose(out[:, 3], 0.29 * values[:, 3] / values[:, 1])
+    soup = ["k11_b_soup3x2"]
+    out = sg.shared_scores(
+        np.column_stack([values[:, :2], values[:, 2]]), names[:2] + soup, inputs, 1, 0.29
+    )
+    w = np.array([1 / 3, 1 / 3])
+    ratios = np.log(np.array([0.28, 0.29])[None, :] / values[:, :2])
+    assert np.allclose(out[:, 2], values[:, 2] * np.exp(ratios @ (w / w.sum())))
