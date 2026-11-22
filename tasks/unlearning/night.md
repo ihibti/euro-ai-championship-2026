@@ -117,23 +117,25 @@ The plan written at 23:00 (`map_even40`, `x3_ext_m80`, then a K sweep) was carri
 
 ## Morning plan (for the humans, from 09:00)
 
-Written at 04:09 and refreshed by 07:30.
+Written at 04:09, revised at 04:40, refreshed by 07:30.
 
 - **Read first:**
   1. `judges_brief.md`, which opens with the result;
   2. `submit_queue.md`, every submission with its prediction and score;
   3. this file's log.
-- **Our best at 04:09:** 0.2837, `k8_e3t2_rm1_lr1e4_x2.pt` (sha `522e5851…`) on the lead's main laptop. If nothing better has scored by 11:00, this is the one that counts. Nothing needs re-submitting, since only the best counts.
+- **Our best at 04:40:** 0.2837, `k8_e3t2_rm1_lr1e4_x2.pt` (sha `522e5851…`) on the lead's main laptop. If nothing better has scored by 11:00, this is the one that counts. Nothing needs re-submitting, since only the best counts.
 - **Slots after 09:00:** 09:08, 09:38, 10:08, 10:38, and 11:08 at the latest. The night authorization ends at 09:00. From then on a human at a terminal submits with `make submit`.
-- **What to submit:** the queue's open lines, in order. The unlearning agent keeps the queue current until 07:30. The candidates by then:
-  - the weight average of the 0.2837's base and its two new seeds, times 2 (`k11_b_soup3_x2.pt`);
-  - the eleventh batch's best line by `peak_check.py`.
+- **What to submit:** the queue's open lines, in order. The unlearning agent keeps the queue current until 07:30.
+  - Night: 04:38 the weight average `k11_b_soup3_x2.pt`; 05:08 the seed twin `k11_b_s1_x2.pt`.
+  - Morning candidate, if the 04:38 average does not score clearly below 0.2837: `k12_soup_x2.pt`, the average of eleven seeds of the 0.2837's recipe (`run_twelfth.sh`, asked on #21 after the 04:38 score).
+  - No score model predicts lines any more (`peak_check.py` is retired, the ledger cannot represent the peak). Choose by argument: same recipe, same factor, less seed noise.
 - **What the night established (each point is a score):**
   - **Sharpening a tempered fine-tune is the recipe:** 0.066 for the fine-tune alone, 0.2133 with its last layer times 2.
   - **More reach pays only up to the 0.2837's level:** forget-set loss 3.8/3.8 once sharpened.
   - **One notch more sharpening on the same model costs 22%** (0.2837 to 0.2222).
-  - **The factor has to match the drift's temperature on unseen images.** The tau 1 run at a factor of 0.76 times its temperature scored 0.256 despite half the spill.
+  - **The factor has to stay near 0.89 times the drift's temperature on unseen images.** The tau 1 run at 0.76 times its temperature scored 0.256 despite half the spill; a sibling of the 0.2837's base at 1.00 times scored 0.2665.
 - **What not to do:**
+  - do not choose among seed twins, or among lines within about 4% of each other, by their public score: the 30% split alone moves the ratio between two of our lines by about 2% (1 SD, `split_noise.py`);
   - no factor above the base's spill temperature (`peak_check.py` prints it as f/T);
   - no fine-tune that reaches further than the 0.2837's base, at its factor;
   - no candidate without a spill probe;
