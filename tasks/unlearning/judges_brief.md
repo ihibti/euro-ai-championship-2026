@@ -65,7 +65,8 @@ This keeps the number of submissions small and makes each one an experiment with
 | 01:38 | `k7_e3t2_rm` | the last 6 blocks fine-tuned towards the cross-fitted step extrapolated 3 times and tempered by 2, with an anchor | mean 0.047, 89% chance above 0.0336; 0 if it fails the gate (it changes about 6% of validation predictions) | **0.066** | twice the previous best. It passed the gate, so A × 0.94 ≥ 70. The score sits at the upper end of the prediction: the ledger underpredicts this fine-tune by about 1.3 times |
 | 02:08 | `k7_e3t2_rm_x2` | the same model with its last layer multiplied by 2 | mean 0.086, 10th to 90th 0.060 to 0.118, 75% chance above 0.066 (0.106 once the exact logits arrived at 02:04) | **0.2133** | sharpening is the recipe: the same checkpoint scores more than three times as much once the spill's temperature is taken out. The ledger gets the direction right and the size wrong: the gain is about twice what it predicts |
 | 02:38 | `k8_e3t2_rm1_lr1e4_x2` | one dial from the 0.2133: the same recipe trained at learning rate 1e-4, sharpened by 2 | ledger mean 0.229, 10th to 90th 0.142 to 0.301, 66% chance above 0.2133; 1.7 times `k7_e3t2_rm_x2` relative to the ledger | **0.2837** | more reach pays at the same factor (1.33 times). Golds that err on other images of the same classes drop to 2% of the weight |
-| 03:08 | `k8_e3t2_rm1_lr1e4_x2p5` | the same fine-tune with the factor one notch further, 2.5 | ledger mean 0.283, 10th to 90th 0.211 to 0.373, 54% chance above 0.2837; about 0.32 relative to the observed x2 | pending | |
+| 03:08 | `k8_e3t2_rm1_lr1e4_x2p5` | the same fine-tune with the factor one notch further, 2.5 | ledger mean 0.283, 10th to 90th 0.211 to 0.373, 54% chance above 0.2837 | 0.2222 | **one notch more sharpening cost 22%**: the forget-set loss has a peak near the 0.2837's level. The ledger cannot represent it and is set aside for the factor (section below) |
+| 03:38 | `k9_e3t1_lr1e4_x1p25` | the ninth batch's untempered (tau 1) fine-tune, last layer times 1.25 | `peak_check.py` mean 0.294, 0.281 to 0.316 over the 13 gold settings that reproduce both scores. It replaces the line fixed at 02:56, which the same check puts at 0.185 | pending | |
 
 ## What the evidence says about gold (as of 02:15)
 
@@ -111,6 +112,33 @@ Multiplying the last layer by a factor s undoes a temperature. It also never cha
   - `x4_e20` gets worse when sharpened, because its targets were never tempered.
 
 We queued `k7_e3t2_rm` and then the same model at s = 2, so the two scores isolate this one change.
+
+## The peak at 03:08: one notch more sharpening cost 22%
+
+The rule fixed before 03:08 assumed the ledger's view of sharpening: more sharpening keeps paying up to a factor of about 2.5. The score said otherwise.
+
+| line | forget-set loss (mean/spread) | public |
+|---|---|---|
+| `k7_e3t2_rm_x2` | 2.02/2.49 | 0.2133 |
+| `k8_e3t2_rm1_lr1e4_x2` | 3.80/3.79 | 0.2837 |
+| `k8_e3t2_rm1_lr1e4_x2p5` | 4.67/4.76 | 0.2222 |
+
+**Why the ledger missed it.** Each of its golds is a single model, and the ones that carry the weight are confidently wrong, with loss means of 8 to 11. Against such a gold, more confident errors always help. The real target differs on two counts:
+- The mean/spread term compares against the average loss of several retrained models.
+- The prediction term compares against their averaged output, which is softer than any one of them.
+
+A single model cannot be both as confident as one retrained model and as soft as their average. So the score has a peak, and the ledger has no hypothesis that produces one. With the 0.2222 included, it still predicts x2.5 above x2.
+
+**What replaced it for the factor: `peak_check.py`** (`9f7a917`, tested in `test_peak_check.py`).
+- It scores a line as mean/spread term × prediction term × retain:
+  - the mean/spread term against a gold loss level;
+  - the prediction term from KL at T=2 to a reference target;
+  - retain from the spill probes.
+- Each setting is scaled so that the 0.2837 matches, and kept only if it then reproduces the 0.2222 within 0.02.
+- 13 settings survive, all with a gold loss level of about 3.3 to 4.0.
+- They put the line fixed for 03:38 (`k9_e3t2_lr2e4_ep40` at x2, loss 5.29/4.86) at 0.185. We withdrew it before its slot and said why on #12 (03:16).
+- In its place went the run with the least spill, lightly sharpened to the 0.2837's loss level: `k9_e3t1_lr1e4` at x1.25, predicted 0.294.
+- The desk pointed out that a check calibrated on two public scores can follow the public 30%. The choice therefore also had to be backed by the probes: its spill is half that of the 0.2837's base (held-out KL 0.45 against 0.99, spare-class KL 0.17 against 0.62), with fewer changed predictions (4.4% against 5.2%).
 
 ## Where the ceiling is: training reach
 
@@ -172,6 +200,7 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 - Until the dumped logits arrive (`dump_logits.py`, at the end of the seventh and eighth batches), fine-tuned candidates enter the ledger through their measured loss statistics plus a fitted proxy of their output distribution. The proxy is known to be off by up to about two times on single candidates.
 - **The ledger had a modelling error, found and fixed at 01:13.** It multiplied each prediction by the share of the accuracy band where the candidate passes the gate. A submission either passes or scores 0, so a 0 was read as a miss rather than as a possible gate failure. That made `dial15`'s 0 rule out the removal reading entirely. Since `7b51a3c`, A is inferred jointly with gold, and the removal reading keeps the 4% it deserves.
 - **Until 01:40 the posterior sat on the edge of the gold grid** (gold right on a third of the images, the furthest gold modelled). Widening the grid lowered every prediction by 10 to 20% and left the ranking unchanged. The predictions written on #12 before 01:40 come from the narrower grid.
+- **The ledger's golds are single models, and the real target is several.** Against a single confidently wrong gold, sharpening always helps; against the real mixture it peaks. The 0.2222 at 03:08 showed it. From 03:15 the factor and the base are chosen with `peak_check.py`, which is calibrated on two public scores and can therefore follow the public 30%. Choices are also required to show their advantage in the probes.
 - The hidden altered copies are not modelled. Our own alterations (flip, crop, rotation, shift, blur, JPEG, jitter, noise) track the exact images closely in every report.
 - Retain is estimated from held-out forget images and spare classes, not from the real control set.
   - Those are training images of the original, which it fits with near certainty.
@@ -192,9 +221,9 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
   - The factor came from a measurement before any score: the probes put the drift on unseen classes at a temperature of about 2.4 (`night.md`, 01:20).
 - **Why did the ledger predict 0.086 for a 0.2133?** Its retain estimate comes from the probes, on images the original memorised. There the fine-tune also changes some predictions, and sharpening cannot undo those. On the real control set, unseen images, the drift is apparently almost purely a temperature, so sharpening removes nearly all of it. The direction was right and the size was about twice too small. The ledger's ranking held, and the later lines use its ranking rather than its levels.
 - **Is the factor tuned to the board?**
-  - It moves one notch at a time (2, then 2.5), each with a written prediction.
-  - The stopping point is set by the theory: past the drift's temperature, retain falls again. Under some golds, which err on other images of the same classes, the forget term collapses beyond 3.
-  - The night plan forbids a factor above 3 without a score at 2.5 first.
+  - It moved one notch at a time with a written prediction each time. 2 scored 0.2837; 2.5 scored 0.2222.
+  - We did not continue upwards, and we did not fine-tune the factor around 2 on the board. The 03:38 line keeps the 0.2837's loss level with a different base, chosen for its lower spill in the probes.
+- **Why did you break your own pre-registered rule at 03:38?** The rule assumed that further-reaching fine-tunes pay at the same factor, and the 03:08 score refuted the model behind it. Submitting the rule's line would have tested a model we already knew to be wrong. We withdrew it before its slot, posted the reason and the replacement's prediction on #12 before its score, and kept the slot for a line whose advantage shows in the probes.
 
 ## Reproduce
 
