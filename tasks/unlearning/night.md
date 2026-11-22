@@ -95,18 +95,25 @@ The search therefore starts low and climbs while the score rises. Gold is not on
 
 ## Submission plan
 
-The plan written at 23:00 (`map_even40`, `x3_ext_m80`, then a K sweep) was carried out through `x4_e20`. From 01:20 the plan follows the ledger:
+The plan written at 23:00 (`map_even40`, `x3_ext_m80`, then a K sweep) was carried out through `x4_e20`. From 01:20 the plan follows the ledger, one dial at a time:
 
-1. **01:38 `k7_e3t2_rm`, 02:08 `k7_e3t2_rm_x2`.** The fine-tune, then the same fine-tune with its last layer doubled. The pair measures the sharpening effect with everything else fixed.
-2. **After that:** the candidate the ledger ranks first once those two scores and the seventh batch's logits are in. That is a sharpened fine-tune from the seventh batch, or from the eighth if it is back. The eighth batch is 16 runs on the confidently wrong reading: further and sharper targets, longer training.
-3. **Each line goes into the queue at least 10 minutes before its slot,** with its predicted score. A line whose base candidate failed the gate is withdrawn.
+1. **Done.** 01:38 `k7_e3t2_rm` scored 0.066. 02:08 `k7_e3t2_rm_x2`, the same model with its last layer doubled, scored **0.2133**: sharpening is the recipe.
+2. **02:38: `k8_e3t2_rm1_lr1e4_x2`.** One dial from the 0.2133: trained at learning rate 1e-4.
+3. **03:08: the last-layer factor 2.5** on the better of the two bases (decision table on #12, 02:21).
+4. **From about 03:38: the ninth batch** (job 15904499), sharpened. It brings tempered targets with more reach (learning rate 2e-4, 40 epochs) and brackets tau (1 and 3) and K (3.5).
+5. **Each line goes into the queue at least 10 minutes before its slot,** with its predicted score. A line whose base failed the gate is withdrawn.
 
 ## Morning plan (for the humans, from 09:00)
 
-- **State to read first:** this file's log, `submit_queue.md` (every submission with its prediction and score), and `judges_brief.md`.
-- **Slots after 09:00:** 09:08, 09:38, 10:08, 10:38, and 11:08 at the latest. The cap of the night authorization ends at 09:00, so from then on a human at a terminal submits with `make submit`.
-- **What to submit:** the ledger's first-ranked candidate among the files on the lead's laptop (`ledger.py --targets output/kkrgp/xfit_extras.npz`, plus `--logits` with the latest dumped logits). Among close candidates, take the one with the smaller drift on held-out and spare classes (#19).
-- **What not to do:** no candidate without a probe; nothing from `u7_*` (it changes half of the predictions on unseen classes); no class dial on the nine classes (the gate, `dial15` = 0).
+- **State to read first:** `judges_brief.md` (it opens with the result), then `submit_queue.md` (every submission with its prediction and score), then this file's log.
+- **Our best at 02:22:** 0.2133, `k7_e3t2_rm_x2.pt` (sha `f69f9ba1…`) on the lead's main laptop. If nothing better has scored by 11:00, this is the submission that counts. Nothing needs to be re-submitted, since only the best counts.
+- **Slots after 09:00:** 09:08, 09:38, 10:08, 10:38, and 11:08 at the latest. The night authorization ends at 09:00, so from then on a human at a terminal submits with `make submit`.
+- **What to submit:** the best-scoring base sharpened one notch further, or a ninth-batch base at the best factor so far. Check the queue first: the unlearning agent keeps it current until 07:30. The ledger (`ledger.py ... --logits` with every dump) ranks candidates well but underpredicts sharpened ones by about 1.6 times.
+- **What not to do:**
+  - no candidate without a spill probe;
+  - nothing from `u7_*` (it changes half of the predictions on unseen classes);
+  - no class dial on the nine classes (the gate: `dial15` scored 0);
+  - no factor above 3 without a score at 2.5 first: the other-images golds collapse beyond it.
 - **Defending the work:** `judges_brief.md`. The likely questions are answered at its end.
 
 ## Log
