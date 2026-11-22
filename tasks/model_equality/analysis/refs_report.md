@@ -367,7 +367,7 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
   - list items (d3).
   The count of each endpoint is compared with its family's remaining endpoints by a two-sided rank permutation test (20,000 draws, seed 0), using the same iterative setting apart at alpha 0.01. It was frozen at 00:54, before any scored P3 answer existed. On the old P3 answers it sets apart L0.7 (p 0.0007), L0.3 (p 0.0019) and L1.5 (p 0.0031), and keeps fp8 with the copies.
 
-## Status at handoff (2026-11-22 01:15; night_d is running on the references, started by the desk at about 01:08)
+## Status at handoff (2026-11-22 01:19; night_d is running on the references, started by the desk at about 01:08)
 
 **Done in this run (23:30 to 01:15)**
 - Round 1 completed to 4 repeats, determinism, separation table, grouping at 40 answers, ablations, permutation tests (E4 to E7). Side channels (E8). night_a P1/P2 (E9): both fail.
@@ -386,6 +386,12 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
   - A post hoc fp8 candidate: P1 copy-only, 9 of 10 against 7 of 50. Its confirmation is `d4_copycont`.
   - Response time is a flat server pace (19.8 s), so timing was dropped.
 - `analysis/recon_ep.md` and `analysis/recon_ep_families.csv`: the 33 scored endpoints are three families of 11, two Qwen-based (A, B) and one Llama (C). The per-family evidence and the place of each disguised endpoint are in the file. The CSV has one model per family: model MCC 0, never submit it.
+- Structure inside the families (exploratory, 2 repeats, in `recon_ep.md`):
+  - A: one tight core, with ep-02 and ep-23 apart by identity only;
+  - B: ep-03 and ep-28 are the first weight candidates; ep-08 and ep-20 differ by identity and style;
+  - C: no structure; the choice battery is at chance there.
+- `analysis/identity.py` (frozen 01:15) and `probes/idn.csv`, which holds the idn_identity row verbatim, for 8 more scored identity answers. On the references, the persona class covers the system-prompt and persona copies and L0.7 and L1.5 alike, so identity does not separate LoRA from prompted copies.
+- `probes/night_e.csv`: two leak probes and e3_identity, verbatim. `analysis/leak.py` reads them (frozen 01:17).
 
 **Measured**
 - Throughput: 9.1 to 10.0 answers per minute on the references.
@@ -401,13 +407,14 @@ Started 2026-11-21 22:40 Paris. Only `ref-01`..`ref-09` were queried, always thr
    - Confirmed if d1 sets apart the LoRAs and not fp8, and if d4 sets apart fp8.
    - Judge d4 knowing that 136 statistics were scanned before the P1 find (E12).
 2. If confirmed, the desk runs P3 (and d4) on the 33 scored endpoints. Read them per family with `--prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`. Use the counts, since these models stop before the cap.
-3. Then `night_c` on the references: `choices.py --answers .../night-c.jsonl --draws 500`.
-4. `src/euroai/me_query.py` saves `elapsed_s` since 4fa9164. The API returns no token count and `finish_reason` lies, so the cap stays inferred from text.
+3. Then `night_e` on the references (6 repeats), read with `leak.py` and `identity.py --ids e3_identity`. Then `night_c`, read with `choices.py --answers .../night-c.jsonl --draws 500`.
+4. After the 8 extra scored identity answers: `identity.py --answers .../round1.jsonl --prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`.
+5. `src/euroai/me_query.py` saves `elapsed_s` since 4fa9164. The API returns no token count and `finish_reason` lies, so the cap stays inferred from text.
 
 **Channel**: the desk alone queries. Never append to `answers/round1.jsonl` and never commit the answer files the desk's chain writes.
 
 **Tests**: the desk's fix is merged (4713f83), so `make test` is safe on this branch again.
 
-**Frozen prompt files**: `probes/round1.csv`, `recon.csv`, `night_a.csv`, `night_b.csv`, `night_c.csv`, `night_d.csv`. Never edit any of them once answers exist.
+**Frozen prompt files**: `probes/round1.csv`, `recon.csv`, `idn.csv`, `night_a.csv`, `night_b.csv`, `night_c.csv`, `night_d.csv`, `night_e.csv`. Never edit any of them once answers exist.
 
-**Tools**: `analysis/group.py`, `permtest.py`, `plurality.py`, `choices.py`, `recon.py`, `stop.py`, `lengths.py`, each with tests under `tasks/model_equality/analysis`.
+**Tools**: `analysis/group.py`, `permtest.py`, `plurality.py`, `choices.py`, `recon.py`, `stop.py`, `lengths.py`, `identity.py`, `leak.py`, each with tests under `tasks/model_equality/analysis`.
