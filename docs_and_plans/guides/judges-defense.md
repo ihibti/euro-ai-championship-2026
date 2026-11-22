@@ -1,12 +1,12 @@
 # Judges' defense pack
 
-Team Begg, European AI Championship, Paris, 22 November 2026. Written during the night for the lead, who slept through it, and through the lead for the jury. Every number here comes from a committed file or a posted score. Points only the lead can settle are marked **for the lead** (five of them).
+Team Begg, European AI Championship, Paris, 22 November 2026. Written during the night for the lead, who slept through it, and through the lead for the jury. Every number here comes from a committed file or a posted score. Points only the lead can settle are marked **for the lead** (four of them).
 
 ## 1. The night in ten lines
 
 1. At 23:45 the public board had us 20th of 32, with an overall 0.33. The sixth team had 0.73. The overall is the mean over the three tasks of (ours − lowest) / (best − lowest).
-2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **0.85** (06:44; 0.7 at 04:23), unlearning **0.2858** (04:39).
-3. Against the board's best scores of 22:33, that is an overall of about 0.85. Our current rank is **for the lead**: the agents cannot read the public board; read it before the jury.
+2. Now: watermark localisation **0.7444** (submitted 23:36), model equality **1.0** (08:07; 0.85 at 06:44, 0.7 at 04:23), unlearning **0.2858** (04:39).
+3. Against the board's best scores of 22:33, that is an overall of about 0.90. Our current rank is **for the lead**: the agents cannot read the public board; read it before the jury.
 4. One human, the team lead, set the rules and the night authorization, a file written at a terminal that caps answers and submissions until 09:00, and then slept.
 5. One agent, the desk, was the only one allowed to touch the GPU cluster (JURECA) and the organizers' server. It spent scored answers, submitted, reviewed and merged.
 6. One agent per task did the analysis: a model equality main line; a second, independent model equality method by another coding agent (Devin) on a second computer; an unlearning agent. None could submit.
@@ -62,12 +62,13 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 - The stop rule caught LoRA 0.3 at 20 answers (p 0.0003).
 - A prediction registered before the scored stories existed held in 2 of 3 families. The third was settled by an exact probability under the base model.
 
-**Result.** Per family, five endpoints are labelled as one model: two prompted copies, a temperature copy, a truncated-sampling copy and a watermark copy. The rest are alone. Public 0.7 at 04:23. At 06:44, after the fp8 test named family C's fp8 copy, C's two remaining plain-like endpoints joined its group: public 0.85.
+**Result.** Per family, five endpoints are labelled as one model: two prompted copies, a temperature copy, a truncated-sampling copy and a watermark copy. The rest are alone. Public 0.7 at 04:23. At 06:44, after the fp8 test named family C's fp8 copy, C's two remaining plain-like endpoints joined its group: public 0.85. At 08:07 one endpoint of family B joined its group (see the fp8 outcome below): public 1.0.
 
 **Limits and another day.**
 - **fp8 against plain.** Until 06:00 no probe separated the two on the references. The simulated fp8 copy does: the fp8 reference stands at +9.0 standard errors over 338 answers, the plain one at -6.1, the seven others between -2.6 and -6.7. It held on both halves of the rows and on 112 answers bought after its first run. Two other ways of quantizing do not single out the fp8 reference, so the server's method is identified too.
 - **The rule on the scored families was fixed before any of their numbers was read** (PR #27, 06:03, amended with Devin at 06:16): an endpoint at +3 standard errors or more is the family's fp8 copy; the family's two closest plain-like endpoints then join the same-model group, unless one of them is the fp8 copy. A second read after more answers was registered before buying them.
-- **Outcome.** C: ep-15 at +2.94, then +3.53 on 72 answers; ep-13 and ep-19 joined; public 0.85. B: ep-22 at +2.71, then +2.81 on 78 answers: under the threshold, so no change, although it is B's only endpoint above zero. A: no endpoint above zero, no change.
+- **Outcome.** C: ep-15 at +2.94, then +3.53 on 72 answers; ep-13 and ep-19 joined; public 0.85. B: ep-22 at +2.71, then +2.81 on 78 answers: under the threshold, so the desk made no change, although it is B's only endpoint above zero. A: no endpoint above zero, no change.
+- **The fifth submission.** At 08:06 the lead, awake again, decided to act on B's reading: ep-32, the other member of the closest pair, joined B's group. Public 1.0. This step is outside the registered rule and we say so; it was a single endpoint, named in advance by the test, and a wrong guess could only have lowered the score.
 - **Earlier attempt, kept as a negative result.** A stop-probability channel: its registered prediction held on fresh reference answers (fp8 above +2), but the gap to plain was about one standard error, too weak to decide a pair.
 - With another day we would buy more answers on B's and A's candidates, and find out what the eleventh endpoint of each family is.
 
@@ -102,11 +103,11 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 
   | task | at night | before | reason recorded |
   |---|---|---|---|
-  | model equality | 4: floor 0.0, families 0.1, labelled copies 0.7, the same plus C's two plain-like endpoints 0.85 | none | yes, in the night log |
+  | model equality | 5: floor 0.0, families 0.1, labelled copies 0.7, the same plus C's two plain-like endpoints 0.85, the same plus B's ep-32 1.0 | none | yes, in the night log |
   | unlearning | 11: ten with a written prediction on #12, the last a seed average chosen without a score model | 1, at 22:19 (0.00) | yes |
   | watermark | 1 (c6, 0.7444) | 3: 18:11 (0.4421), 19:09 (0.6876), 22:19 (c5, 0.7251) | held-out gain |
 
-  No model equality grouping was submitted to test a candidate against the public score. **For the lead:** this holds for the night. If morning submissions add single endpoints (decision 1 of the morning brief), replace it with what was done: after the registered rule stopped short in family B, N submissions each added one endpoint named by that test; each could only gain if the endpoint is truly the same model, and each is recorded.
+  Four of the five model equality groupings were named by a rule fixed beforehand. The fifth (08:07) was not: the fp8 test read B's candidate at +2.81 against a threshold of 3, the desk declined to act, and the lead decided to submit the one endpoint the test pointed to. It is the only submission of the event made on a reading that had missed its own threshold.
 - **Ideas withdrawn after failing their own test:**
   - Model equality main line:
     - distance clustering, which merged all nine references at 40 answers;
@@ -133,7 +134,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 | job submitted from inside the team folder | every night job was submitted by one command that first changes into the team's task folder, stops unless the path is the team folder, and stops unless the team check prints nothing. Open question to the organizers: does a submission from a login node that does not show scratch, pointed at the team folder, count? | morning brief, decision 3 |
 | a few hundred files at most on scratch | 209 files staged at 23:45 were removed at 01:35, when an organizer asked teams to free slots; from 02:13 every batch was staged by renaming and emptying old files, with no new file (the staging script counts the folder before and after: 689 and 689 for the tenth and eleventh batches); the batches between 00:03 and 01:16 wrote one checkpoint, one report and one log per run, a few dozen files each, and the output files of the 01:16 batch were created in advance so that a full quota could not break it | night log 01:35, 02:13 |
 | 100 answers per scored endpoint | used 64 (A), 66 (B), 48 (C), and 78 and 72 on the two endpoints of the fp8 second read; night cap 80 | morning brief |
-| 30 minutes between submissions per task | unlearning 23:37 to 04:39, every 30 to 31 minutes; model equality 23:36, 01:30, 04:23, 06:44; watermark 23:36, 77 minutes after the lead's own c5 submission | morning brief tables |
+| 30 minutes between submissions per task | unlearning 23:37 to 04:39, every 30 to 31 minutes; model equality 23:36, 01:30, 04:23, 06:44, 08:07; watermark 23:36, 77 minutes after the lead's own c5 submission | morning brief tables |
 
 **Incidents, stated plainly:**
 - **23:47, a held follow-up job.** The desk queued a 5-hour job behind the running one, to hold the node for later work. The organizers' text allows chained follow-ups. Our stricter rule allows no pending job and no job without ready work. The lead pointed out the ban risk, and the desk cancelled it at 23:54, seven minutes later.
@@ -146,7 +147,7 @@ Team Begg, European AI Championship, Paris, 22 November 2026. Written during the
 1. **How do you know two endpoints serve the same model?** We do not claim it from similarity. Each label is a specific disguise (prompt, temperature, top-p, watermark), identified by a method that recovered the same disguise on the published references.
 2. **Did you tune to the public board?** No. Rules were committed before their data, and no grouping was submitted as a trial. In unlearning, each submission carried a written prediction, and the board was used to reject hypotheses.
 3. **Why are so many model equality endpoints left alone?** Calling a pair "same" wrongly costs about as much as missing a true pair. We join only what a validated method names.
-4. **Can you tell fp8 from plain?** Yes on the references, and in one family so far. A simulated fp8 copy of the base model explains the fp8 reference's answers better than the plain model does (+9.0 standard errors) and every other reference's answers worse. With the threshold fixed in advance it named C's fp8 copy (+3.53); B's candidate stopped at +2.81 and we did not act on it; A shows none.
+4. **Can you tell fp8 from plain?** Yes on the references, and in one family so far. A simulated fp8 copy of the base model explains the fp8 reference's answers better than the plain model does (+9.0 standard errors) and every other reference's answers worse. With the threshold fixed in advance it named C's fp8 copy (+3.53). B's candidate stopped at +2.81, just under the threshold; the rule said no change, and the lead chose in the morning to act on it with one submission, which took the public score to 1.0. A shows none.
 5. **Isn't multiplying the last layer by 2 a trick?** It changes no predicted class, so accuracy is untouched. It undoes the softness that the temperature-2 target taught. The factor came from a measurement made before any score.
 6. **Why average three unlearning models?** They are seeds of one recipe and match on every statistic we measure. The board cannot rank them: on 30% to 84% of random splits, the public and hidden parts disagree on which seed is better. Averaging removes seed noise without choosing on the public split.
 7. **How sound is the watermark score?** It rests on a held-out fifth of the training images, not on the train score. c6's paired gain over c5 is +0.0104, with a 90% interval above zero.
