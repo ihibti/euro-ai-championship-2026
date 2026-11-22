@@ -530,3 +530,132 @@ The lesson from A: a pattern seen at 2 repeats did not survive 8 fresh ones. The
 - That matches modal.py on the same rows: SmolLM's batteries carry no power at 4 repeats.
 - So the method neither recovers {plain, fp8, system prompt, persona, temperature, perhaps watermark} nor excludes the LoRAs. It is unvalidated.
 - A 10-answer check would need 6 more battery repeats on the 9 references (108 answers). The desk holds that decision until the likelihood scores are validated.
+
+## The batteries at 10 repeats: modal.py, rank.py, pairwise.py and the greedy check (read 03:46; data 69f3fb3)
+
+All tools were run unchanged. Commands: `modal.py`, `rank.py` and `pairwise.py` with `--prefix ep- --families tasks/model_equality/analysis/recon_ep_families.csv`.
+
+**Greedy check.** No endpoint answers identically every time. These repeat whole answers verbatim (distinct texts out of 10, trivia / choice):
+
+| family | endpoint | trivia | choice | note |
+|---|---|---|---|---|
+| A | ep-04 | 5 | 6 | |
+| A | ep-17, ep-25 | 8 | 10 | |
+| A | ep-24 | 9 | 10 | |
+| B | ep-06 | 4 | 7 | |
+| B | ep-08, ep-21 | 9 | 10 | |
+| C | ep-10 | 8 | 8 | |
+
+Every other endpoint gives 10 and 10. On the references (4 repeats), the only repeated battery answer in 72 belongs to the watermark copy ref-06 (choice: 3 distinct in 4).
+
+**A**
+- modal.py:
+  - sets apart ep-17 (p 0.0095), ep-04 (0.0085) and ep-18 (0.0065), with 4 choice flips each;
+  - sharpness: 0.94 to 0.95 for most endpoints, ep-24 0.93, ep-14 0.92, ep-33 0.91 (the least sharp non-prompted), ep-02 0.92, ep-23 0.90.
+- rank.py: ep-04 (3.7e-5), ep-17 (0.058), ep-01, ep-18, ep-14, ep-24, ep-25, ep-33, ep-12.
+- pairwise.py: the largest group (8) is ep-01, 02, 04, 12, 14, 17, 24, 33. Outside it are ep-18, ep-25 and the prompted ep-23. Ten pairs are rejected, all involving 18, 25 or 23; 18 and 25 are also rejected against each other (p 0.001).
+- Strict rule of 02:47:
+  - ep-04 meets it: modal p 0.0085; e1 default on fresh rows p 0.00025; sharpness 0.95, tied with ep-17 and ep-25, so not the clear sharpest.
+  - ep-17 and ep-18 have no second frozen probe, so they are not split.
+
+**B**
+- modal.py:
+  - sets apart ep-06 alone (p 0.001; 4 trivia and 5 choice flips);
+  - ep-30 p 0.08, with sharpness 0.78, the least sharp in B. The prompted ep-08 is 0.80.
+- rank.py: ep-21 (0.031), ep-06, ep-28, ep-22, ep-30, ep-26, ep-03, ep-07, ep-32.
+- pairwise.py: the largest group (10) is everything but the prompted ep-20. One pair is rejected, ep-20 against ep-28 (p 0.006), which is about the 0.5 false rejections expected.
+- Strict rule:
+  - ep-30 fails it: modal does not set it apart, and it is the least sharp, the temperature signature. It stays with the majority.
+  - ep-06 has no second frozen probe yet. B's fresh leak rows are pending.
+
+**C**
+- modal.py: nothing set apart. Sharpness 0.67 to 0.81, with ep-10 the sharpest (0.81, next 0.77).
+- rank.py: ep-05 (0.24), ep-31, ep-13, ep-19, ep-10, ep-11, ep-27, ep-09, ep-15.
+- pairwise.py:
+  - ep-10 is rejected against 8 of the 10 others (11 to 19 flips, p 0.000 to 0.007); only ep-11 (p 0.20) and ep-27 (0.024) pass with it;
+  - ep-15 is rejected against ep-05 and ep-10;
+  - the largest group (9) is everything but ep-10 and ep-15.
+- Strict rule: nothing is split. ep-10 is not set apart by modal against the pool, and it has no second probe.
+
+**A pattern across the families, described and found after the fact.** In each family one endpoint combines three marks:
+- the most repeated whole answers;
+- sharpness at or near the top;
+- mode flips against its family (modal one-against-rest in A and B, pairwise in C).
+Those endpoints are ep-04 (A), ep-06 (B) and ep-10 (C). On the references the watermark copy is the one that repeats an answer and the sharpest (0.81, against 0.68 for plain). A previous-token watermark adds the same bias wherever the context repeats, which lowers entropy and can flip borderline items consistently. ep-04's one-token e1 effect fits the same reading. So the three are most likely the watermark copies of A, B and C, the same model as their plain copy. The strict rule's watermark condition (sharpest by at least 0.05) missed ep-04, because A's sharpness saturates at 0.95.
+
+**Against the likelihood reading (desk, 03:35 and 03:46).**
+- ep-14 and ep-24, LoRA 1.5 and LoRA 0.7 by fitted temperature, show nothing on the batteries:
+  - 0 and 0 trivia flips, 2 and 2 choice flips;
+  - modal p 0.18 and 0.24; both inside the pairwise largest group.
+  - Their sharpness (0.92 and 0.93) sits just under the base-like 0.94 to 0.95 and above the temperature copy ep-33 (0.91). That ordering follows their fitted tau: 0.87, 0.77, and 1.0 for ep-33.
+  - So the batteries see a hotter distribution with the modes kept, which is what a pure temperature or a LoRA that does not reach the batteries' top answers would give. They cannot tell those apart.
+- ep-04, flagged by the strict rule, is base-like by likelihood, which cannot see a watermark, fp8 or LoRA 0.3. That is consistent with the watermark reading.
+- B and C: no likelihood tables yet. The batteries predict that ep-30 fits near tau 1.0 (the temperature copy) and that ep-06 and ep-10 fit the plain temperature with residual 0 (watermark).
+
+## The watermark check, in numbers (03:52; watermark.py, e1e4e30)
+
+`watermark.py` counts repeated whole battery answers (verbatim repeats of an earlier answer of the same endpoint), reports sharpness, and gives the mean common prefix of an endpoint's story answers. The battery rule was fitted to the batteries already read:
+- most repeated answers, at least 3 and at least 3 more than the next;
+- among the two sharpest;
+- prompted copies excluded.
+
+Its out-of-sample check was registered at 03:51, before any scored story answer of repeat 2 or more: ep-04, ep-06 and ep-10 should each have the longest story prefix among the non-prompted endpoints of their family (chance 0.0014 for all three).
+
+References (batteries at 4 repeats; story at 10 repeats, rows read after the commit):
+
+| reference | truth | repeated battery answers (of 8) | sharpness | story prefix (characters) |
+|---|---|---|---|---|
+| ref-06 | watermark | 1 | 0.808 | 118.5 |
+| ref-03 | system prompt | 0 | 0.636 | 67.1 |
+| ref-09 | LoRA 0.3 | 0 | 0.668 | 36.4 |
+| ref-05 | persona | 0 | 0.669 | 36.2 |
+| ref-01 | plain | 0 | 0.679 | 28.9 |
+| ref-02 | fp8 | 0 | 0.700 | 27.6 |
+| ref-07 | LoRA 1.5 | 0 | 0.629 | 17.3 |
+| ref-04 | LoRA 0.7 | 0 | 0.674 | 13.6 |
+| ref-08 | temperature | 0 | 0.603 | 1.6 |
+
+- The watermark copy is top on all three statistics, with a story prefix 1.8 times the next (the system-prompt copy, whose fixed prompt also shapes the opening) and 4 times plain.
+- The three LoRAs never repeat an answer, sit mid-pack or lower on sharpness, and have story prefixes of 14 to 36. An adapter does not produce the signature.
+- The temperature copy is the bottom on sharpness and story prefix.
+- The battery rule itself cannot fire at 4 repeats (it needs at least 3 repeats), so on the references the check rests on the story prefix and sharpness.
+
+Scored (batteries at 10 repeats; out of 20 answers):
+
+| family | lead in repeated answers | next | its sharpness (rank) | rule |
+|---|---|---|---|---|
+| A | ep-04: 9 | ep-17, ep-25: 2 | 0.948 (2nd, after ep-25 0.953) | candidate ep-04 |
+| B | ep-06: 9 | ep-08, ep-21: 1 | 0.870 (tied 2nd with ep-21; ep-22 0.880) | none: the tie falls against it |
+| C | ep-10: 4 | all others 0 | 0.805 (1st) | candidate ep-10 |
+
+The story prediction is read when the scored story rows land, at about 04:14.
+
+## Labelled same-model copies so far, and the unlabelled endpoints (03:52)
+
+| family | prompted | temperature | watermark | labelled | unlabelled |
+|---|---|---|---|---|---|
+| A | ep-02, 23 | ep-33 (likelihood tau 1.0; least sharp non-prompted) | ep-04 | 4 | ep-01, 12, 14, 17, 18, 24, 25 |
+| B | ep-08, 20 | ep-30 (least sharp; stops early on d1; likelihood pending) | ep-06 | 4 | ep-03, 07, 21, 22, 26, 28, 32 |
+| C | ep-16, 29 | not identified; the least sharp is ep-31 (0.666) | ep-10 | 3 | ep-05, 09, 11, 13, 15, 19, 27, 31 |
+
+A, the seven unlabelled ordered from most to least likely plain. Inputs are every probe here, with the likelihood reading as one input among them:
+1. **ep-12**: no flag anywhere. rank.py last (0.97), modal p 0.70, inside the pairwise group, e1 default 9/10, e2 yes 2/10 (base 0.35), sharpness 0.937, base-like by likelihood.
+2. **ep-25**: modal p 0.85. But it falls outside the pairwise group (rejected against ep-01, 04, 18, 23) and repeats 2 battery answers. e1 default 10/10, base-like by likelihood.
+3. **ep-01**: modal p 0.016 (0.004 in rank's pool), rejected pairwise against ep-18 and ep-25. Leak is base-like (e1 8/10), and so is likelihood.
+4. **ep-24**: no battery flag (modal p 0.24, in the pairwise group), e1 10/10. Likelihood puts it at the LoRA 0.7 signature (z 3.2).
+5. **ep-18**: set apart by modal (p 0.0065), outside the pairwise group (rejected against ep-01, 04, 23, 25). Base-like by likelihood.
+6. **ep-17**: set apart by modal (p 0.0095); e2 yes 7/10 against a base rate of 0.35; ranked 2nd by rank.py. Base-like by likelihood.
+7. **ep-14**: no battery flag. e2 yes 0/10 against 0.35 (p about 0.04). Likelihood puts it at the LoRA 1.5 signature (tau 0.87, z 3.8).
+
+The ordering is weak in the middle. Only ep-12 is clean on every probe. ep-18 and ep-25 being rejected against each other (p 0.001) says at least one of them is not plain.
+
+## Second story registration: the temperature copies (written 03:54; one fresh story answer per scored endpoint existed, unread)
+
+On the references the temperature copy has the shortest story prefix (1.6 characters, against 13.6 to 118.5). The battery counts point to one hot copy per family: it gives the most rare battery answers (tokens given once in 10 answers on an item) and is the least sharp non-prompted endpoint:
+- A: ep-33, 12 rare answers, the most of any non-prompted A endpoint; temperature 1.0 by likelihood;
+- B: ep-30, 62 rare answers, against at most 17 elsewhere; sharpness 0.779;
+- C: ep-31, 60 rare answers, against at most 47; sharpness 0.666.
+
+Prediction, read with `watermark.py --min-repeat 2`: on fresh story rows, ep-33, ep-30 and ep-31 each have the shortest mean story prefix among the non-prompted endpoints of their family. Chance for all three is 0.0014.
+
+A described battery check for a truncated-sampling copy (few rare answers given many minority answers) fails its validation on A. ep-14, the truncated copy by likelihood, has 5 rare answers out of 48 minority answers (0.10). That is indistinguishable from ep-24 (0.09) and ep-01 (0.11). So the batteries cannot name a second decoding copy in B or C.
