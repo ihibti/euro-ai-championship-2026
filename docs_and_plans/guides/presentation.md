@@ -72,7 +72,7 @@ Each slide: a title, at most three bullets, the one number that matters, and spe
 
 ## Slide 6. Unlearning: the path and its limit
 
-- 0.00 (22:19), 0.066, 0.2133, 0.2837, 0.2858 (04:39), then **0.2938** (10:18): a weight average of three runs that the morning's score model picked (prediction 0.291). Each submission had its prediction posted first. Every neighbour of the night's best scored lower (0.2222, 0.256, 0.2665), and each said why.
+- 0.00 (22:19), 0.066, 0.2133, 0.2837, 0.2858 (04:39), then **0.2938** (10:18), each with its prediction posted first. The 0.2938 is a weight average of three runs, picked by the morning's score model (prediction 0.291). The night's neighbours of the best all scored lower (0.2222, 0.256, 0.2665).
 - What failed:
   - the night's score predictor, retired at 04:12 after three misses;
   - the thirteenth batch, which failed two of its four pre-posted conditions;
