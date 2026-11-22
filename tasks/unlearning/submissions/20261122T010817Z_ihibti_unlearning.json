@@ -1,0 +1,32 @@
+{
+  "attempted_at": "2026-11-22T01:08:17.798919+00:00",
+  "authorization": "night",
+  "bytes": 343629795,
+  "file": "data/unlearning/candidates/k7_e3t2_rm_x2.pt",
+  "git": {
+    "branch": "ihibti/setup-hackathon-swarm-workspace",
+    "commit": "147bf84658b599dd91beb4d88ebe629b8b1fcafa",
+    "dirty": false
+  },
+  "http_status": 200,
+  "message": "score 0.2133; previous best 0.066; improved True; New best on this task. Score shown is on the public split; the final ranking uses the held out subset, revealed after submissions close.",
+  "person": "ihibti",
+  "response": {
+    "delta": 0.1473,
+    "improved": true,
+    "message": "New best on this task. Score shown is on the public split; the final ranking uses the held out subset, revealed after submissions close.",
+    "previous_best": 0.066,
+    "score": 0.2133,
+    "status": "success",
+    "submission_id": 2429
+  },
+  "score": 0.2133,
+  "server_task_id": "31-unlearning",
+  "sha256": "f69f9ba1f725d8e3fc04b907373b7f0ce6ce6454d480e59c83aba71b6f7e2373",
+  "status": "success",
+  "task": "unlearning",
+  "validation_notes": [
+    "176 float32 tensors, all finite",
+    "strict load skipped (No module named 'timm'); install timm to run it"
+  ]
+}

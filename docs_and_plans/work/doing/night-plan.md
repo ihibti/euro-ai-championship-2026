@@ -85,3 +85,69 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 23:58 | Round 1 on the references at 40 answers: MCC 0 in both modes | not spent on the scored endpoints; near-tie probes `night_a` and `night_b` run on the references first (`tasks/model_equality/research_night.md`) |
 | 00:03 | `run_sixth.sh` at `2dcdbdd` started on the four GPUs of the running job (#21) | `run_fifth.sh` ended at 00:00, reports on `desk/unlearning` |
 | 00:07 | Unlearning `x4_e20.pt` submitted | public 0.0336, up from 0.0063; next slot at 00:38 (`scale_t4.pt`) |
+| 00:22 | A test run on the lead's main laptop sent one request with a test key to the organizers' server (HTTP 401) | cause: the script tests acted on the night authorization; fixed in PR #31, merged 00:37; the stray record was never committed |
+| 00:28 | Job 15903485 ended at its limit | `run_sixth.sh`: `t6_t2` to `t6_t5` saved and checked, four runs cut; reports on `desk/unlearning` at `0735d6f` |
+| 00:29 | Job 15904049 submitted for `run_seventh.sh` at `7ea0106` (team check empty, four GPUs, limit 1 h 15) | cancelled at 00:40: the unlearning agent replaced the batch four minutes after the start |
+| 00:38 | Unlearning `scale_t4.pt` submitted | public 0.0057; best stays 0.0336; the reading "gold is soft everywhere" is out |
+| 00:40 | First scored answers: five round-1 prompts at 2 repeats on the 33 endpoints (330 answers) | in `answers/round1.jsonl` on `ihibti/model-equality-refs`; rows carry the response time |
+| 00:41 | Job 15904082 submitted for `run_seventh.sh` at `d926e1e`, after the cancelled job had left the queue and the team check printed nothing | limit 1 h 15; ends by itself |
+| 00:41 | The JURECA link dropped, seconds after the submission | only the lead can reopen it; no JURECA work until then; notification sent |
+| 00:46 | `dial12`, `dial15`, `dial20` built on the lead's main laptop from the original rebuilt out of `scale_t4.pt` | sha256 on #12; 01:08 slot armed on the queue's first open line |
+| 00:54 | The lead reopened the JURECA link and allowed the desk to reopen a dropped connection with one guarded attempt | four connections open; only the one to `jureca03` shows scratch, the rebooted login nodes do not |
+| 01:07 | Job 15904082 completed, no failed run | reports, logs and logits on `desk/unlearning` (`357d3c8`, `fa05188`); eleven checkpoints on the lead's main laptop |
+| 01:08 | Unlearning `dial15.pt` submitted | public 0.0; best stays 0.0336 |
+| 01:08 | Reconnaissance done: 330 scored answers, none failed | three families of 11 (two Qwen-based, one Llama); `night_d` started on the references |
+| 01:16 | Job 15904237 submitted for `run_eighth.sh` at `5ac28b2` (team check empty, limit 1 h 15) | pending, estimated start 01:50; output files created in advance because scratch has under 1,000 file slots left for all teams |
+| 01:26 | Job 15904237 started | 16 runs on four GPUs; first reports on `desk/unlearning` at `c632153`, four checkpoints on the lead's main laptop by 01:48 |
+| 01:30 | Model equality: the family grouping submitted (three families of 11, one model per family) | public 0.1: the families are right on the public pairs; the model part is computed inside families only and stays at zero |
+| 01:35 | An organizer wrote that scripts fail to create files on scratch until teams delete some | the desk removed `runs/442697b` (209 files, staged by this session); the lead is asked about the two unused Python environments (33,000 files) |
+| 01:38 | Unlearning `k7_e3t2_rm.pt` submitted | public 0.066, a new best (0.0336 before) |
+| 01:38 | `night_d` on the references landed (360 answers) | the repetition prompt passes at 20 answers per endpoint in both analyses, not at 10; the fp8 candidate is refuted; scored identity answers started |
+| 01:59 | Job 15904237 completed, no failed run | all reports and logits on `desk/unlearning` at `7c30bc4`; the eight checkpoints on the lead's main laptop |
+| 02:08 | Unlearning `k7_e3t2_rm_x2.pt` submitted (the 0.066 checkpoint, last layer times 2) | public 0.2133 |
+| 02:13 | Job 15904499 submitted for `run_ninth.sh` at `a8bd579` (team check empty, limit 50 minutes); started 02:23 | staged by renaming and emptying old files: no new file on scratch |
+| 02:25 | Model equality: leak prompts on the 33 endpoints | six prompted copies identified (ep-02, 08, 29 system prompt; ep-23, 20, 16 persona); an identity-based grouping was held back at 02:05 and would have been wrong; a first candidate split inside family A, to be confirmed on fresh answers |
+| 02:38 | Unlearning `k8_e3t2_rm1_lr1e4_x2.pt` submitted | public 0.2837, a new best |
+| 02:48 | Job 15904499 completed, no failed run | reports and logits on `desk/unlearning` at `3a3dd21`; the six checkpoints on the lead's main laptop |
+| 02:58 | Model equality: the candidate split in family A failed its pre-registered test on eight fresh answers per endpoint (yes-rate 14 of 40 against 9 of 32) | no split from that probe; ep-04 stays set apart on the other leak prompt (default prompt quoted 2 of 10 times against 72 of 80) |
+| 03:02 | A local run of public base models on the lead's main laptop, no endpoint calls | family A fits Qwen2.5-3B-Instruct, unquantized; next, every recorded answer scored token by token under the base model |
+| 03:07 | Job 15904691 submitted for `run_tenth.sh` at `66c6b31` (team check empty, limit 1 hour) | staged with no new file; pending on priority |
+| 03:08 | Unlearning `k8_e3t2_rm1_lr1e4_x2p5.pt` submitted | public 0.2222; the best stays 0.2837 (the same checkpoint at factor 2) |
+| 03:38 | Unlearning `k9_e3t1_lr1e4_x1p25.pt` submitted (a gentler recipe, last layer times 1.25) | public 0.256; the best stays 0.2837 |
+| 03:42 | Job 15904691 completed, no failed run | reports and logits on `desk/unlearning` at `1461f80`; the six checkpoints on the lead's main laptop |
+| 03:45 | Model equality: the two batteries at 10 repeats on the 33 endpoints (answers used per endpoint: 56 in A, 58 in B, 40 in C) | both analysts read them with rules frozen beforehand; they agree on little inside the families |
+| 03:47 | Job 15904844 submitted for `run_eleventh.sh` at `42ccecc` (team check empty, limit 45 minutes) | staged with no new file; pending on priority |
+| 03:50 | Model equality: every recorded answer of family A scored token by token under its base model (Qwen2.5-3B-Instruct), on the laptop | ep-33 is the temperature copy, ep-04 the watermark copy, ep-14 a truncated-sampling copy; ep-24 is the one visible adapter candidate; five endpoints look like the base model |
+| 03:51 | The story prompt at 10 repeats: the nine references done, the 33 endpoints started (8 answers each) | answers per endpoint after it: 64 in A, 66 in B, 48 in C |
+| 03:59 | Family B fits Qwen2.5-1.5B-Instruct; its table arrived | ep-30 is the temperature copy, ep-07 a truncated-sampling copy; ep-22 has the watermark signature (the batteries pointed to ep-06); ep-28 is the adapter candidate |
+| 04:01 | Job 15904844 started | six runs on the four GPUs |
+| 04:08 | Unlearning `k8_e3t2_rm1_ep40_x2p25.pt` submitted (a sibling run, last layer times 2.25) | public 0.2665; the best stays 0.2837; the unlearning agent retired its score predictor |
+| 04:13 | The story prompt finished on the 33 endpoints; a one-off look at a reference endpoint | the server returns no token probabilities and has no raw-completion route; response time is a fixed pace |
+| 04:21 | Family C fits Llama-3.2-1B-Instruct; its table arrived | ep-31 is the temperature copy, ep-27 the truncated-sampling copy, ep-10 the watermark copy; ep-05 and ep-11 look like adapters |
+| 04:23 | Model equality: `labelled_copies_v1.csv` submitted: per family the five identified same-model copies as one model, every other endpoint alone | public 0.7 (was 0.1) |
+| 04:26 | Job 15904844 completed (24 minutes), no failed run | reports and logits on `desk/unlearning` at `8c443bf`; the six checkpoints on the lead's main laptop; no job in the queue |
+| 04:39 | Unlearning `k11_b_soup3_x2.pt` submitted (the average of the weights of the 0.2837 run and its two new seeds, last layer times 2) | public 0.2858, a new best |
+| 04:46 | The unlearning agent asked for a twelfth batch (eight more seeds) | not staged: the desk stopped one minute later |
+| 04:47 | The desk session reached its usage limit and stopped; its two agents stopped on the same limit | no job in the queue, no slot armed; state written in the morning brief and on #21 |
+| 04:54 | The unlearning agent withdrew the twelfth batch: at temperature 2 the seeds are the same model, so more seeds cannot move the average | no open GPU request; the night's unlearning submissions end at 0.2858 |
+| 05:04 | The purchase of free reference answers on the plain and fp8 references ended | 30 repeats of the stop probes and the three hint probes, 14 of round 1; committed on `ihibti/model-equality-refs` |
+| 06:00 | The desk resumed | defense pack found on `ihibti/model-equality-refs` (`8568af4`), brought to this branch and its gaps filled |
+| 06:02 | First test that sees fp8 on the references: likelihood ratio between a simulated fp8 copy of the base model and the plain base model, over every returned token | fp8 reference +7.6 standard errors, plain -4.8, watermark -4.9, temperature copy -6.7; holds on both halves of the rows |
+| 06:03 | The same test started on the nine non-prompted endpoints of each family; decision rule registered on PR #27 before any family number was read, amended with Devin at 06:16 | results expected from 06:30 (B), then C, then A |
+| 06:24 | Family B read with the registered rule | ep-22 +2.71 standard errors, the only endpoint above zero; under the threshold of 3, no change |
+| 06:29 | Job 15905366 submitted: the unlearning agent's thirteenth batch (`4225b24`, a target mixed from three cross-fits), 45 minutes | staged with no new file (689 before and after), code on scratch matches the commit by hash, team check empty; pending on priority |
+| 06:29 | Family C read | ep-15 +2.94, the only endpoint above zero; under the threshold, no change |
+| 06:36 | Second read registered on PR #27, then bought: 24 answers on ep-15, 12 on ep-22 | all 36 answered; ep-15 at 72 and ep-22 at 78 of the night cap of 80 |
+| 06:41 | Second read | C: ep-15 +3.53, so ep-13 and ep-19 join C's group by the rule. B: ep-22 +2.81, no change |
+| 06:43 | Family A read | no endpoint above zero; no change |
+| 06:44 | Model equality: `labelled_copies_v2.csv` submitted (C's group gains ep-13 and ep-19) | public 0.85 (was 0.7); 1 night submission left |
+| 06:48 | A variant of the fp8 simulation that also rounds activations, tried on the references only | the fp8 reference fell from +9.0 to +0.3: dropped, never used on a scored endpoint |
+| 06:50 | Two files for family B prepared and checked, not submitted: ep-32 added, and ep-32 with ep-26 | decision 1 of the morning brief; the desk keeps to "no change for B tonight", as written before the second read |
+| 06:54 | The local analysis (base-model scoring, the fp8 test, its rule, the desk's cluster scripts) copied from the session's temporary folder into the repository | `tasks/model_equality/analysis/local_anchor/`, `jsc/night_desk/`, `tasks/unlearning/desk_build/` |
+| 07:12 | Job 15905366 completed (23 minutes 46 seconds), no failed run | reports on `desk/unlearning` at `6bd108e`; hashes on #21; no job in the queue |
+| 07:15 | The unlearning agent ran its four checks on the thirteenth batch: two failed (cross-fits disagree on 4.7% and 5.3% against a floor of 5%; loss at x2 2.91/3.03 against 3.8 within 0.4) | last unlearning slot left empty; the night ends at 0.2858; no GPU request open |
+| 07:16 | Pull request #33 opened: the night's records, brief, defense pack and analysis code to `main` | merged once the brief is final |
+| 07:18 | `main` merged into the desk branch (224 tests pass, 1 skipped), then #33 merged | `main` holds the night's records, the brief and the defense pack |
+| 07:39 to 08:04 | The desk's session exited while idle; the four connections to JURECA dropped in the same window | nothing was running or owed; connections left down, no job planned |
+| 08:06 | The lead, awake, said go on decision 1 | |
+| 08:07 | Fifth model equality submission: `labelled_copies_v2_b32.csv`, ep-32 added to family B's group | public **1.0** (was 0.85); night submissions for the task used up; nothing more to submit |
