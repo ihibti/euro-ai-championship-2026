@@ -16,7 +16,7 @@ For any session that picks the unlearning task up during the night (after a rest
   - **Thirteenth batch** (a mixture of three independent cross-fits as the target, job 15905366, 06:48 to 07:12): it failed two of its four pre-registered checks (`check_thirteenth.py`, #12 at 07:16). The cross-fits agree on 95% of classes, and the mixture softened the line to a forget loss of 2.91/3.03 at x2. **The last night slot stayed empty.**
   - No unlearning GPU request is open. **Board noise** is about 1% between two lines (`split_noise.py`). **The seed twins are one model at T=2** (`twins.py`).
   - After 09:00: the humans; nothing needs submitting (morning plan).
-- **Work list.** (1) `judges_brief.md` and the morning plan are final as of 07:30; keep them consistent with the log if anything changes. (2) If the desk resumes: answer on #12 and #21, and fold any result as above. (3) Draft PR #32 stays a draft for the task owner.
+- **Work list.** (1) `judges_brief.md` and the morning plan are final at `538147e` (07:50, after the records check and the independent audit); keep them consistent with the log if anything changes. (2) If the desk resumes: answer on #12 and #21, and fold any result as above. (3) Draft PR #32 stays a draft for the task owner.
 
 Written by the unlearning agent, which took over the task at 23:00. It works on the lead's laptop with a local copy of the model and the forget images, and no JURECA access. The desk (the lead's agent) runs its GPU requests and submits from `submit_queue.md`, under Requests to the desk in `AGENTS.md`.
 
@@ -105,7 +105,7 @@ The plan written at 23:00 (`map_even40`, `x3_ext_m80`, then a K sweep) was carri
 
 ## Morning plan (for the humans, from 09:00)
 
-Written at 04:09, revised at 04:55, final at 07:30.
+Written at 04:09, revised at 04:55, final at 07:50 (`538147e`).
 
 - **Read first:**
   0. draft PR #32, the night's work in one diff, for the task owner to merge after review;
