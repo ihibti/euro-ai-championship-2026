@@ -13,14 +13,14 @@ Draft kept current through the night by the desk. Final version by 08:30. The ev
 | Task | Public score | Submitted | Board's best at 22:33 |
 |---|---|---|---|
 | Watermark | 0.7444 | c6, 23:36 | 0.75 |
-| Model equality | 0.1 | family grouping, 01:30 | 1.00 |
+| Model equality | 0.7 | identified copies as one model per family, 04:23 | 1.00 |
 | Unlearning | 0.2837 | `k8_e3t2_rm1_lr1e4_x2.pt`, 02:38 | 0.40 |
 
-Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read since.
+Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read since. With the three scores above and the board's bests of 22:33, our overall would be about 0.80.
 
 ## What was spent
 
-- **Submissions under the night authorization** (ends 09:00): model equality 2 of 5, unlearning 9 of 12, watermark 1 of 1 (at 04:04).
+- **Submissions under the night authorization** (ends 09:00): model equality 3 of 5, unlearning 10 of 12, watermark 1 of 1 (at 04:25).
 - **Scored answers per endpoint** (night cap 80, organizers' cap 100): 64 in family A, 66 in B, 48 in C once the story prompt finishes at about 04:13. Every prompt set ran on the nine references first.
 - **GPU:** jobs 15903485 (ended 00:28 at its limit), 15904049 (cancelled by the desk after 10 minutes, the batch was replaced), 15904082 (26 minutes), 15904237 (33 minutes, ended 01:59), 15904499 (25 minutes, ended 02:48), 15904691 (31 minutes, ended 03:42), 15904844 (submitted 03:47, limit 45 minutes, pending). Never more than one job running or pending; team check empty before each `sbatch`.
 
@@ -37,6 +37,7 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
 | 02:38 | `k8_e3t2_rm1_lr1e4_x2.pt` (the same recipe at a higher learning rate, last layer times 2) | 0.2837 |
 | 03:08 | `k8_e3t2_rm1_lr1e4_x2p5.pt` (the 0.2837 checkpoint, last layer times 2.5) | 0.2222 |
 | 03:38 | `k9_e3t1_lr1e4_x1p25.pt` (a gentler recipe, last layer times 1.25) | 0.256 |
+| 04:08 | `k8_e3t2_rm1_ep40_x2p25.pt` (a sibling run, last layer times 2.25) | 0.2665 |
 
 ## Model equality
 
@@ -47,14 +48,15 @@ Public board at 23:45: Begg 20th of 32 with 0.33; the 6th had 0.73. Not re-read 
   - watermark copy: fits the plain temperature, but unevenly, in both directions;
   - strong adapters (LoRA 0.7, 1.5): shifted and uneven, one direction;
   - fp8 and LoRA 0.3: indistinguishable from plain. This is the limit of every method we have.
-- **Labels at 04:00.**
+- **Labels at 04:25, submitted at 04:23 for a public 0.7.**
 
-  | Family | Same model as plain (positively identified) | Adapter candidate | Look like the base model (plain, fp8, weak adapters hide here) |
+  | Family | One model: the plain model in disguise (positively identified) | Adapter candidates, each alone | Look like the base model, each alone (plain and fp8 hide here) |
   |---|---|---|---|
-  | A | ep-02, ep-23 (prompted), ep-33 (temperature 1.0), ep-14 (truncated sampling, top-p 0.95), ep-04 (watermark) | ep-24 | ep-01, 12, 17, 18, 25 |
-  | B | ep-08, ep-20 (prompted), ep-30 (temperature 1.0), ep-07 (truncated sampling); watermark: ep-22 by likelihood, ep-06 by the batteries, open | ep-28 | ep-03, 21, 26, 32, and ep-06 or ep-22 |
-  | C | ep-29, ep-16 (prompted); the rest pending | | |
+  | A (Qwen2.5-3B) | ep-02, ep-23 (prompts), ep-33 (temperature 1.0), ep-14 (top-p 0.95), ep-04 (watermark) | ep-24 | ep-01, 12, 17, 18, 25 |
+  | B (Qwen2.5-1.5B) | ep-08, ep-20, ep-30, ep-07, ep-06 | ep-03, ep-28 | ep-21, 22, 26, 32 |
+  | C (Llama-3.2-1B) | ep-29, ep-16, ep-31, ep-27, ep-10 | ep-05, ep-11 | ep-09, 13, 15, 19 |
 
+- **What the 0.7 means.** The model part is about 0.67 on the public pairs. The rule gives 0.77 if each family has exactly one more same-model endpoint (its plain copy) and 0.60 if it has two. The points still open are the plain copy of each family.
 - **Submission rule.** Per family, the positively identified copies form one model and every other endpoint is its own model. It never claims two endpoints are the same without evidence. Checked by Devin's code: it scores 0.77 on the model part if exactly one more endpoint is the plain copy, 0.60 or 0.46 if one or two further undetectable same-model copies hide among the rest, 0.51 if one of our labels is wrong.
 - **Where the two analysts disagree.** ep-12 as A's plain copy: Devin 0.6, the main line 0.3 to 0.4; not added. ep-06 against ep-22 as B's watermark copy.
 - **Devin's second method** (battery modes, cliques) and the main line's battery rules were frozen before each read. A split of family A proposed by the desk at 02:25 failed its pre-registered test at 02:58 and was never submitted.

@@ -120,3 +120,8 @@ Filled in by 07:30 with exact commands: what was spent, what was submitted, the 
 | 03:50 | Model equality: every recorded answer of family A scored token by token under its base model (Qwen2.5-3B-Instruct), on the laptop | ep-33 is the temperature copy, ep-04 the watermark copy, ep-14 a truncated-sampling copy; ep-24 is the one visible adapter candidate; five endpoints look like the base model |
 | 03:51 | The story prompt at 10 repeats: the nine references done, the 33 endpoints started (8 answers each) | answers per endpoint after it: 64 in A, 66 in B, 48 in C |
 | 03:59 | Family B fits Qwen2.5-1.5B-Instruct; its table arrived | ep-30 is the temperature copy, ep-07 a truncated-sampling copy; ep-22 has the watermark signature (the batteries pointed to ep-06); ep-28 is the adapter candidate |
+| 04:01 | Job 15904844 started | six runs on the four GPUs |
+| 04:08 | Unlearning `k8_e3t2_rm1_ep40_x2p25.pt` submitted (a sibling run, last layer times 2.25) | public 0.2665; the best stays 0.2837; the unlearning agent retired its score predictor |
+| 04:13 | The story prompt finished on the 33 endpoints; a one-off look at a reference endpoint | the server returns no token probabilities and has no raw-completion route; response time is a fixed pace |
+| 04:21 | Family C fits Llama-3.2-1B-Instruct; its table arrived | ep-31 is the temperature copy, ep-27 the truncated-sampling copy, ep-10 the watermark copy; ep-05 and ep-11 look like adapters |
+| 04:23 | Model equality: `labelled_copies_v1.csv` submitted: per family the five identified same-model copies as one model, every other endpoint alone | public 0.7 (was 0.1) |
