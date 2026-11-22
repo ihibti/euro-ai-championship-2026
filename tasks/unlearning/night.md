@@ -10,13 +10,12 @@ For any session that picks the unlearning task up during the night (after a rest
 - **On a new score (#12).** Add it to `observed` in `ledger_inputs.json`, rerun `ledger.py --targets output/kkrgp/xfit_extras.npz`, log prediction against outcome below, rewrite `submit_queue.md` within 10 minutes, push, acknowledge on #12.
 - **On new GPU results (`desk/unlearning`, `tasks/unlearning/reports/21/`).** Copy the JSON reports to `/Volumes/euroai-apfs/r21/`, add the candidates' measured statistics and retain estimates to `ledger_inputs.json`, rerun the ledger, queue the best by expected score.
 - **Limits.** 8 unlearning submissions left at 01:08 under the night authorization (until 09:00), one per 30 minutes. No GPU request after 10:00; last submission by 11:00.
-- **Pending at 02:00.**
-  - Scores: `k7_e3t2_rm` 0.066 at 01:38 (our best). 02:08 `k7_e3t2_rm_x2` (sha `f69f9ba1…`, desk-build). 02:38 `k8_e3t1_rm1` (sha `fa5a4f2d…`), pre-registered on #12 whatever 02:08 scores; change it by 02:30 only if the eighth dump's exact logits move its prediction below 0.066.
-  - The ledger (`ledger.py`): gold grid to K=6, sharpening split by changed predictions, several `--logits`. Run: `ledger.py --targets output/kkrgp/xfit_extras.npz --logits /Volumes/euroai-apfs/r21/seventh/logits.npz [/Volumes/euroai-apfs/r21/eighth/logits.npz]`.
-  - Eighth batch (job 15904237): first half folded (`fold_reports.py /Volumes/euroai-apfs/r21/eighth --write`). Second half (ep40, lr1e-4 candidate, K5 tau 2.5, 9 blocks) and `eighth/logits.npz` at about 02:10 to 02:20 on `desk/unlearning` under `reports/21/eighth/`: copy, fold, rerun the ledger with both dumps.
-  - Ninth batch asked on #21 (`6d06777`); amend the 9-block run by 02:20 if the eighth's 9-block probe is bad. Results about 35 minutes after it starts, under `reports/21/ninth/`.
-  - Slots: 6 night submissions left after 02:08 (until 09:00); then the humans until 11:00.
-  - Night research: U1, U2 and U3 delivered (rows 1 to 27).
+- **Pending at 02:16.**
+  - Scores: `k7_e3t2_rm` 0.066 (01:38); `k7_e3t2_rm_x2` **0.2133** (02:08, our best). 02:38: `k8_e3t2_rm1_lr1e4_x2`, a desk-build (`splice_head.py --model output/kkrgp/k8_e3t2_rm1_lr1e4.pt --scale 0.5`). The desk posts its sha256 on #12; put it on the queue line at once (deadline 02:36). The prediction is on #12 (02:14).
+  - Next dial after 02:38: the last-layer factor (x2.5, then x3) on the best base. See log row 02:15: the probe-based retain is pessimistic after sharpening.
+  - The ledger (`ledger.py`) with both dumps: `--logits /Volumes/euroai-apfs/r21/seventh/logits.npz /Volumes/euroai-apfs/r21/eighth/logits.npz`. It ranks well and underpredicts sharpened fine-tunes by about 1.6 times.
+  - Ninth batch: job 15904499 (`a8bd579`), submitted 02:13, pending on priority, about 33 minutes once started. Results under `reports/21/ninth/` with `logits.npz`. The renames are done (file count 689 before and after). Fold with `fold_reports.py /Volumes/euroai-apfs/r21/ninth --write`, rerun the ledger with all three dumps, and queue the best sharpened candidate.
+  - Slots: 5 night submissions left after 02:38 (until 09:00), then the humans until 11:00.
 - **Work list.** (1) Judges' brief, `judges_brief.md`. (2) Fold every result into the ledger. (3) Ask for the logits of submitted candidates, so the ledger stops using proxies.
 
 Written by the unlearning agent, which took over the task at 23:00. It works on the lead's laptop with a local copy of the model and the forget images, and no JURECA access. The desk (the lead's agent) runs its GPU requests and submits from `submit_queue.md`, under Requests to the desk in `AGENTS.md`.
