@@ -298,6 +298,12 @@ python $WT/tasks/unlearning/csd.py --full 0 --hedge 0 --blocks 6 --lr 5e-5 --epo
 python $WT/tasks/unlearning/splice_head.py --model output/kkrgp/k7_e3t2_rm.pt --scale 0.5 --save output/kkrgp/k7_e3t2_rm_x2.pt
 ```
 
+**The 0.2858**: step 2 with `--lr 1e-4` three times, as `k8_e3t2_rm1_lr1e4` (seed 0), `k11_b_s1` (`--seed 1`) and `k11_b_s2` (`--seed 2`), then their average with the last layer times 2 (sha256 `53dfdc9d…`; the desk built it with the same arithmetic on its laptop):
+
+```
+python $WT/tasks/unlearning/soup.py --models output/kkrgp/k8_e3t2_rm1_lr1e4.pt output/kkrgp/k11_b_s1.pt output/kkrgp/k11_b_s2.pt --scale 0.5 --save output/kkrgp/k11_b_soup3_x2.pt
+```
+
 **The analysis**, from the same folder (`source /Volumes/euroai-apfs/ops/env.sh; cd $T` on the lead's laptop):
 
 ```

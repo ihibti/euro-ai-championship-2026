@@ -109,7 +109,8 @@ The plan written at 23:00 (`map_even40`, `x3_ext_m80`, then a K sweep) was carri
 Written at 04:09, revised at 04:55, refreshed by 07:30.
 
 - **Read first:**
-  1. `judges_brief.md`, which opens with the result;
+  0. draft PR #32, the night's work in one diff, for the task owner to merge after review;
+  1. `judges_brief.md`, which opens with a two-minute version for presenting;
   2. `submit_queue.md`, every submission with its prediction and score;
   3. this file's log.
 - **Our best at 04:55:** **0.2858**, `k11_b_soup3_x2.pt` (sha `53dfdc9d…`, on the desk's laptop and in the team's `unlearning/output/kkrgp/`). If nothing better scores by 11:00, this is the one that counts. Nothing needs re-submitting, since only the best counts.
