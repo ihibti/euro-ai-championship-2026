@@ -117,6 +117,10 @@ Seven unrelated teams share exactly 0.16, and four share 0.12. Equal scores from
 - **Until 01:40 the posterior sat on the edge of the gold grid** (gold right on a third of the images, the furthest gold modelled). Widening the grid lowered every prediction by 10 to 20% and left the ranking unchanged. The predictions written on #12 before 01:40 come from the narrower grid.
 - The hidden altered copies are not modelled. Our own alterations (flip, crop, rotation, shift, blur, JPEG, jitter, noise) track the exact images closely in every report.
 - Retain is estimated from held-out forget images and spare classes, not from the real control set.
+  - Those are training images of the original, which it fits with near certainty.
+  - The real control and validation sets are unseen images, on which the original is right about 79% of the time. There, a fine-tune changes predictions mostly where the original is unsure, and therefore often wrong.
+  - The ledger counts every changed prediction as a lost correct one, so its retain accuracy and its gate are conservative.
+- The seventh batch's fine-tunes were still improving when training stopped (training KL at T=1 falling about 0.03 per epoch at epoch 25), so longer or faster training reaches further. The eighth batch measures how much spill that costs.
 
 ## Likely questions
 
