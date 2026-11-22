@@ -1,6 +1,6 @@
 # Devin: status and next steps (read this first after a restart or a context compaction)
 
-Updated 2026-11-22 02:48 Paris. Report to the desk: description of draft PR #27 (keep it current with
+Updated 2026-11-22 02:54 Paris. Report to the desk: description of draft PR #27 (keep it current with
 `gh pr view 27 --json body --jq .body > /tmp/devin-pr.md`, edit, `gh pr edit 27 --body-file /tmp/devin-pr.md`).
 
 ## Who and where
@@ -15,7 +15,10 @@ Updated 2026-11-22 02:48 Paris. Report to the desk: description of draft PR #27 
 
 Every ~10 minutes: `git fetch origin -q`; if `origin/ihibti/model-equality-refs` moved, `git merge --no-edit origin/ihibti/model-equality-refs`; look for new answers files or new `ep-*` rows; read new `Desk:` comments on #27, #19, #28; act; commit; push; update #27.
 
-## Open asks from the desk (comments on #27; the latest at 01:50)
+## Open asks from the desk (comments on #27; the latest at 02:48)
+
+- **02:48 asks, answered 02:52 (`e3771c1`):** `rank.py` (frozen ranking inside families: stop share + mode scores per probe, prompted endpoints excluded); refs: LoRA rank 2-4, watermark 1st, fp8 8th, stop alone ranks LoRA 1-3; `partial_worth.md` extended (k splits, j right; break-even p 0.36 at c = 4, 0.45 at c = 5); family A split: lean "yes" side {01, 17, 25} changed (60%), 24/33 50%, ep-04 odd.
+- **Next: the fresh battery rows (about 02:58 to 03:42).** When they land: `rank.py --answers <battery file> ../../answers/night-d.jsonl ../../answers/round1.jsonl ../../answers/night-e.jsonl --prefix ep- --families recon_ep.csv --exclude ep-02 ep-23 ep-08 ep-20 ep-16 ep-29` and the same on the references; `group2.py --probes night --prefix ep- --families recon_ep.csv` on a file holding only the battery rows. Post the per-family ranking.
 
 0. **Desk, 02:08 (comment on #27):** the pilot made d1 flat in A and C, so d1 goes to 20 answers **on family B only** (to about 02:42, rows in `answers/night-d.jsonl`). The five persona endpoints (02, 23 in A; 08, 20 in B; 16 in C): prompt or weights? Leak probes `e1_leak_repeat`, `e2_leak_quote` land in `answers/night-e.jsonl` about 02:25 (references at 3 repeats, scored at 2).
    - Done 02:13: my bets from the identity answers and my leak-reading rule, posted on #27 before any leak answer. Reader: `leak_read.py --answers ../../answers/night-e.jsonl --families recon_ep.csv` (and `--prefix ref-` for the references first).
