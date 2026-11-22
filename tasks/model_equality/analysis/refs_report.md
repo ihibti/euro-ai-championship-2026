@@ -487,3 +487,17 @@ Full tables in `recon_ep.md` (sections from "Identity at 10 answers" onwards).
 **Frozen prompt files**: `probes/round1.csv`, `recon.csv`, `idn.csv`, `night_a.csv`, `night_b.csv`, `night_c.csv`, `night_d.csv`, `night_e.csv`, `night_f.csv`. Never edit any of them once answers exist.
 
 **Tools**: `analysis/group.py`, `permtest.py`, `plurality.py`, `choices.py`, `recon.py`, `stop.py`, `lengths.py`, `identity.py`, `leak.py`, `within.py`, each with tests under `tasks/model_equality/analysis`.
+
+## E15. Registered stop.py check of the fp8 stop hint (frozen 04:33, 608d5d3)
+
+- Hypothesis (from the desk's stop channel, fp8 at +2.92 where plain is −0.67): fp8 (ref-02) stops earlier than plain (ref-01) on the d probes.
+- Rule, `analysis/fp8stop.py`, frozen while the desk's chain was appending night_d rows at 30 repeats. 8 rows with repeat >= 11 existed then, unread.
+  - Fresh rows only (repeat >= 11).
+  - One measure per probe, larger meaning a later stop: d1 repetitions, d2 words, d3 list items, d4 characters.
+  - Per probe, a one-sided permutation test (20,000 draws).
+  - Fisher's combination over the four probes.
+  - Revived if the combined p < 0.01 and at least 3 of 4 probes point the predicted way.
+- Repeats 0 to 10 had been read before the freeze, so they are described only. Command: `fp8stop.py --min-repeat 0 --max-repeat 10`.
+  - Combined p 0.50, with 2 of 4 probes in the predicted direction: d2 p 0.085 and d1 p 0.44 agree; d3 p 0.94 and d4 p 0.74 do not.
+  - d1 runs long: plain 6/11, fp8 5/11. d4 copy-only: 7/11 each.
+  - The old rows show no fp8 stop effect on the text-side measures.
